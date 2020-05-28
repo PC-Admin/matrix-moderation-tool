@@ -16,7 +16,7 @@ import csv
 import time
 
 # These values can be hard coded for easier usage:
-server_url = "example.org"
+server_url = ""
 access_token = ""
 federation_port = ""
 
@@ -54,6 +54,33 @@ def reset_password():
 
 # Example:
 # $ curl -kX POST -H 'Content-Type: application/json' -d '{"new_password": "dogpoo"}' https://perthchat.org/_matrix/client/r0/admin/reset_password/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
+
+def set_user_server_admin():
+	# tried setting 'admin: false' here but it failed and promoted the user instead!
+	print("\nBe aware that you need to set at least 1 user to server admin already by editing the database in order to use this command. See https://github.com/PC-Admin/PC-Admins-Synapse-Moderation-Tool/blob/master/README.md for details on how to do this.")
+	username = input("\nPlease enter the username you want to promote to server admin: ")
+	username = append_username(username)
+	passthrough = 0
+	server_admin_result = "true"
+	#while passthrough == 0:	
+	#	server_admin = input("Do you want to set this user as a server admin? (y/n):")
+	#	if server_admin == "y" or server_admin == "Y" or server_admin == "yes" or server_admin == "Yes":
+	#		server_admin_result = "true"
+	#		passthrough = 1
+	#	elif server_admin == "n" or server_admin == "N" or server_admin == "no" or server_admin == "No":
+	#		server_admin_result = "false"
+	#		passthrough = 1
+	#	else:
+	#		print("Invalid input! Try again.\n")
+	
+	command_string = "curl -kX PUT -H 'Content-Type: application/json' -d '{\"admin\": \"" + server_admin_result + "\"}' https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v2/users/" + username + ":" + server_url + "?access_token=" + access_token
+	print("\n" + command_string + "\n")
+	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	output = process.stdout
+	print(output)
+
+# Example:
+# $ curl -kX POST -H 'Content-Type: application/json' -d '{"admin": "true"}' https://perthchat.org/_synapse/admin/v2/users/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
 
 def query_account():
 	username = input("\nPlease enter the username you wish to query: ")
@@ -208,7 +235,7 @@ if federation_port == 0:
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) Reset a users password.\n5) List all user accounts.\n6) Create multiple user accounts.\n7) Deactivate multiple user accounts.\n8) List rooms in public directory.\n9) Remove a room from the public directory.\n10) Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) Reset a users password.\n5) Promote a user to server admin.\n6) List all user accounts.\n7) Create multiple user accounts.\n8) Deactivate multiple user accounts.\n9) List rooms in public directory.\n10) Remove a room from the public directory.\n11) Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -218,17 +245,19 @@ while pass_token == False:
 	elif menu_input == "4":
 		reset_password()
 	elif menu_input == "5":
-		list_accounts()
+		set_user_server_admin()
 	elif menu_input == "6":
-		create_multiple_accounts()
+		list_accounts()
 	elif menu_input == "7":
-		deactivate_multiple_accounts()
+		create_multiple_accounts()
 	elif menu_input == "8":
-		list_directory_rooms()
+		deactivate_multiple_accounts()
 	elif menu_input == "9":
-		remove_room_from_directory()
+		list_directory_rooms()
 	elif menu_input == "10":
+		remove_room_from_directory()
+	elif menu_input == "11":
 		print("\nExiting...\n")
 		pass_token = True
 	else:
-		print("\nIncorrect input detected, please select a number from 1 to 4!\n")
+		print("\nIncorrect input detected, please select a number from 1 to 11!\n")
