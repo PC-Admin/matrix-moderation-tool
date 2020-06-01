@@ -15,10 +15,12 @@ import subprocess
 import csv
 import time
 
-# These values can be hard coded for easier usage:
-server_url = ""
+###########################################################################
+# These values can be hard coded for easier usage:                        #
+server_url = "example.org"
 access_token = ""
 federation_port = ""
+###########################################################################
 
 def append_username(username):
 	if username[0] == "@":
@@ -203,8 +205,8 @@ def list_directory_rooms():
 # $ curl -kX GET https://perthchat.org/_matrix/client/r0/publicRooms?access_token=ACCESS_TOKEN
 
 def remove_room_from_directory():
-	internal_ID = input("\nEnter the internal id of the room you wish to remove from the directory (Example: !rapAelwZkajRyeZIpm): ")
-	command_string = "curl -kX PUT -H \'Content-Type: application/json\' -d \'{\"visibility\": \"private\"}\' \'https://" + server_url + ":" + str(federation_port) + "/_matrix/client/r0/directory/list/room/" + internal_ID + ":" + server_url + "?access_token=" + access_token + "\'"
+	internal_ID = input("\nEnter the internal id of the room you wish to remove from the directory (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	command_string = "curl -kX PUT -H \'Content-Type: application/json\' -d \'{\"visibility\": \"private\"}\' \'https://" + server_url + ":" + str(federation_port) + "/_matrix/client/r0/directory/list/room/" + internal_ID + "?access_token=" + access_token + "\'"
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
@@ -228,14 +230,14 @@ if length_access_token == 0:
 
 # check is federation port is hard coded, if not set it
 
-if federation_port == 0:
+if len(federation_port) == 0:
 	federation_port = input("Please enter the federation port for the server (default is 8448): ")
 
 # loop menu for various moderation actions
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) Reset a users password.\n5) Promote a user to server admin.\n6) List all user accounts.\n7) Create multiple user accounts.\n8) Deactivate multiple user accounts.\n9) List rooms in public directory.\n10) Remove a room from the public directory.\n11) Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) Reset a users password.\n5) Promote a user to server admin.\n6) List all user accounts.\n7) Create multiple user accounts.\n8) Deactivate multiple user accounts.\n9) List rooms in public directory.\n10) Remove a room from the public directory.\n\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -256,7 +258,7 @@ while pass_token == False:
 		list_directory_rooms()
 	elif menu_input == "10":
 		remove_room_from_directory()
-	elif menu_input == "11":
+	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True
 	else:
