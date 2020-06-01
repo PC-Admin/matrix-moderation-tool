@@ -60,3 +60,5 @@ A few of the commands will not work unless /_synapse/ is mapped to port 8008. He
 
 ```
 
+You can also run the script locally on your server if you do not wish to map /_synapse/.
+
