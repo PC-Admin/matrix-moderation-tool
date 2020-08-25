@@ -10,32 +10,33 @@
 # https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
 # https://github.com/matrix-org/synapse/blob/master/docs/admin_api/purge_room.md
 # https://github.com/matrix-org/synapse/blob/master/docs/admin_api/purge_remote_media.rst
+# https://github.com/matrix-org/synapse/blob/develop/docs/admin_api/media_admin_api.md#list-all-media-in-a-room
 
 import subprocess
 import csv
 import time
+import os
 
 ###########################################################################
 # These values can be hard coded for easier usage:                        #
-server_url = "example.org"
-access_token = ""
-federation_port = ""
+server_url = "perthchat.org"
+access_token = "MDAxYmxvY2F0aW9uIHBlcnRoY2hhdC5vcmcKMDAxM2lkZW50aWZpZXIga2V5CjAwMTBjaWQgZ2VuID0gMQowMDJhY2lkIHVzZXJfaWQgPSBAUEMtQWRtaW46cGVydGhjaGF0Lm9yZwowMDE2Y2lkIHR5cGUgPSBhY2Nlc3MKMDAyMWNpZCBub25jZSA9IEJMSFZuSzZ6YldyK1JqTG0KMDAyZnNpZ25hdHVyZSAE5gnRVeXN2WZCDT3U9pgH8J-4xefLnO7lj15Ps7YLUwo"
+federation_port = "8448"
 ###########################################################################
 
-def append_username(username):
-	if username[0] == "@":
-		return username
-	elif username[0] != "@":
-		username = "@" + username
-		return username
+def parse_username(username):
+	tail_end = ':' + server_url
+	username = username.replace('@','')
+	username = username.replace(tail_end,'')
+	return username
 
 def deactivate_account(preset_username):
 	if len(preset_username) == 0:
 		username = input("\nPlease enter the username to deactivate: ")
-		username = append_username(username)
+		username = parse_username(username)
 	else:
-		username = append_username(preset_username)
-	command_string = "curl -kX POST -H 'Content-Type: application/json' -d '{\"erase\": true}' https://" + server_url + ":" + str(federation_port) + "/_matrix/client/r0/admin/deactivate/" + username + ":" + server_url + "?access_token=" + access_token
+		username = parse_username(preset_username)
+	command_string = "curl -kX POST -H 'Content-Type: application/json' -d '{\"erase\": true}' https://" + server_url + ":" + str(federation_port) + "/_matrix/client/r0/admin/deactivate/@" + username + ":" + server_url + "?access_token=" + access_token
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
@@ -47,8 +48,8 @@ def deactivate_account(preset_username):
 def reset_password():
 	username = input("\nPlease enter the username for the password reset: ")
 	password = input("Please enter the password to set: ")
-	username = append_username(username)
-	command_string = "curl -kX POST -H 'Content-Type: application/json' -d '{\"new_password\": \"" + password + "\"}' https://" + server_url + ":" + str(federation_port) + "/_matrix/client/r0/admin/reset_password/" + username + ":" + server_url + "?access_token=" + access_token
+	username = parse_username(username)
+	command_string = "curl -kX POST -H 'Content-Type: application/json' -d '{\"new_password\": \"" + password + "\"}' https://" + server_url + ":" + str(federation_port) + "/_matrix/client/r0/admin/reset_password/@" + username + ":" + server_url + "?access_token=" + access_token
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
@@ -61,21 +62,11 @@ def set_user_server_admin():
 	# tried setting 'admin: false' here but it failed and promoted the user instead!
 	print("\nBe aware that you need to set at least 1 user to server admin already by editing the database in order to use this command. See https://github.com/PC-Admin/PC-Admins-Synapse-Moderation-Tool/blob/master/README.md for details on how to do this.")
 	username = input("\nPlease enter the username you want to promote to server admin: ")
-	username = append_username(username)
+	username = parse_username(username)
 	passthrough = 0
 	server_admin_result = "true"
-	#while passthrough == 0:	
-	#	server_admin = input("Do you want to set this user as a server admin? (y/n):")
-	#	if server_admin == "y" or server_admin == "Y" or server_admin == "yes" or server_admin == "Yes":
-	#		server_admin_result = "true"
-	#		passthrough = 1
-	#	elif server_admin == "n" or server_admin == "N" or server_admin == "no" or server_admin == "No":
-	#		server_admin_result = "false"
-	#		passthrough = 1
-	#	else:
-	#		print("Invalid input! Try again.\n")
 	
-	command_string = "curl -kX PUT -H 'Content-Type: application/json' -d '{\"admin\": \"" + server_admin_result + "\"}' https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v2/users/" + username + ":" + server_url + "?access_token=" + access_token
+	command_string = "curl -kX PUT -H 'Content-Type: application/json' -d '{\"admin\": \"" + server_admin_result + "\"}' https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v2/users/@" + username + ":" + server_url + "?access_token=" + access_token
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
@@ -86,8 +77,8 @@ def set_user_server_admin():
 
 def query_account():
 	username = input("\nPlease enter the username you wish to query: ")
-	username = append_username(username)
-	command_string = "curl -kXGET https://" + server_url + ":" + str(federation_port) + "/_matrix/client/r0/admin/whois/" + username + ":" + server_url + "?access_token=" + access_token
+	username = parse_username(username)
+	command_string = "curl -kXGET https://" + server_url + ":" + str(federation_port) + "/_matrix/client/r0/admin/whois/@" + username + ":" + server_url + "?access_token=" + access_token
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
@@ -137,14 +128,14 @@ def list_accounts():
 def create_account(preset_username,preset_password):
 	if len(preset_username) == 0 and len(preset_password) == 0:
 		username = input("\nPlease enter the username to create: ")
-		username = append_username(username)
+		username = parse_username(username)
 		user_password = input("Please enter the password for this account: ")
 	elif len(preset_username) > 0 and len(preset_password) > 0:
-		username = append_username(preset_username)
+		username = parse_username(preset_username)
 		user_password = preset_password
 	else:
 		print("\nError with user/pass file data, skipping...\n")
-	command_string = "curl -kX PUT -H 'Content-Type: application/json' -d '{\"password\": \"" + user_password + "\"}' https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v2/users/" + username + ":" + server_url + "?access_token=" + access_token
+	command_string = "curl -kX PUT -H 'Content-Type: application/json' -d '{\"password\": \"" + user_password + "\"}' https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v2/users/@" + username + ":" + server_url + "?access_token=" + access_token
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
@@ -215,6 +206,91 @@ def remove_room_from_directory():
 # Example
 # $ curl -kX PUT -H 'Content-Type: application/json' -d '{"visibility": "private"}' 'https://perthchat.org/_matrix/client/r0/directory/list/room/!DwUPBvNapIVecNllgt:perthchat.org?access_token=ACCESS_TOKEN'
 
+def list_media_in_room():
+	internal_ID = input("\nEnter the internal id of the room you want to get a list of media for (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	command_string = "curl -kX GET https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v1/room/" + internal_ID + "/media?access_token=" + access_token
+	print("\n" + command_string + "\n")
+	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	media_list_output = process.stdout
+	print(media_list_output)
+	print_file_list_choice = input("\n Do you want to write this list to a file? y/n? ")
+
+	if print_file_list_choice == "y" or print_file_list_choice == "Y" or print_file_list_choice == "yes" or print_file_list_choice == "Yes":
+		print_file_list_choice = "true"
+	elif print_file_list_choice == "n" or print_file_list_choice == "N" or print_file_list_choice == "no" or print_file_list_choice == "No":
+		print_file_list_choice = "false"
+	else:
+		print("Input invalid! Defaulting to 'No'.")
+		print_file_list_choice = "false"
+
+	if print_file_list_choice == "true":
+		media_list_filename = open("media_list.txt","w+")
+		media_list_filename.write(media_list_output)
+		media_list_filename.close() 
+
+	download_files_choice = input("\n Do you also want to download a copy of these media files? y/n? ")
+
+	if download_files_choice == "y" or download_files_choice == "Y" or download_files_choice == "yes" or download_files_choice == "Yes":
+		download_files_choice = "true"
+	elif download_files_choice == "n" or download_files_choice == "N" or download_files_choice == "no" or download_files_choice == "No":
+		download_files_choice = "false"
+	else:
+		print("Input invalid! Defaulting to 'No'.")
+		download_files_choice = "false"
+
+	if download_files_choice == "true":
+		media_list_filename = open("media_list.txt", "r")
+		media_list_filename_lines = media_list_filename.readlines()
+		os.mkdir("./media-files")
+		os.chdir("./media-files")
+		count = 0
+		# Strips the newline character 
+		for line in media_list_filename_lines:
+			if "mxc" in line:
+				print(line)
+				cleaned_line = line.replace('        "mxc://','')
+				cleaned_line = cleaned_line.replace('",','')
+				cleaned_line = cleaned_line.replace('"','')
+				cleaned_line = cleaned_line.replace('\n','')
+				print(cleaned_line)
+				download_command = "wget https://" + server_url + "/_matrix/media/r0/download/" + cleaned_line
+				print(download_command)
+				download_process = subprocess.run([download_command], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+		os.chdir("../")
+
+# Example
+# $ curl -kX GET https://perthchat.org/_synapse/admin/v1/room/<room_id>/media?access_token=ACCESS_TOKEN
+
+# To access via web:
+# https://perthchat.org/_matrix/media/r0/download/ + server_name + "/" + media_id
+
+def quarantine_media_in_room():
+	internal_ID = input("\nEnter the internal id of the room you want to quarantine, this makes local and remote data inaccessible (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	command_string = "curl -kX PUT \'https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v1/room/" + internal_ID + "/media/quarantine?access_token=" + access_token
+	print("\n" + command_string + "\n")
+	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	output = process.stdout
+	print(output)
+
+# UNTESTED
+
+# Example
+# $ curl -kX PUT 'https://perthchat.org/_synapse/admin/v1/room/!DwUPBvNapIVecNllgt:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN'
+
+def quarantine_users_media():
+	username = input("\nPlease enter the username of the user who's media you want to quarantine: ")
+	username = parse_username(username)
+	command_string = "curl -kX PUT https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v1/user/@" + username + ":" + server_url + "/media/quarantine?access_token=" + access_token
+	print("\n" + command_string + "\n")
+	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	output = process.stdout
+	print(output)
+
+# UNTESTED
+
+# Example:
+# $ curl -kX PUT https://perthchat.org/_synapse/admin/v1/user/@PC-Admin:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN
+
 
 # check if url is hard coded, if not set it
 
@@ -237,7 +313,7 @@ if len(federation_port) == 0:
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) Reset a users password.\n5) Promote a user to server admin.\n6) List all user accounts.\n7) Create multiple user accounts.\n8) Deactivate multiple user accounts.\n9) List rooms in public directory.\n10) Remove a room from the public directory.\n\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) Reset a users password.\n5) Promote a user to server admin.\n6) List all user accounts.\n7) Create multiple user accounts.\n8) Deactivate multiple user accounts.\n9) List rooms in public directory.\n10) Remove a room from the public directory.\n11) List/Download all media in a room.\n12) Quarantine all media in a room.\n13) Quarantine all media a users uploaded.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -258,6 +334,12 @@ while pass_token == False:
 		list_directory_rooms()
 	elif menu_input == "10":
 		remove_room_from_directory()
+	elif menu_input == "11":
+		list_media_in_room()
+	elif menu_input == "12":
+		quarantine_media_in_room()
+	elif menu_input == "13":
+		quarantine_users_media()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True
