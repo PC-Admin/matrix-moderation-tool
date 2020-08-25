@@ -19,8 +19,8 @@ import os
 
 ###########################################################################
 # These values can be hard coded for easier usage:                        #
-server_url = "perthchat.org"
-access_token = "MDAxYmxvY2F0aW9uIHBlcnRoY2hhdC5vcmcKMDAxM2lkZW50aWZpZXIga2V5CjAwMTBjaWQgZ2VuID0gMQowMDJhY2lkIHVzZXJfaWQgPSBAUEMtQWRtaW46cGVydGhjaGF0Lm9yZwowMDE2Y2lkIHR5cGUgPSBhY2Nlc3MKMDAyMWNpZCBub25jZSA9IEJMSFZuSzZ6YldyK1JqTG0KMDAyZnNpZ25hdHVyZSAE5gnRVeXN2WZCDT3U9pgH8J-4xefLnO7lj15Ps7YLUwo"
+server_url = "example.org"
+access_token = ""
 federation_port = "8448"
 ###########################################################################
 
