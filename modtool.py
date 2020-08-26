@@ -8,9 +8,7 @@
 #
 # To do:
 # https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
-# https://github.com/matrix-org/synapse/blob/master/docs/admin_api/purge_room.md
-# https://github.com/matrix-org/synapse/blob/master/docs/admin_api/purge_remote_media.rst
-# https://github.com/matrix-org/synapse/blob/develop/docs/admin_api/media_admin_api.md#list-all-media-in-a-room
+# Make the menu prettier!
 
 import subprocess
 import csv
@@ -266,30 +264,60 @@ def list_media_in_room():
 
 def quarantine_media_in_room():
 	internal_ID = input("\nEnter the internal id of the room you want to quarantine, this makes local and remote data inaccessible (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
-	command_string = "curl -kX PUT \'https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v1/room/" + internal_ID + "/media/quarantine?access_token=" + access_token
+	command_string = "curl -X POST \'https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v1/room/" + internal_ID + "/media/quarantine?access_token=" + access_token + "\'"
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
 	print(output)
 
-# UNTESTED
-
 # Example
-# $ curl -kX PUT 'https://perthchat.org/_synapse/admin/v1/room/!DwUPBvNapIVecNllgt:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN'
+# $ curl -X POST 'https://perthchat.org/_synapse/admin/v1/room/!DwUPBvNapIVecNllgt:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN'
 
 def quarantine_users_media():
 	username = input("\nPlease enter the username of the user who's media you want to quarantine: ")
 	username = parse_username(username)
-	command_string = "curl -kX PUT https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v1/user/@" + username + ":" + server_url + "/media/quarantine?access_token=" + access_token
+	command_string = "curl -X POST \'https://" + server_url + ":" + str(federation_port) + "/_synapse/admin/v1/user/@" + username + ":" + server_url + "/media/quarantine?access_token=" + access_token + "\'"
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
 	print(output)
 
-# UNTESTED
+# Example:
+# $ curl -X POST https://perthchat.org/_synapse/admin/v1/user/@PC-Admin:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN
+
+def purge_room():
+	internal_ID = input("\nEnter the internal id of the room you want purge (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users: ")
+	new_room_name = input("\nPlease enter the room name of the muted violation room your users will be sent to: ")
+	message = input("\nPlease enter the shutdown message that will be displayed to users: ")
+	purge_choice = input("\n Do you want to purge the room? (This deletes all the room history from your database.) y/n? ")
+	block_choice = input("\n Do you want to block the room? (This prevents your server users re-entering the room.) y/n? ")
+	username = parse_username(user_ID)
+
+	if purge_choice == "y" or purge_choice == "Y" or purge_choice == "yes" or purge_choice == "Yes":
+		purge_choice = "true"
+	elif purge_choice == "n" or purge_choice == "N" or purge_choice == "no" or purge_choice == "No":
+		purge_choice = "false"
+	else:
+		print("Input invalid! exiting.")
+		return
+
+	if block_choice == "y" or block_choice == "Y" or block_choice == "yes" or block_choice == "Yes":
+		block_choice = "true"
+	elif block_choice == "n" or block_choice == "N" or block_choice == "no" or block_choice == "No":
+		block_choice = "false"
+	else:
+		print("Input invalid! exiting.")
+		return
+
+	command_string = "curl -X POST -H 'Content-Type: application/json' -d '{\"new_room_user_id\": \"" + user_ID + "\",\"room_name\": \"" + new_room_name + "\",\"message\": \"" + message + "\",\"block\": " + block_choice + ",\"purge\": " + purge_choice + "}' \'https://" + server_url + "/_synapse/admin/v1/rooms/" + internal_ID + "/delete?access_token=" + access_token + "\'"
+	print("\n" + command_string + "\n")
+	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	output = process.stdout
+	print(output)
 
 # Example:
-# $ curl -kX PUT https://perthchat.org/_synapse/admin/v1/user/@PC-Admin:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN
+# $ curl -X POST -H 'Content-Type: application/json' -d '{"new_room_user_id": "@PC-Admin:perthchat.org","room_name": "VIOLATION ROOM 2","message": "You have been very naughty!","block": true,"purge": true}' 'https://perthchat.org/_synapse/admin/v1/rooms/!mPfaFTrXqUJsgrldwu:perthchat.org/delete?access_token=ACCESS_TOKEN
 
 
 # check if url is hard coded, if not set it
@@ -313,7 +341,7 @@ if len(federation_port) == 0:
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) Reset a users password.\n5) Promote a user to server admin.\n6) List all user accounts.\n7) Create multiple user accounts.\n8) Deactivate multiple user accounts.\n9) List rooms in public directory.\n10) Remove a room from the public directory.\n11) List/Download all media in a room.\n12) Quarantine all media in a room.\n13) Quarantine all media a users uploaded.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) Reset a users password.\n5) Promote a user to server admin.\n6) List all user accounts.\n7) Create multiple user accounts.\n8) Deactivate multiple user accounts.\n9) List rooms in public directory.\n10) Remove a room from the public directory.\n11) List/Download all media in a room.\n12) Quarantine all media in a room.\n13) Quarantine all media a users uploaded.\n14) Purge a room.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -340,8 +368,10 @@ while pass_token == False:
 		quarantine_media_in_room()
 	elif menu_input == "13":
 		quarantine_users_media()
+	elif menu_input == "14":
+		purge_room()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True
 	else:
-		print("\nIncorrect input detected, please select a number from 1 to 11!\n")
+		print("\nIncorrect input detected, please select a number from 1 to 14!\n")
