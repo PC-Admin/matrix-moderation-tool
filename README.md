@@ -9,7 +9,7 @@ Contact me at: @PC-Admin:perthchat.org if you get stuck or have an edit in mind.
 ***
 ## Licensing
 
-This work is licensed under GNU Lesser General Public License v3, for more information on this license see here: https://www.gnu.org/licenses/lgpl-3.0.txt
+This work is licensed under GNU Affero General Public License v3, for more information on this license see here: https://www.gnu.org/licenses/agpl-3.0.txt
 
 ***
 ## Setup script
