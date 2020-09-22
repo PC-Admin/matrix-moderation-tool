@@ -16,7 +16,7 @@ This work is licensed under GNU Affero General Public License v3, for more infor
 
 You can hard code the server URL, federation port and access token for faster use, it will prompt you for these values if you don't.
 
-Your access token can be found in Riot > Settings > Help & About, your user account must first be upgraded to a server admin.
+Your access token can be found in Element > Settings > Help & About, your user account must first be upgraded to a server admin.
 
 ***
 ## Upgrade user to 'server admin'
