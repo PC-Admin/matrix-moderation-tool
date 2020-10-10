@@ -330,6 +330,34 @@ def purge_room():
 # $ curl -X POST -H 'Content-Type: application/json' -d '{"new_room_user_id": "@PC-Admin:perthchat.org","room_name": "VIOLATION ROOM 2","message": "You have been very naughty!","block": true,"purge": true}' 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!mPfaFTrXqUJsgrldwu:perthchat.org/delete?access_token=ACCESS_TOKEN
 
 
+def purge_remote_media_repo():
+	purge_from = input("\nEnter the number of days to purge from: ")
+	purge_too = input("\nEnter the number of days to purge too: ")
+
+	while int(purge_from) >= int(purge_too):
+		epoche_command = "date --date '" + str(purge_from) + " days ago' +%s"
+		print(epoche_command)
+		epoche_time_process  = subprocess.run([epoche_command], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+		print(epoche_time_process.stdout)
+		epoche_time = epoche_time_process.stdout
+		epoche_time_stripped = epoche_time.replace("\n", "")
+		command_string = "curl -X POST --header \"Authorization: Bearer " + access_token + "\" 'https://" + homeserver_url + "/_synapse/admin/v1/purge_media_cache?before_ts=" + epoche_time_stripped + "000'"
+		print(command_string)
+		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+		print(process.stdout)
+		purge_from = int(purge_from) - 1
+		time.sleep(2)
+
+# This loop is quite slow, our server was having disk issues.
+
+print("Done! :)")
+
+# Exmaple:
+# $ date --date '149 days ago' +%s
+# 1589442217
+# $ curl -X POST --header "Authorization: Bearer ACCESS_TOKEN" 'https://matrix.perthchat.org/_synapse/admin/v1/purge_media_cache?before_ts=1589439628000'
+
+
 # check if homeserver url is hard coded, if not set it
 
 if homeserver_url == "matrix.example.org":
@@ -351,7 +379,7 @@ if length_access_token == 0:
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) Reset a users password.\n5) Promote a user to server admin.\n6) List all user accounts.\n7) List room memberships of user.\n8) Create multiple user accounts.\n9) Deactivate multiple user accounts.\n10) List rooms in public directory.\n11) Remove a room from the public directory.\n12) List/Download all media in a room.\n13) Quarantine all media in a room.\n14) Quarantine all media a users uploaded.\n15) Purge a room.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) Reset a users password.\n5) Promote a user to server admin.\n6) List all user accounts.\n7) List room memberships of user.\n8) Create multiple user accounts.\n9) Deactivate multiple user accounts.\n10) Quarantine all media a users uploaded\n#### Room Commands ####\n11) List rooms in public directory.\n12) Remove a room from the public directory.\n13) List/Download all media in a room.\n14) Quarantine all media in a room..\n15) Purge a room.\n#### Server Commands ####\n16) Purge Remote Media Repository up to a certain date.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -371,17 +399,19 @@ while pass_token == False:
 	elif menu_input == "9":
 		deactivate_multiple_accounts()
 	elif menu_input == "10":
-		list_directory_rooms()
-	elif menu_input == "11":
-		remove_room_from_directory()
-	elif menu_input == "12":
-		list_media_in_room()
-	elif menu_input == "13":
-		quarantine_media_in_room()
-	elif menu_input == "14":
 		quarantine_users_media()
+	elif menu_input == "11":
+		list_directory_rooms()
+	elif menu_input == "12":
+		remove_room_from_directory()
+	elif menu_input == "13":
+		list_media_in_room()
+	elif menu_input == "14":
+		quarantine_media_in_room()
 	elif menu_input == "15":
 		purge_room()
+	elif menu_input == "16":
+		purge_remote_media_repo()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True
