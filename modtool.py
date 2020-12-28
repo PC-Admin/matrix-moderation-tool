@@ -34,27 +34,27 @@ def deactivate_account(preset_username):
 		username = parse_username(username)
 	else:
 		username = parse_username(preset_username)
-	command_string = "curl -kX POST -H 'Content-Type: application/json' -d '{\"erase\": true}' https://" + homeserver_url + "/_matrix/client/r0/admin/deactivate/@" + username + ":" + base_url + "?access_token=" + access_token
+	command_string = "curl -X POST -H \"Authorization: Bearer " + access_token + "\" 'https://" + homeserver_url + "/_synapse/admin/v2/deactivate/@" + username + ":" + base_url + "' --data '{\"erase\": true}'"
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
 	print(output)
 
 # Example:
-# $ curl -kX POST -H 'Content-Type: application/json' -d '{"erase": true}' https://matrix.perthchat.org/_matrix/client/r0/admin/deactivate/@billybob:perthchat.org?access_token=ACCESS_TOKEN
+# $ curl -X POST -H "Authorization: Bearer ACCESS_TOKEN" "https://matrix.perthchat.org/_synapse/admin/v1/deactivate/@billybob:perthchat.org" --data '{"erase": true}'
 
 def reset_password():
 	username = input("\nPlease enter the username for the password reset: ")
 	password = input("Please enter the password to set: ")
 	username = parse_username(username)
-	command_string = "curl -kX POST -H 'Content-Type: application/json' -d '{\"new_password\": \"" + password + "\"}' https://" + homeserver_url + "/_matrix/client/r0/admin/reset_password/@" + username + ":" + base_url + "?access_token=" + access_token
+	command_string = "curl -X POST -H 'Content-Type: application/json' -d '{\"new_password\": \"" + password + "\", \"logout_devices\": true}' https://" + homeserver_url + "/_synapse/admin/v1/reset_password/@" + username + ":" + base_url + "?access_token=" + access_token
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
 	print(output)
 
 # Example:
-# $ curl -kX POST -H 'Content-Type: application/json' -d '{"new_password": "dogpoo"}' https://matrix.perthchat.org/_matrix/client/r0/admin/reset_password/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
+# $ curl -X POST -H 'Content-Type: application/json' -d '{"new_password": "dogpoo", "logout_devices": true}' https://matrix.perthchat.org/_synapse/admin/v1/reset_password/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
 
 def set_user_server_admin():
 	# tried setting 'admin: false' here but it failed and promoted the user instead!
@@ -64,7 +64,7 @@ def set_user_server_admin():
 	passthrough = 0
 	server_admin_result = "true"
 	
-	command_string = "curl -kX PUT -H 'Content-Type: application/json' -d '{\"admin\": \"" + server_admin_result + "\"}' https://" + homeserver_url + "/_synapse/admin/v2/users/@" + username + ":" + base_url + "?access_token=" + access_token
+	command_string = "curl -X PUT -H 'Content-Type: application/json' -d '{\"admin\": \"" + server_admin_result + "\"}' https://" + homeserver_url + "/_synapse/admin/v1/users/@" + username + ":" + base_url + "/admin?access_token=" + access_token
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
@@ -73,29 +73,55 @@ def set_user_server_admin():
 # Example:
 # $ curl -kX POST -H 'Content-Type: application/json' -d '{"admin": "true"}' https://matrix.perthchat.org/_synapse/admin/v2/users/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
 
-def query_account():
-	username = input("\nPlease enter the username you wish to query: ")
+def query_account(preset_username):
+	if preset_username == '':
+		username = input("\nPlease enter the username you wish to query: ")
+	elif preset_username != '':
+		username = preset_username
 	username = parse_username(username)
 	command_string = "curl -kXGET https://" + homeserver_url + "/_matrix/client/r0/admin/whois/@" + username + ":" + base_url + "?access_token=" + access_token
-	print("\n" + command_string + "\n")
+	#print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
-	print(output)
+	print(output + "\n")
 
 # Example:
 # $ curl -kXGET https://matrix.perthchat.org/_matrix/client/r0/admin/whois/@PC-Admin:perthchat.org?access_token=ACCESS_TOKEN
 
-def list_joined_rooms():
-	username = input("\nPlease enter the username you wish to query: ")
+def list_joined_rooms(preset_username):
+	if preset_username == '':
+		username = input("\nPlease enter the username you wish to query: ")
+	elif preset_username != '':
+		username = preset_username
 	username = parse_username(username)
 	command_string = "curl -kXGET https://" + homeserver_url + "/_synapse/admin/v1/users/@" + username + ":" + base_url + "/joined_rooms?access_token=" + access_token
-	print("\n" + command_string + "\n")
+	#print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
-	print(output)
+	print(output + "\n")
 
 # Example:
 # $ curl -kXGET https://matrix.perthchat.org/_synapse/admin/v1/users/@PC-Admin:perthchat.org/joined_rooms?access_token=ACCESS_TOKEN
+
+def query_multiple_accounts():
+	print("Query multiple user accounts selected")
+	user_list_location = input("\nPlease enter the path of the file containing a newline seperated list of Matrix usernames: ")
+	with open(user_list_location, newline='') as f:
+		reader = csv.reader(f)
+		data = list(reader)
+		print(len(data))
+	query_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to query all of these users? y/n?\n")
+	if query_confirmation == "y" or query_confirmation == "Y" or query_confirmation == "yes" or query_confirmation == "Yes":  
+		x = 0
+		while x <= (len(data) - 1):
+			print(data[x][0])
+			query_account(data[x][0])
+			list_joined_rooms(data[x][0])
+			x += 1
+			#print(x)
+			time.sleep(1)
+	if query_confirmation == "n" or query_confirmation == "N" or query_confirmation == "no" or query_confirmation == "No":
+		print("\nExiting...\n")
 
 def list_accounts():
 	deactivated_choice = input("Do you want to include deactivated accounts y/n? ")
@@ -156,7 +182,7 @@ def create_account(preset_username,preset_password):
 
 def create_multiple_accounts():
 	print("Create multiple user accounts selected")
-	user_list_location = input("\nPlease enter the path of the file containing a csv list of names: ")
+	user_list_location = input("\nPlease enter the path of the file containing a newline seperated list of Matrix usernames: ")
 	with open(user_list_location, newline='') as f:
 		reader = csv.reader(f)
 		data = list(reader)
@@ -169,7 +195,7 @@ def create_multiple_accounts():
 			create_account(data[x][0],data[x][1])
 			x += 1
 			#print(x)
-			time.sleep(1)
+			time.sleep(10)
 	if create_confirmation == "n" or create_confirmation == "N" or  create_confirmation == "no" or  create_confirmation == "No":
 		print("\nExiting...\n")
 
@@ -184,12 +210,12 @@ def deactivate_multiple_accounts():
 	#print(data[0][0])
 	if delete_confirmation == "y" or delete_confirmation == "Y" or  delete_confirmation == "yes" or  delete_confirmation == "Yes":  
 		x = 0
-		while x <= (len(data[0]) - 1):
+		while x <= (len(data) - 1):
 			#print(data[0][x])
-			deactivate_account(data[0][x])
+			deactivate_account(data[x][0])
 			x += 1
 			#print(x)
-			time.sleep(1)
+			time.sleep(10)
 	if delete_confirmation == "n" or delete_confirmation == "N" or  delete_confirmation == "no" or  delete_confirmation == "No":
 		print("\nExiting...\n")
 
@@ -198,13 +224,18 @@ def list_directory_rooms():
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
+	output = output.replace('\"room_id\":\"','\n')
+	output = output.replace('\",\"name','\n\",\"name')
 	print(output)
 
 # Example
 # $ curl -kXGET https://matrix.perthchat.org/_matrix/client/r0/publicRooms?access_token=ACCESS_TOKEN
 
-def remove_room_from_directory():
-	internal_ID = input("\nEnter the internal id of the room you wish to remove from the directory (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+def remove_room_from_directory(preset_internal_ID):
+	if preset_internal_ID == '':
+		internal_ID = input("\nEnter the internal id of the room you wish to remove from the directory (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	elif preset_internal_ID != '':
+		internal_ID = preset_internal_ID
 	command_string = "curl -kX PUT -H \'Content-Type: application/json\' -d \'{\"visibility\": \"private\"}\' \'https://" + homeserver_url + "/_matrix/client/r0/directory/list/room/" + internal_ID + "?access_token=" + access_token + "\'"
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
@@ -214,14 +245,35 @@ def remove_room_from_directory():
 # Example
 # $ curl -kX PUT -H 'Content-Type: application/json' -d '{"visibility": "private"}' 'https://matrix.perthchat.org/_matrix/client/r0/directory/list/room/!DwUPBvNapIVecNllgt:perthchat.org?access_token=ACCESS_TOKEN'
 
-def list_media_in_room():
-	internal_ID = input("\nEnter the internal id of the room you want to get a list of media for (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+def remove_multiple_rooms_from_directory():
+	print("Remove multiple rooms from directory selected")
+	purge_list_location = input("\nPlease enter the path of the file containing a newline seperated list of room ids: ")
+	with open(purge_list_location, newline='') as f:
+    		reader = csv.reader(f)
+    		data = list(reader)
+	x = 0
+	while x <= (len(data) - 1):
+		print(data[x][0])
+		remove_room_from_directory(data[x][0])
+		x += 1
+		#print(x)
+		time.sleep(1)
+
+def list_and_download_media_in_room(preset_internal_ID,preset_print_file_list_choice,preset_download_files_choice,base_directory):
+	if preset_internal_ID == '':
+		internal_ID = input("\nEnter the internal id of the room you want to get a list of media for (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	elif preset_internal_ID != '':
+		internal_ID = preset_internal_ID
 	command_string = "curl -kXGET https://" + homeserver_url + "/_synapse/admin/v1/room/" + internal_ID + "/media?access_token=" + access_token
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	media_list_output = process.stdout
-	print(media_list_output)
-	print_file_list_choice = input("\n Do you want to write this list to a file? y/n? ")
+	#print("Full media list:\n" + media_list_output)
+
+	if preset_print_file_list_choice == '':
+		print_file_list_choice = input("\n Do you want to write this list to a file? y/n? ")
+	elif preset_print_file_list_choice != '':
+		print_file_list_choice = preset_print_file_list_choice
 
 	if print_file_list_choice == "y" or print_file_list_choice == "Y" or print_file_list_choice == "yes" or print_file_list_choice == "Yes":
 		print_file_list_choice = "true"
@@ -231,12 +283,22 @@ def list_media_in_room():
 		print("Input invalid! Defaulting to 'No'.")
 		print_file_list_choice = "false"
 
-	if print_file_list_choice == "true":
-		media_list_filename = open("media_list.txt","w+")
-		media_list_filename.write(media_list_output)
-		media_list_filename.close() 
+	room_dir = "./" + internal_ID
+	room_dir = room_dir.replace('!', '')
+	room_dir = room_dir.replace(':', '-')
+	os.mkdir(room_dir)
+	os.chdir(room_dir)
 
-	download_files_choice = input("\n Do you also want to download a copy of these media files? y/n? ")
+	if print_file_list_choice == "true":
+		media_list_filename_location = "./media_list.txt"
+		media_list_filename = open(media_list_filename_location,"w+")
+		media_list_filename.write(media_list_output)
+		media_list_filename.close()
+
+	if preset_download_files_choice == '':
+		download_files_choice = input("\n Do you also want to download a copy of these media files? y/n? ")
+	if preset_download_files_choice != '':
+		download_files_choice = preset_download_files_choice
 
 	if download_files_choice == "y" or download_files_choice == "Y" or download_files_choice == "yes" or download_files_choice == "Yes":
 		download_files_choice = "true"
@@ -247,30 +309,52 @@ def list_media_in_room():
 		download_files_choice = "false"
 
 	if download_files_choice == "true":
-		media_list_filename = open("media_list.txt", "r")
-		media_list_filename_lines = media_list_filename.readlines()
+		media_list_output = media_list_output.split('\"')
+		#print("New media list:\n" + str(media_list_output))
 		os.mkdir("./media-files")
 		os.chdir("./media-files")
 		count = 0
 		# Strips the newline character 
-		for line in media_list_filename_lines:
+		for line in media_list_output:
 			if "mxc" in line:
-				print(line)
-				cleaned_line = line.replace('        "mxc://','')
-				cleaned_line = cleaned_line.replace('",','')
-				cleaned_line = cleaned_line.replace('"','')
-				cleaned_line = cleaned_line.replace('\n','')
-				print(cleaned_line)
-				download_command = "wget https://" + homeserver_url + "/_matrix/media/r0/download/" + cleaned_line
+				#print("Line is 1: \n\n" + line + "\n")
+				line = line.replace('mxc://','')
+				download_command = "wget https://" + homeserver_url + "/_matrix/media/r0/download/" + line
 				print(download_command)
 				download_process = subprocess.run([download_command], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-		os.chdir("../")
+		os.chdir(base_directory)
 
 # Example
 # $ curl -kXGET https://matrix.perthchat.org/_synapse/admin/v1/room/<room_id>/media?access_token=ACCESS_TOKEN
 
 # To access via web:
 # https://matrix.perthchat.org/_matrix/media/r0/download/ + server_name + "/" + media_id
+
+def download_media_from_multiple_rooms():
+	print("Download media from multiple rooms selected")
+	download_media_list_location = input("\nPlease enter the path of the file containing a newline seperated list of room ids: ")
+	with open(download_media_list_location, newline='') as f:
+    		reader = csv.reader(f)
+    		data = list(reader)
+	preset_print_file_list_choice = input("\n Do you want to print list files of all the media in these rooms? y/n? ")
+	preset_download_files_choice = input("\n Do you want to download all the media in these rooms? y/n? ")
+
+	os.mkdir("./media_download")
+	os.chdir("./media_download")
+
+	pwd_process = subprocess.run(["pwd"], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	base_directory = pwd_process.stdout
+	base_directory = base_directory.replace('\n','')
+	print(base_directory)
+
+	print("Beginning download of media from all rooms in list...")
+	x = 0
+	while x <= (len(data) - 1):
+		print(data[x][0])
+		list_and_download_media_in_room(data[x][0],preset_print_file_list_choice,preset_download_files_choice,base_directory)
+		x += 1
+		#print(x)
+		time.sleep(1)
 
 def quarantine_media_in_room():
 	internal_ID = input("\nEnter the internal id of the room you want to quarantine, this makes local and remote data inaccessible (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
@@ -295,13 +379,32 @@ def quarantine_users_media():
 # Example:
 # $ curl -X POST https://matrix.perthchat.org/_synapse/admin/v1/user/@PC-Admin:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN
 
-def purge_room():
-	internal_ID = input("\nEnter the internal id of the room you want purge (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
-	user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users: ")
-	new_room_name = input("\nPlease enter the room name of the muted violation room your users will be sent to: ")
-	message = input("\nPlease enter the shutdown message that will be displayed to users: ")
-	purge_choice = input("\n Do you want to purge the room? (This deletes all the room history from your database.) y/n? ")
-	block_choice = input("\n Do you want to block the room? (This prevents your server users re-entering the room.) y/n? ")
+def purge_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_message,preset_purge_choice,preset_block_choice):
+	if preset_internal_ID == '':
+		internal_ID = input("\nEnter the internal id of the room you want purge (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	elif preset_internal_ID != '':
+		internal_ID = preset_internal_ID
+	if preset_user_ID == '':
+		user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users: ")
+	elif preset_user_ID != '':
+		user_ID = preset_user_ID
+	if preset_new_room_name == '':
+		new_room_name = input("\nPlease enter the room name of the muted violation room your users will be sent to: ")
+	elif preset_new_room_name != '':
+		new_room_name = preset_new_room_name
+	if preset_message == '':	
+		message = input("\nPlease enter the shutdown message that will be displayed to users: ")
+	elif preset_message != '':
+		message = preset_message
+	if preset_purge_choice == '':
+		purge_choice = input("\n Do you want to purge the room? (This deletes all the room history from your database.) y/n? ")
+	elif preset_purge_choice != '':
+		purge_choice = preset_purge_choice
+	if preset_block_choice == '':
+		block_choice = input("\n Do you want to block the room? (This prevents your server users re-entering the room.) y/n? ")
+	elif preset_block_choice != '':
+		block_choice = preset_block_choice
+
 	username = parse_username(user_ID)
 
 	if purge_choice == "y" or purge_choice == "Y" or purge_choice == "yes" or purge_choice == "Yes":
@@ -320,7 +423,7 @@ def purge_room():
 		print("Input invalid! exiting.")
 		return
 
-	command_string = "curl -X POST -H 'Content-Type: application/json' -d '{\"new_room_user_id\": \"" + user_ID + "\",\"room_name\": \"" + new_room_name + "\",\"message\": \"" + message + "\",\"block\": " + block_choice + ",\"purge\": " + purge_choice + "}' \'https://" + homeserver_url + "/_synapse/admin/v1/rooms/" + internal_ID + "/delete?access_token=" + access_token + "\'"
+	command_string = "curl -X POST -H 'user-agent: anything' -d '{\"new_room_user_id\": \"@" + username + ":" + base_url + "\",\"room_name\": \"" + new_room_name + "\",\"message\": \"" + message + "\",\"block\": " + block_choice + ",\"purge\": " + purge_choice + "}' \'https://" + homeserver_url + "/_synapse/admin/v1/rooms/" + internal_ID + "/delete?access_token=" + access_token + "\'"
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
@@ -329,6 +432,34 @@ def purge_room():
 # Example:
 # $ curl -X POST -H 'Content-Type: application/json' -d '{"new_room_user_id": "@PC-Admin:perthchat.org","room_name": "VIOLATION ROOM 2","message": "You have been very naughty!","block": true,"purge": true}' 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!mPfaFTrXqUJsgrldwu:perthchat.org/delete?access_token=ACCESS_TOKEN
 
+def purge_multiple_rooms():
+	print("Purge multiple rooms selected")
+	purge_list_location = input("\nPlease enter the path of the file containing a newline seperated list of room ids: ")
+	with open(purge_list_location, newline='') as f:
+    		reader = csv.reader(f)
+    		data = list(reader)
+	preset_user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users: ")
+	preset_new_room_name = input("\nPlease enter the room name of the muted violation room your users will be sent to: ")
+	preset_message = input("\nPlease enter the shutdown message that will be displayed to users: ")
+	preset_purge_choice = input("\n Do you want to purge these rooms? (This deletes all the room history from your database.) y/n? ")
+	preset_block_choice = input("\n Do you want to block these rooms? (This prevents your server users re-entering the room.) y/n? ")
+	purge_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to purge and block these rooms? y/n?\n")
+	#print(len(data[0]))
+	#print(data[0][0])
+	if purge_confirmation == "y" or purge_confirmation == "Y" or  purge_confirmation == "yes" or  purge_confirmation == "Yes":  
+		x = 0
+		while x <= (len(data) - 1):
+			print(data[x][0])
+			purge_room(data[x][0],preset_user_ID,preset_new_room_name,preset_message,preset_purge_choice,preset_block_choice)
+			x += 1
+			#print(x)
+			time.sleep(10)
+
+	if purge_confirmation == "n" or purge_confirmation == "N" or  purge_confirmation == "no" or  purge_confirmation == "No":
+		print("\nExiting...\n")
+
+# Example:
+# $ curl -X POST -H 'Content-Type: application/json' -d '{"new_room_user_id": "@PC-Admin:perthchat.org","room_name": "VIOLATION ROOM 2","message": "You have been very naughty!","block": true,"purge": true}' 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!mPfaFTrXqUJsgrldwu:perthchat.org/delete?access_token=ACCESS_TOKEN
 
 def purge_remote_media_repo():
 	purge_from = input("\nEnter the number of days to purge from: ")
@@ -349,13 +480,51 @@ def purge_remote_media_repo():
 		time.sleep(2)
 
 # This loop is quite slow, our server was having disk issues.
+	print("Done! :)")
 
-print("Done! :)")
-
-# Exmaple:
+# Example:
 # $ date --date '149 days ago' +%s
 # 1589442217
 # $ curl -X POST --header "Authorization: Bearer ACCESS_TOKEN" 'https://matrix.perthchat.org/_synapse/admin/v1/purge_media_cache?before_ts=1589439628000'
+
+def prepare_database_copy_of_multiple_rooms():
+	print("Preparing database copying of events from multiple rooms selected\n")
+	print("This command needs to be run on the target server as root, it will setup postgres commands to download the join-leave events and all-events from a list of rooms.\n\nIt mounts a ramdisk beforehand at /matrix/postgres/data/ramdisk\n\nThis function is only compatible with Spantaleevs Matrix deploy script: https://github.com/spantaleev/matrix-docker-ansible-deploy\n")
+	database_copy_list_location = input("Please enter the path of the file containing a newline seperated list of room ids: ")
+	with open(database_copy_list_location, newline='') as f:
+    		reader = csv.reader(f)
+    		data = list(reader)
+
+	make_ramdisk_command = "mkdir /matrix/postgres/data/ramdisk; mount -t ramfs -o size=512m ramfs /matrix/postgres/data/ramdisk; chown -R matrix:matrix /matrix/postgres/data/ramdisk"
+	make_ramdisk_command_process = subprocess.run([make_ramdisk_command], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	print(make_ramdisk_command_process.stdout)
+
+	x = 0
+	while x <= (len(data) - 1):
+		print(data[x][0])
+		roomid_trimmed = data[x][0]
+		roomid_trimmed = roomid_trimmed.replace('!', '')
+		roomid_trimmed = roomid_trimmed.replace(':', '-')
+		os.mkdir("/matrix/postgres/data/ramdisk/" + roomid_trimmed)
+		touch_command = "touch /matrix/postgres/data/ramdisk/" + roomid_trimmed + "/dump_room_data.sql"
+		touch_command_process  = subprocess.run([touch_command], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+		print(touch_command_process.stdout)
+		sql_file_contents = "\set ROOMID '" + data[x][0] + "'\nCOPY (SELECT * FROM current_state_events JOIN room_memberships ON room_memberships.event_id = current_state_events.event_id WHERE current_state_events.room_id = :'ROOMID') TO '/var/lib/postgresql/data/ramdisk/" + roomid_trimmed + "/user_join-leave.csv' WITH CSV HEADER;\nCOPY (SELECT * FROM event_json WHERE room_id=:'ROOMID') TO '/var/lib/postgresql/data/ramdisk/" + roomid_trimmed + "/room_events.csv' WITH CSV HEADER;"
+		print(sql_file_contents)
+		sql_file_location = "/matrix/postgres/data/ramdisk/" + roomid_trimmed + "/dump_room_data.sql"
+		sql_file = open(sql_file_location,"w+")
+		sql_file.write(sql_file_contents)
+		sql_file.close()
+
+		x += 1
+		#print(x)
+		time.sleep(1)
+
+	chown_command = "chown -R matrix:matrix /matrix/postgres/data/ramdisk; docker restart matrix-postgres"
+	chown_command_process = subprocess.run([chown_command], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	print(chown_command_process.stdout)
+
+	print("\nThe sql query files have been generated, as postgres user in container run:\n# docker exec -it matrix-postgres /bin/bash\nbash-5.0$  export PGPASSWORD=your-db-password\nbash-5.0$ for f in /var/lib/postgresql/data/ramdisk/*/dump_room_data.sql; do psql --host=127.0.0.1 --port=5432 --username=synapse -w -f $f; done\n\nAfter copying the data to a cloud location law enforcement can access, clean up the ramdisk like so:\n# rm -r /matrix/postgres/data/ramdisk/*\n# umount /matrix/postgres/data/ramdisk")
 
 
 # check if homeserver url is hard coded, if not set it
@@ -379,41 +548,51 @@ if length_access_token == 0:
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) Reset a users password.\n5) Promote a user to server admin.\n6) List all user accounts.\n7) List room memberships of user.\n8) Create multiple user accounts.\n9) Deactivate multiple user accounts.\n10) Quarantine all media a users uploaded\n#### Room Commands ####\n11) List rooms in public directory.\n12) Remove a room from the public directory.\n13) List/Download all media in a room.\n14) Quarantine all media in a room..\n15) Purge a room.\n#### Server Commands ####\n16) Purge Remote Media Repository up to a certain date.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded\n#### Room Commands ####\n12) List rooms in public directory.\n13) Remove a room from the public directory.\n14) Remove multiple rooms from the public directory.\n15) List/Download all media in a room.\n16) Download media from multiple rooms.\n17) Quarantine all media in a room.\n18) Purge a room.\n19) Purge multiple rooms.\n#### Server Commands ####\n20) Purge remote media repository up to a certain date.\n21) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
 		create_account('','')
 	elif menu_input == "3":
-		query_account()
+		query_account('')
 	elif menu_input == "4":
-		reset_password()
+		list_joined_rooms('')
 	elif menu_input == "5":
-		set_user_server_admin()
+		query_multiple_accounts()
 	elif menu_input == "6":
-		list_accounts()
+		reset_password()
 	elif menu_input == "7":
-		list_joined_rooms()
+		set_user_server_admin()
 	elif menu_input == "8":
-		create_multiple_accounts()
+		list_accounts()
 	elif menu_input == "9":
-		deactivate_multiple_accounts()
+		create_multiple_accounts()
 	elif menu_input == "10":
-		quarantine_users_media()
+		deactivate_multiple_accounts()
 	elif menu_input == "11":
-		list_directory_rooms()
+		quarantine_users_media()
 	elif menu_input == "12":
-		remove_room_from_directory()
+		list_directory_rooms()
 	elif menu_input == "13":
-		list_media_in_room()
+		remove_room_from_directory('')
 	elif menu_input == "14":
-		quarantine_media_in_room()
+		remove_multiple_rooms_from_directory()
 	elif menu_input == "15":
-		purge_room()
+		list_and_download_media_in_room('','','','./')
 	elif menu_input == "16":
+		download_media_from_multiple_rooms()
+	elif menu_input == "17":
+		quarantine_media_in_room()
+	elif menu_input == "18":
+		purge_room('','','','','','')
+	elif menu_input == "19":
+		purge_multiple_rooms()
+	elif menu_input == "20":
 		purge_remote_media_repo()
+	elif menu_input == "21":
+		prepare_database_copy_of_multiple_rooms()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True
 	else:
-		print("\nIncorrect input detected, please select a number from 1 to 14!\n")
+		print("\nIncorrect input detected, please select a number from 1 to 21!\n")
