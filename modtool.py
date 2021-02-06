@@ -34,7 +34,7 @@ def deactivate_account(preset_username):
 		username = parse_username(username)
 	else:
 		username = parse_username(preset_username)
-	command_string = "curl -X POST -H \"Authorization: Bearer " + access_token + "\" 'https://" + homeserver_url + "/_synapse/admin/v2/deactivate/@" + username + ":" + base_url + "' --data '{\"erase\": true}'"
+	command_string = "curl -X POST -H \"Authorization: Bearer " + access_token + "\" 'https://" + homeserver_url + "/_synapse/admin/v1/deactivate/@" + username + ":" + base_url + "' --data '{\"erase\": true}'"
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
