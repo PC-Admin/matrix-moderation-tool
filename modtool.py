@@ -218,6 +218,20 @@ def deactivate_multiple_accounts():
 			time.sleep(10)
 	if delete_confirmation == "n" or delete_confirmation == "N" or  delete_confirmation == "no" or  delete_confirmation == "No":
 		print("\nExiting...\n")
+		
+def list_room_details(preset_internal_ID):
+	if preset_internal_ID == '':
+		internal_ID = input("\nEnter the internal id of the room you wish to query (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	elif preset_internal_ID != '':
+		internal_ID = preset_internal_ID
+	command_string = "curl -kXGET 'https://" + homeserver_url + "/_synapse/admin/v1/rooms/" + internal_ID + "?access_token=" + access_token + "'"
+	print("\n" + command_string + "\n")
+	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	output = process.stdout
+	print(output)
+
+# Example
+# $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org?access_token=ACCESS_TOKEN'
 
 def list_directory_rooms():
 	command_string = "curl -kXGET https://" + homeserver_url + "/_matrix/client/r0/publicRooms?access_token=" + access_token
@@ -548,7 +562,7 @@ if length_access_token == 0:
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded\n#### Room Commands ####\n12) List rooms in public directory.\n13) Remove a room from the public directory.\n14) Remove multiple rooms from the public directory.\n15) List/Download all media in a room.\n16) Download media from multiple rooms.\n17) Quarantine all media in a room.\n18) Purge a room.\n19) Purge multiple rooms.\n#### Server Commands ####\n20) Purge remote media repository up to a certain date.\n21) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) List rooms in public directory.\n14) Remove a room from the public directory.\n15) Remove multiple rooms from the public directory.\n16) List/Download all media in a room.\n17) Download media from multiple rooms.\n18) Quarantine all media in a room.\n19) Purge a room.\n20) Purge multiple rooms.\n#### Server Commands ####\n21) Purge remote media repository up to a certain date.\n22) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -572,24 +586,26 @@ while pass_token == False:
 	elif menu_input == "11":
 		quarantine_users_media()
 	elif menu_input == "12":
-		list_directory_rooms()
+		list_room_details('')
 	elif menu_input == "13":
-		remove_room_from_directory('')
+		list_directory_rooms()
 	elif menu_input == "14":
-		remove_multiple_rooms_from_directory()
+		remove_room_from_directory('')
 	elif menu_input == "15":
-		list_and_download_media_in_room('','','','./')
+		remove_multiple_rooms_from_directory()
 	elif menu_input == "16":
-		download_media_from_multiple_rooms()
+		list_and_download_media_in_room('','','','./')
 	elif menu_input == "17":
-		quarantine_media_in_room()
+		download_media_from_multiple_rooms()
 	elif menu_input == "18":
-		purge_room('','','','','','')
+		quarantine_media_in_room()
 	elif menu_input == "19":
-		purge_multiple_rooms()
+		purge_room('','','','','','')
 	elif menu_input == "20":
-		purge_remote_media_repo()
+		purge_multiple_rooms()
 	elif menu_input == "21":
+		purge_remote_media_repo()
+	elif menu_input == "22":
 		prepare_database_copy_of_multiple_rooms()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
