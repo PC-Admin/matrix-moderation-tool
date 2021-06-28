@@ -19,9 +19,9 @@ import os
 
 ###########################################################################
 # These values can be hard coded for easier usage:                        #
-homeserver_url = "matrix.perthchat.org"
-base_url = "perthchat.org"
-access_token = "syt_bWljaGFlbA_buBejnFJUvfDjtMLLDkP_3sspLa"
+homeserver_url = "matrix.example.org"
+base_url = "example.org"
+access_token = ""
 ###########################################################################
 
 def parse_username(username):
@@ -86,7 +86,7 @@ def reset_password():
 #def set_user_server_admin():
 	# tried setting 'admin: false' here but it failed and promoted the user instead!
 #	print("\nBe aware that you need to set at least 1 user to server admin already by editing the database in order to use this command. See https://github.com/PC-Admin/PC-Admins-Synapse-Moderation-Tool/blob/master/README.md for details on how to do this.")
-	username = input("\nPlease enter the username you want to promote to server admin: ")
+#	username = input("\nPlease enter the username you want to promote to server admin: ")
 #	username = parse_username(username)
 #	passthrough = 0
 #	server_admin_result = "true"
@@ -282,7 +282,7 @@ def create_multiple_accounts():
 
 def deactivate_multiple_accounts():
 	print("Deactivate multiple user accounts selected")
-	user_list_location = input("\nPlease enter the path of the file containing a csv list of names: ")
+	user_list_location = input("\nPlease enter the path of the file containing a newline seperated list of names: ")
 	with open(user_list_location, newline='') as f:
     		reader = csv.reader(f)
     		data = list(reader)
