@@ -14,6 +14,7 @@ import subprocess
 import csv
 import time
 import os
+import json
 
 ###########################################################################
 # These values can be hard coded for easier usage:                        #
@@ -393,13 +394,13 @@ def quarantine_users_media():
 # Example:
 # $ curl -X POST https://matrix.perthchat.org/_synapse/admin/v1/user/@PC-Admin:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN
 
-def purge_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_message,preset_purge_choice,preset_block_choice):
+def delete_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_message,preset_purge_choice,preset_block_choice):
 	if preset_internal_ID == '':
 		internal_ID = input("\nEnter the internal id of the room you want purge (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
 	elif preset_internal_ID != '':
 		internal_ID = preset_internal_ID
 	if preset_user_ID == '':
-		user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users: ")
+		user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users (Example: michael): ")
 	elif preset_user_ID != '':
 		user_ID = preset_user_ID
 	if preset_new_room_name == '':
@@ -437,34 +438,66 @@ def purge_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_mes
 		print("Input invalid! exiting.")
 		return
 
-	command_string = "curl -X POST -H 'user-agent: anything' -d '{\"new_room_user_id\": \"@" + username + ":" + base_url + "\",\"room_name\": \"" + new_room_name + "\",\"message\": \"" + message + "\",\"block\": " + block_choice + ",\"purge\": " + purge_choice + "}' \'https://" + homeserver_url + "/_synapse/admin/v1/rooms/" + internal_ID + "/delete?access_token=" + access_token + "\'"
-	print("\n" + command_string + "\n")
+	command_string = 'curl -H "Authorization: Bearer ' + access_token + "\" --data '{ \"new_room_user_id\": \"@" + username + ":" + base_url + "\" , \"room_name\": \"" + new_room_name + "\", \"message\": \"" + message + "\", \"block\": " + block_choice + ", \"purge\": " + purge_choice + " }' -X DELETE 'https://" + homeserver_url + "/_synapse/admin/v2/rooms/" + internal_ID + "'"
+	#print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
-	print(output)
+	#print(output)
+
+	status = "null"
+	count = 0
+	sleep_time = 1
+
+	while status != "complete" and count < 8:
+		time.sleep(sleep_time)
+		count = count + 1
+		sleep_time = sleep_time * 2
+		command_string = 'curl -H "Authorization: Bearer ' + access_token + "\" -kX GET 'https://" + homeserver_url + '/_synapse/admin/v2/rooms/' + internal_ID + "/delete_status'"
+		#print("\n" + command_string + "\n")
+		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+		output_json = json.loads(process.stdout)
+		#print(output_json)
+		status = output_json["results"][0]["status"]
+		print("status: " + status)
+		#print("count: " + str(count))
+		if status != "complete":
+			print("Sleeping for " + str(sleep_time) + " seconds...")
+
+	if status == "complete":
+		print(internal_ID + " has been successfully deleted!")
+		if str(output_json["results"][0]["shutdown_room"]["kicked_users"]) != '[]':
+			print("List of kicked users:")
+			for entry in output_json["results"][0]["shutdown_room"]["kicked_users"]:
+				print(entry)
+		print("")
 
 # Example:
-# $ curl -X POST -H 'Content-Type: application/json' -d '{"new_room_user_id": "@PC-Admin:perthchat.org","room_name": "VIOLATION ROOM 2","message": "You have been very naughty!","block": true,"purge": true}' 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!mPfaFTrXqUJsgrldwu:perthchat.org/delete?access_token=ACCESS_TOKEN
+#$ curl -H "Authorization: Bearer ACCESS_TOKEN" --data '{ "new_room_user_id": "@PC-Admin:perthchat.org", "room_name": "VIOLATION ROOM", "message": "YOU HAVE BEEN NAUGHTY!", "block": true, "purge": true }' -X DELETE 'https://matrix.perthchat.org/_synapse/admin/v2/rooms/!yUykDcYIEtrbSxOyPD:perthchat.org'
+# {"delete_id":"efphJOtAxlBNtkGD"}
 
-def purge_multiple_rooms():
-	print("Purge multiple rooms selected")
+# Then check with:
+# $ curl -H "Authorization: Bearer ACCESS_TOKEN" -kX GET 'https://matrix.perthchat.org/_synapse/admin/v2/rooms/!yUykDcYIEtrbSxOyPD:perthchat.org/delete_status'
+# {"results":[{"delete_id":"yRjYjwoTOXOnRQPa","status":"complete","shutdown_room":{"kicked_users":["@michael:perthchat.org"],"failed_to_kick_users":[],"local_aliases":[],"new_room_id":"!AXTUBcSlehQuCidiZu:perthchat.org"}}]}
+
+def delete_multiple_rooms():
+	print("Delete multiple rooms selected")
 	purge_list_location = input("\nPlease enter the path of the file containing a newline seperated list of room ids: ")
 	with open(purge_list_location, newline='') as f:
     		reader = csv.reader(f)
     		data = list(reader)
-	preset_user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users: ")
+	preset_user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users (Example: michael): ")
 	preset_new_room_name = input("\nPlease enter the room name of the muted violation room your users will be sent to: ")
 	preset_message = input("\nPlease enter the shutdown message that will be displayed to users: ")
 	preset_purge_choice = input("\n Do you want to purge these rooms? (This deletes all the room history from your database.) y/n? ")
 	preset_block_choice = input("\n Do you want to block these rooms? (This prevents your server users re-entering the room.) y/n? ")
-	purge_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to purge and block these rooms? y/n?\n")
+	purge_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to purge and block these rooms? y/n? ")
 	#print(len(data[0]))
 	#print(data[0][0])
 	if purge_confirmation == "y" or purge_confirmation == "Y" or  purge_confirmation == "yes" or  purge_confirmation == "Yes":  
 		x = 0
 		while x <= (len(data) - 1):
-			print(data[x][0])
-			purge_room(data[x][0],preset_user_ID,preset_new_room_name,preset_message,preset_purge_choice,preset_block_choice)
+			#print(data[x][0])
+			delete_room(data[x][0],preset_user_ID,preset_new_room_name,preset_message,preset_purge_choice,preset_block_choice)
 			x += 1
 			#print(x)
 			time.sleep(10)
@@ -473,7 +506,7 @@ def purge_multiple_rooms():
 		print("\nExiting...\n")
 
 # Example:
-# $ curl -X POST -H 'Content-Type: application/json' -d '{"new_room_user_id": "@PC-Admin:perthchat.org","room_name": "VIOLATION ROOM 2","message": "You have been very naughty!","block": true,"purge": true}' 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!mPfaFTrXqUJsgrldwu:perthchat.org/delete?access_token=ACCESS_TOKEN
+# See delete_room().
 
 def purge_remote_media_repo():
 	purge_from = input("\nEnter the number of days to purge from: ")
@@ -558,11 +591,12 @@ length_access_token = len(access_token)
 if length_access_token == 0:
 	access_token = input("Please enter access token for server admin account: ")
 
+
 # loop menu for various moderation actions
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) List rooms in public directory.\n14) Remove a room from the public directory.\n15) Remove multiple rooms from the public directory.\n16) List/Download all media in a room.\n17) Download media from multiple rooms.\n18) Quarantine all media in a room.\n19) Purge a room.\n20) Purge multiple rooms.\n#### Server Commands ####\n21) Purge remote media repository up to a certain date.\n22) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) List rooms in public directory.\n14) Remove a room from the public directory.\n15) Remove multiple rooms from the public directory.\n16) List/Download all media in a room.\n17) Download media from multiple rooms.\n18) Quarantine all media in a room.\n19) Delete a room.\n20) Delete multiple rooms.\n#### Server Commands ####\n21) Purge remote media repository up to a certain date.\n22) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -600,9 +634,9 @@ while pass_token == False:
 	elif menu_input == "18":
 		quarantine_media_in_room()
 	elif menu_input == "19":
-		purge_room('','','','','','')
+		delete_room('','','','','','')
 	elif menu_input == "20":
-		purge_multiple_rooms()
+		delete_multiple_rooms()
 	elif menu_input == "21":
 		purge_remote_media_repo()
 	elif menu_input == "22":
