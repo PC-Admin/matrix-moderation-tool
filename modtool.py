@@ -596,6 +596,8 @@ def purge_room_to_timestamp(preset_internal_ID, preset_timestamp):
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
 	print(output)
+	output_json = json.loads(process.stdout)
+	purge_id = output_json["purge_id"]
 
 	status = "null"
 	count = 0
@@ -605,14 +607,14 @@ def purge_room_to_timestamp(preset_internal_ID, preset_timestamp):
 		time.sleep(sleep_time)
 		count = count + 1
 		sleep_time = sleep_time * 2
-		command_string = 'curl -H "Authorization: Bearer ' + access_token + "\" -kX GET 'https://" + homeserver_url + '/_synapse/admin/v1/purge_history_status/' + internal_ID + "'"
-		#print("\n" + command_string + "\n")
+		command_string = 'curl -H "Authorization: Bearer ' + access_token + "\" -kX GET 'https://" + homeserver_url + '/_synapse/admin/v1/purge_history_status/' + purge_id + "'"
+		print("\n" + command_string + "\n")
 		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-		print("\nOutput type: " + str(type(process.stdout)))
-		print("Output value: " + str(process.stdout) + "\n")
+		#print("\nOutput type: " + str(type(process.stdout)))
+		#print("Output value: " + str(process.stdout) + "\n")
 		output_json = json.loads(process.stdout)
 		#print(output_json)
-		status = output_json["results"][0]["status"]
+		status = output_json["status"]
 		print("status: " + status)
 		#print("count: " + str(count))
 		if status != "complete":
@@ -632,7 +634,7 @@ def purge_room_to_timestamp(preset_internal_ID, preset_timestamp):
 
 
 
-def purge_multiple_rooms_to_timestamp()
+def purge_multiple_rooms_to_timestamp():
 	print("Purge the event history of multiple rooms to a specific timestamp selected")
 	purge_list_location = input("\nPlease enter the path of the file containing a newline seperated list of room ids: ")
 	with open(purge_list_location, newline='') as f:
@@ -649,7 +651,6 @@ def purge_multiple_rooms_to_timestamp()
 			purge_room_to_timestamp(data[x][0], preset_timestamp)
 			x += 1
 			#print(x)
-			#time.sleep(2) # deleting a room is quicker then a full shutdown
 
 	if purge_confirmation == "n" or purge_confirmation == "N" or purge_confirmation == "no" or purge_confirmation == "No":
 		print("\nExiting...\n")
@@ -746,7 +747,7 @@ if length_access_token == 0:
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) List rooms in public directory.\n14) Remove a room from the public directory.\n15) Remove multiple rooms from the public directory.\n16) List/Download all media in a room.\n17) Download media from multiple rooms.\n18) Quarantine all media in a room.\n19) Shutdown a room.\n20) Shutdown multiple rooms.\n21) Delete a room.\n22) Delete multiple rooms.\n23) Purge the event history of a room to a specific timestamp.\n24)Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n25) Purge remote media repository up to a certain date.\n26) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) List rooms in public directory.\n14) Remove a room from the public directory.\n15) Remove multiple rooms from the public directory.\n16) List/Download all media in a room.\n17) Download media from multiple rooms.\n18) Quarantine all media in a room.\n19) Shutdown a room.\n20) Shutdown multiple rooms.\n21) Delete a room.\n22) Delete multiple rooms.\n23) Purge the event history of a room to a specific timestamp.\n24) Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n25) Purge remote media repository up to a certain date.\n26) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -792,7 +793,7 @@ while pass_token == False:
 	elif menu_input == "22":
 		delete_multiple_rooms()
 	elif menu_input == "23":
-		purge_room_to_timestamp('')
+		purge_room_to_timestamp('','')
 	elif menu_input == "24":
 		purge_multiple_rooms_to_timestamp()
 	elif menu_input == "25":
