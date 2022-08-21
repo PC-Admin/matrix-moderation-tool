@@ -493,7 +493,7 @@ def shutdown_multiple_rooms():
 	shutdown_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to shutdown these rooms? y/n? ")
 	#print(len(data[0]))
 	#print(data[0][0])
-	if shutdown_confirmation == "y" or shutdown_confirmation == "Y" or  shutdown_confirmation == "yes" or  shutdown_confirmation == "Yes":
+	if shutdown_confirmation == "y" or shutdown_confirmation == "Y" or shutdown_confirmation == "yes" or shutdown_confirmation == "Yes":
 		x = 0
 		while x <= (len(data) - 1):
 			#print(data[x][0])
@@ -506,7 +506,7 @@ def shutdown_multiple_rooms():
 		print("\nExiting...\n")
 
 # Example:
-# See shutdown_room().
+# See shutdown_room()
 
 def delete_room(preset_internal_ID):
 	if preset_internal_ID == '':
@@ -522,7 +522,7 @@ def delete_room(preset_internal_ID):
 
 	status = "null"
 	count = 0
-	sleep_time = 1
+	sleep_time = 0.5
 
 	while status != "complete" and count < 8:
 		time.sleep(sleep_time)
@@ -531,6 +531,8 @@ def delete_room(preset_internal_ID):
 		command_string = 'curl -H "Authorization: Bearer ' + access_token + "\" -kX GET 'https://" + homeserver_url + '/_synapse/admin/v2/rooms/' + internal_ID + "/delete_status'"
 		#print("\n" + command_string + "\n")
 		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+		#print("\nOutput type: " + str(type(process.stdout)))
+		#print("Output value: " + str(process.stdout) + "\n")
 		output_json = json.loads(process.stdout)
 		#print(output_json)
 		status = output_json["results"][0]["status"]
@@ -562,22 +564,99 @@ def delete_multiple_rooms():
 		reader = csv.reader(f)
 		data = list(reader)
 	delete_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to delete these rooms? y/n? ")
-	#print(len(data[0]))
-	#print(data[0][0])
-	if delete_confirmation == "y" or delete_confirmation == "Y" or  delete_confirmation == "yes" or delete_confirmation == "Yes":
+	#print("len(data[0]) - " + str(len(data[0])))
+	#print("data[0][0] - " + data[0][0])
+	if delete_confirmation == "y" or delete_confirmation == "Y" or delete_confirmation == "yes" or delete_confirmation == "Yes":
 		x = 0
 		while x <= (len(data) - 1):
-			#print(data[x][0])
+			print("data[x][0] - " + data[x][0])
 			delete_room(data[x][0])
 			x += 1
 			#print(x)
-			time.sleep(5) # deleting a room is quicker then a full shutdown
+			#time.sleep(2) # deleting a room is quicker then a full shutdown
 
 	if delete_confirmation == "n" or delete_confirmation == "N" or delete_confirmation == "no" or delete_confirmation == "No":
 		print("\nExiting...\n")
 
 # Example:
-# See delete_room().
+# See delete_room()
+
+def purge_room_to_timestamp(preset_internal_ID, preset_timestamp):
+	if preset_internal_ID == '':
+		internal_ID = input("\nEnter the internal id of the room you want to delete (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	elif preset_internal_ID != '':
+		internal_ID = preset_internal_ID
+	if preset_timestamp == '':
+		timestamp = input("\nEnter the epoche timestamp in microseconds (Example: 1661058683000): ")
+	elif preset_timestamp != '':
+		timestamp = preset_timestamp
+
+	command_string = 'curl --header "Authorization: Bearer ' + access_token + "\" -X POST -H \"Content-Type: application/json\" -d '{ \"delete_local_events\": false, \"purge_up_to_ts\": " + timestamp + " }' 'https://" + homeserver_url + "/_synapse/admin/v1/purge_history/" + internal_ID + "'"
+	print("\n" + command_string + "\n")
+	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	output = process.stdout
+	print(output)
+
+	status = "null"
+	count = 0
+	sleep_time = 0.5
+
+	while status != "complete" and count < 8:
+		time.sleep(sleep_time)
+		count = count + 1
+		sleep_time = sleep_time * 2
+		command_string = 'curl -H "Authorization: Bearer ' + access_token + "\" -kX GET 'https://" + homeserver_url + '/_synapse/admin/v1/purge_history_status/' + internal_ID + "'"
+		#print("\n" + command_string + "\n")
+		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+		print("\nOutput type: " + str(type(process.stdout)))
+		print("Output value: " + str(process.stdout) + "\n")
+		output_json = json.loads(process.stdout)
+		#print(output_json)
+		status = output_json["results"][0]["status"]
+		print("status: " + status)
+		#print("count: " + str(count))
+		if status != "complete":
+			print("Sleeping for " + str(sleep_time) + " seconds...")
+
+	if status == "complete":
+		print(internal_ID + " has successfully had its history purged!")
+		print("")
+
+# Example:
+#$ curl --header "Authorization: Bearer syt_bW..." -X POST -H "Content-Type: application/json" -d '{ "delete_local_events": false, "purge_up_to_ts": 1661058683000 }' 'https://matrix.perthchat.org/_synapse/admin/v1/purge_history/!OnWgVbeuALuOEZowed:perthchat.org'
+#{"purge_id":"rfWgHeCWWyDoOJZn"}
+
+# Then check with:
+#$ curl -H "Authorization: Bearer syt_bW..." -kX GET 'https://matrix.perthchat.org/_synapse/admin/v1/purge_history_status/rfWgHeCWWyDoOJZn'
+#{"status":"complete"}
+
+
+
+def purge_multiple_rooms_to_timestamp()
+	print("Purge the event history of multiple rooms to a specific timestamp selected")
+	purge_list_location = input("\nPlease enter the path of the file containing a newline seperated list of room ids: ")
+	with open(purge_list_location, newline='') as f:
+		reader = csv.reader(f)
+		data = list(reader)
+	preset_timestamp = input("\nPlease enter the epoche timestamp in milliseconds you wish to purge too (for example 1661058683000): ")
+	purge_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to purge the history of these rooms? y/n? ")
+	print("len(data[0]) - " + str(len(data[0])))
+	print("data[0][0] - " + data[0][0])
+	if purge_confirmation == "y" or purge_confirmation == "Y" or purge_confirmation == "yes" or purge_confirmation == "Yes":
+		x = 0
+		while x <= (len(data) - 1):
+			print("data[x][0] - " + data[x][0])
+			purge_room_to_timestamp(data[x][0], preset_timestamp)
+			x += 1
+			#print(x)
+			#time.sleep(2) # deleting a room is quicker then a full shutdown
+
+	if purge_confirmation == "n" or purge_confirmation == "N" or purge_confirmation == "no" or purge_confirmation == "No":
+		print("\nExiting...\n")
+
+# Example:
+# See purge_room_to_timestamp()
+
 
 def purge_remote_media_repo():
 	purge_from = input("\nEnter the number of days to purge from: ")
@@ -667,7 +746,7 @@ if length_access_token == 0:
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) List rooms in public directory.\n14) Remove a room from the public directory.\n15) Remove multiple rooms from the public directory.\n16) List/Download all media in a room.\n17) Download media from multiple rooms.\n18) Quarantine all media in a room.\n19) Shutdown a room.\n20) Shutdown multiple rooms.\n21) Delete a room.\n22) Delete multiple rooms.\n#### Server Commands ####\n23) Purge remote media repository up to a certain date.\n24) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) List rooms in public directory.\n14) Remove a room from the public directory.\n15) Remove multiple rooms from the public directory.\n16) List/Download all media in a room.\n17) Download media from multiple rooms.\n18) Quarantine all media in a room.\n19) Shutdown a room.\n20) Shutdown multiple rooms.\n21) Delete a room.\n22) Delete multiple rooms.\n23) Purge the event history of a room to a specific timestamp.\n24)Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n25) Purge remote media repository up to a certain date.\n26) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -713,8 +792,12 @@ while pass_token == False:
 	elif menu_input == "22":
 		delete_multiple_rooms()
 	elif menu_input == "23":
-		purge_remote_media_repo()
+		purge_room_to_timestamp('')
 	elif menu_input == "24":
+		purge_multiple_rooms_to_timestamp()
+	elif menu_input == "25":
+		purge_remote_media_repo()
+	elif menu_input == "26":
 		prepare_database_copy_of_multiple_rooms()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
