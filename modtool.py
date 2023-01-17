@@ -345,6 +345,18 @@ def list_and_download_media_in_room(preset_internal_ID,preset_print_file_list_ch
 # To access via web:
 # https://matrix.perthchat.org/_matrix/media/r0/download/ + server_name + "/" + media_id
 
+def redact_room_event():
+	internal_ID = input("\nEnter the internal id of the room the event is in (Example: !rapAelwZkajRyeZIpm:perthchat.org): ")
+	event_ID = input("\nEnter the event id of the event you wish to redact (Example: $lQT7NYYyVvwoVpZWcj7wceYQqeOzsJg1N6aXIecys4s): ")
+	redaction_reason = input("\nEnter the reason you're redacting this content: ")
+	command_string = "curl -X POST --header \"Authorization: Bearer " + access_token + "\" --data-raw '{\"reason\": \"" + redaction_reason + "\"}' 'https://matrix.perthchat.org/_matrix/client/v3/rooms/" + internal_ID + "/redact/" + event_ID + "'"
+	print("\n" + command_string + "\n")
+	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	output = process.stdout
+	print(output)
+# $ curl -X POST --header "Authorization: Bearer syt_..." --data-raw '{"reason": "Indecent material"}' 'https://matrix.perthchat.org/_matrix/client/v3/rooms/!fuYHAYyXqNLDxlKsWP:perthchat.org/redact/$nyjgZguQGadRRy8MdYtIgwbAeFcUAPqOPiaj_E60XZs'
+# {"event_id":"$_m1gFtPg-5DiTyCvGfeveAX2xaA8gAv0BYLpjC8xe64"}
+
 def download_media_from_multiple_rooms():
 	print("Download media from multiple rooms selected")
 	download_media_list_location = input("\nPlease enter the path of the file containing a newline seperated list of room ids: ")
@@ -393,6 +405,9 @@ def quarantine_users_media():
 
 # Example:
 # $ curl -X POST https://matrix.perthchat.org/_synapse/admin/v1/user/@PC-Admin:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN
+
+def remove_users_media():
+	print("null")
 
 def shutdown_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_message,preset_purge_choice,preset_block_choice):
 	if preset_internal_ID == '':
@@ -632,8 +647,6 @@ def purge_room_to_timestamp(preset_internal_ID, preset_timestamp):
 #$ curl -H "Authorization: Bearer syt_bW..." -kX GET 'https://matrix.perthchat.org/_synapse/admin/v1/purge_history_status/rfWgHeCWWyDoOJZn'
 #{"status":"complete"}
 
-
-
 def purge_multiple_rooms_to_timestamp():
 	print("Purge the event history of multiple rooms to a specific timestamp selected")
 	purge_list_location = input("\nPlease enter the path of the file containing a newline seperated list of room ids: ")
@@ -658,6 +671,67 @@ def purge_multiple_rooms_to_timestamp():
 # Example:
 # See purge_room_to_timestamp()
 
+def delete_block_media():
+	# Take media_id from user
+	media_id = input("\nEnter the media_id of the media you would like to delete and block on your server. (Example: For this media https://matrix.perthchat.org/_matrix/media/r0/download/matrix.org/eDmjusOjnHyFPOYGxlrOsULJ the media_id is 'eDmjusOjnHyFPOYGxlrOsULJ'): ")
+	remote_server = input("\nEnter the remote servers URL without the 'https://' (Example: matrix.org): ")
+	# find filesystem_id from database
+	command_collect_filesystem_id = "ssh " + homeserver_url + """ "/matrix/postgres/bin/cli-non-interactive --dbname=synapse -t -c 'SELECT DISTINCT filesystem_id FROM remote_media_cache WHERE media_id = '\\''""" + media_id + """'\\'" | xargs"""
+	print(command_collect_filesystem_id)
+	process_collect_filesystem_id = subprocess.run([command_collect_filesystem_id], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	filesystem_id = process_collect_filesystem_id.stdout
+	print(process_collect_filesystem_id.stdout)
+	# list the target files on disk
+	command_collect_thumbnails = "ssh " + homeserver_url + ' "find /matrix/synapse/storage/media-store/remote_thumbnail/' + remote_server + '/' + filesystem_id[:2] + "/" + filesystem_id[2:4] + "/" + filesystem_id[4:].rstrip() + """ -type f -printf '%p\\n'\""""
+	print(command_collect_thumbnails)
+	process_collect_thumbnails = subprocess.run([command_collect_thumbnails], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	remote_thumbnails_list = process_collect_thumbnails.stdout
+	print(remote_thumbnails_list)
+	command_content_location = "ssh " + homeserver_url + ' "ls /matrix/synapse/storage/media-store/remote_content/' + remote_server + '/' + filesystem_id[:2] + "/" + filesystem_id[2:4] + "/" + filesystem_id[4:].rstrip() + '"'
+	print(command_content_location)
+	process_content_location = subprocess.run([command_content_location], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	remote_content_location = process_content_location.stdout
+	print(remote_content_location)
+	# Zero the target files on disk then chattr +i them
+	for line in remote_thumbnails_list.split('\n'):
+		if line:
+			command_zero_thumbnails = 'ssh ' + homeserver_url + ' "true > ' + line + '"'
+			print(command_zero_thumbnails)
+			process_zero_thumbnails = subprocess.run(command_zero_thumbnails, shell=True)
+			print(process_zero_thumbnails.stdout)
+			command_make_thumbnail_immutable = 'ssh ' + homeserver_url + ' "chattr +i ' + line + '"'
+			print(command_make_thumbnail_immutable)
+			process_make_thumbnail_immutable = subprocess.run(command_make_thumbnail_immutable, shell=True)
+			print(process_make_thumbnail_immutable.stdout)
+	command_zero_media = 'ssh ' + homeserver_url + ' "true > ' + remote_content_location.rstrip() + '"'
+	print(command_zero_media)
+	process_remove_media = subprocess.run(command_zero_media, shell=True)
+	print(process_remove_media.stdout)
+	command_make_content_immutable = 'ssh ' + homeserver_url + ' "chattr +i ' + remote_content_location.rstrip() + '"'
+	print(command_make_content_immutable)
+	process_make_content_immutable = subprocess.run(command_make_content_immutable, shell=True)
+	print(process_make_content_immutable.stdout)
+
+# Example, first use the media_id to find the filesystem_id:
+# $ ssh matrix.perthchat.org "/matrix/postgres/bin/cli-non-interactive --dbname=synapse -t -c 'SELECT DISTINCT filesystem_id FROM remote_media_cache WHERE media_id = '\''eDmjusOjnHyFPOYGxlrOsULJ'\'" | xargs
+# ehckzWWeUkDhhPfNFkcfCFNv
+
+# Then use that filesystem_id to locate the remote file and all it's thumbnails:
+# $ ssh matrix.perthchat.org "find /matrix/synapse/storage/media-store/remote_thumbnail/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv -type f -printf '%p\n'"
+#/matrix/synapse/storage/media-store/remote_thumbnail/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv/32-32-image-jpeg-crop
+#/matrix/synapse/storage/media-store/remote_thumbnail/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv/640-480-image-jpeg-scale
+# ...
+# $ ssh matrix.perthchat.org "ls /matrix/synapse/storage/media-store/remote_content/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv"
+# /matrix/synapse/storage/media-store/remote_content/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv
+
+# Then zero each file and make it immutable:
+# $ ssh matrix.perthchat.org "true > /matrix/synapse/storage/media-store/remote_thumbnail/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv/32-32-image-jpeg-crop"
+# $ ssh matrix.perthchat.org "chattr +i /matrix/synapse/storage/media-store/remote_thumbnail/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv/32-32-image-jpeg-crop"
+# $ ssh matrix.perthchat.org "true > /matrix/synapse/storage/media-store/remote_thumbnail/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv/640-480-image-jpeg-scale"
+# $ ssh matrix.perthchat.org "chattr +i /matrix/synapse/storage/media-store/remote_thumbnail/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv/640-480-image-jpeg-scale"
+# ...
+# $ ssh matrix.perthchat.org "true > /matrix/synapse/storage/media-store/remote_content/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv"
+# $ ssh matrix.perthchat.org "chattr +i /matrix/synapse/storage/media-store/remote_content/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv"
 
 def purge_remote_media_repo():
 	purge_from = input("\nEnter the number of days to purge from: ")
@@ -742,12 +816,11 @@ length_access_token = len(access_token)
 if length_access_token == 0:
 	access_token = input("Please enter access token for server admin account: ")
 
-
 # loop menu for various moderation actions
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) List rooms in public directory.\n14) Remove a room from the public directory.\n15) Remove multiple rooms from the public directory.\n16) List/Download all media in a room.\n17) Download media from multiple rooms.\n18) Quarantine all media in a room.\n19) Shutdown a room.\n20) Shutdown multiple rooms.\n21) Delete a room.\n22) Delete multiple rooms.\n23) Purge the event history of a room to a specific timestamp.\n24) Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n25) Purge remote media repository up to a certain date.\n26) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n12) Delete a users uploaded media.\n#### Room Commands ####\n13) List details of a room.\n14) List rooms in public directory.\n15) Remove a room from the public directory.\n16) Remove multiple rooms from the public directory.\n17) Redact a room event. (Like abusive avatars or display names.) \n18) List/Download all media in a room.\n19) Download media from multiple rooms.\n20) Quarantine all media in a room.\n21) Shutdown a room.\n22) Shutdown multiple rooms.\n23) Delete a room.\n24) Delete multiple rooms.\n25) Purge the event history of a room to a specific timestamp.\n26) Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n27) Delete and block a specific media. (Like an abusive avatar.) \n28) Purge remote media repository up to a certain date.\n29) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -771,34 +844,40 @@ while pass_token == False:
 	elif menu_input == "11":
 		quarantine_users_media()
 	elif menu_input == "12":
-		list_room_details('')
+		remove_users_media()
 	elif menu_input == "13":
-		list_directory_rooms()
+		list_room_details('')
 	elif menu_input == "14":
-		remove_room_from_directory('')
+		list_directory_rooms()
 	elif menu_input == "15":
-		remove_multiple_rooms_from_directory()
+		remove_room_from_directory('')
 	elif menu_input == "16":
-		list_and_download_media_in_room('','','','./')
+		remove_multiple_rooms_from_directory()
 	elif menu_input == "17":
-		download_media_from_multiple_rooms()
+		redact_room_event()
 	elif menu_input == "18":
-		quarantine_media_in_room()
+		list_and_download_media_in_room('','','','./')
 	elif menu_input == "19":
-		shutdown_room('','','','','','')
+		download_media_from_multiple_rooms()
 	elif menu_input == "20":
-		shutdown_multiple_rooms()
+		quarantine_media_in_room()
 	elif menu_input == "21":
-		delete_room('')
+		shutdown_room('','','','','','')
 	elif menu_input == "22":
-		delete_multiple_rooms()
+		shutdown_multiple_rooms()
 	elif menu_input == "23":
-		purge_room_to_timestamp('','')
+		delete_room('')
 	elif menu_input == "24":
-		purge_multiple_rooms_to_timestamp()
+		delete_multiple_rooms()
 	elif menu_input == "25":
-		purge_remote_media_repo()
+		purge_room_to_timestamp('','')
 	elif menu_input == "26":
+		purge_multiple_rooms_to_timestamp()
+	elif menu_input == "27":
+		delete_block_media()
+	elif menu_input == "28":
+		purge_remote_media_repo()
+	elif menu_input == "29":
 		prepare_database_copy_of_multiple_rooms()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
