@@ -234,6 +234,29 @@ def list_room_details(preset_internal_ID):
 # Example
 # $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org?access_token=ACCESS_TOKEN'
 
+def export_room_state(preset_internal_ID):
+    if preset_internal_ID == '':
+        internal_ID = input("\nEnter the internal id of the room with with to export the 'state' of (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+    elif preset_internal_ID != '':
+        internal_ID = preset_internal_ID
+
+    os.chdir(current_directory)
+    room_dir = current_directory + "/state_events"
+    os.makedirs(room_dir, exist_ok=True)
+    os.chdir(room_dir)
+
+    command_string = "curl -kXGET 'https://" + homeserver_url + "/_synapse/admin/v1/rooms/" + internal_ID + "/state?access_token=" + access_token + "' > ./" + internal_ID + "_state.json"
+    print("\n" + command_string + "\n")
+    process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+    output = process.stdout
+    print(output)
+
+# Example
+# $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org/state?access_token=ACCESS_TOKEN'
+
+# See
+# https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#room-state-api
+
 def list_directory_rooms():
 	command_string = "curl -kXGET https://" + homeserver_url + "/_matrix/client/r0/publicRooms?access_token=" + access_token
 	print("\n" + command_string + "\n")
@@ -449,6 +472,10 @@ def shutdown_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_
 	else:
 		print("Input invalid! exiting.")
 		return
+
+    # First export the state events of the room to examine them later or import them to rdlist
+	export_room_state(internal_ID)
+	print ("Exported room state events to file, this data can be useful for profiling a room after you've blocked/purged it: ./state_events" + internal_ID + "_state.json")
 
 	command_string = 'curl -H "Authorization: Bearer ' + access_token + "\" --data '{ \"new_room_user_id\": \"@" + username + ":" + base_url + "\" , \"room_name\": \"" + new_room_name + "\", \"message\": \"" + message + "\", \"block\": " + block_choice + ", \"purge\": " + purge_choice + " }' -X DELETE 'https://" + homeserver_url + "/_synapse/admin/v2/rooms/" + internal_ID + "'"
 	#print("\n" + command_string + "\n")
@@ -813,11 +840,15 @@ length_access_token = len(access_token)
 if length_access_token == 0:
 	access_token = input("Please enter access token for server admin account: ")
 
+# record the current directory location
+
+current_directory = os.getcwd()
+
 # loop menu for various moderation actions
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) List rooms in public directory.\n14) Remove a room from the public directory.\n15) Remove multiple rooms from the public directory.\n16) Redact a room event. (Like abusive avatars or display names.) \n17) List/Download all media in a room.\n18) Download media from multiple rooms.\n19) Quarantine all media in a room.\n20) Shutdown a room.\n21) Shutdown multiple rooms.\n22) Delete a room.\n23) Delete multiple rooms.\n24) Purge the event history of a room to a specific timestamp.\n25) Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n26) Delete and block a specific media. (Like an abusive avatar.) \n27) Purge remote media repository up to a certain date.\n28) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) Export the state events of a target room.\n14) List rooms in public directory.\n15) Remove a room from the public directory.\n16) Remove multiple rooms from the public directory.\n17) Redact a room event. (Like abusive avatars or display names.) \n18) List/Download all media in a room.\n19) Download media from multiple rooms.\n20) Quarantine all media in a room.\n21) Shutdown a room.\n22) Shutdown multiple rooms.\n23) Delete a room.\n24) Delete multiple rooms.\n25) Purge the event history of a room to a specific timestamp.\n26) Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n27) Delete and block a specific media. (Like an abusive avatar.) \n28) Purge remote media repository up to a certain date.\n29) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -843,39 +874,42 @@ while pass_token == False:
 	elif menu_input == "12":
 		list_room_details('')
 	elif menu_input == "13":
-		list_directory_rooms()
+		export_room_state('')
 	elif menu_input == "14":
-		remove_room_from_directory('')
+		list_directory_rooms()
 	elif menu_input == "15":
-		remove_multiple_rooms_from_directory()
+		remove_room_from_directory('')
 	elif menu_input == "16":
-		redact_room_event()
+		remove_multiple_rooms_from_directory()
 	elif menu_input == "17":
-		list_and_download_media_in_room('','','','./')
+		redact_room_event()
 	elif menu_input == "18":
-		download_media_from_multiple_rooms()
+		list_and_download_media_in_room('','','','./')
 	elif menu_input == "19":
-		quarantine_media_in_room()
+		download_media_from_multiple_rooms()
 	elif menu_input == "20":
-		shutdown_room('','','','','','')
+		quarantine_media_in_room()
 	elif menu_input == "21":
-		shutdown_multiple_rooms()
+		shutdown_room('','','','','','')
 	elif menu_input == "22":
-		delete_room('')
+		shutdown_multiple_rooms()
 	elif menu_input == "23":
-		delete_multiple_rooms()
+		delete_room('')
 	elif menu_input == "24":
-		purge_room_to_timestamp('','')
+		delete_multiple_rooms()
 	elif menu_input == "25":
-		purge_multiple_rooms_to_timestamp()
+		purge_room_to_timestamp('','')
 	elif menu_input == "26":
-		delete_block_media()
+		purge_multiple_rooms_to_timestamp()
 	elif menu_input == "27":
-		purge_remote_media_repo()
+		delete_block_media()
 	elif menu_input == "28":
+		purge_remote_media_repo()
+	elif menu_input == "29":
 		prepare_database_copy_of_multiple_rooms()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True
 	else:
 		print("\nIncorrect input detected, please select a number from 1 to 28!\n")
+
