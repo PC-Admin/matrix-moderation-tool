@@ -539,22 +539,27 @@ def shutdown_multiple_rooms():
 	preset_purge_choice = input("\n Do you want to purge these rooms? (This deletes all the room history from your database.) y/n? ")
 	preset_block_choice = input("\n Do you want to block these rooms? (This prevents your server users re-entering the room.) y/n? ")
 	# Get the directory of the current script
-	script_dir = os.path.dirname(os.path.realpath(__file__))	
+	script_dir = os.path.dirname(os.path.realpath(__file__))
+	room_list_data = []	
 	for file in file_list:
+		print("Processing file: " + file)
 		# Change the current working directory
 		os.chdir(script_dir)
 		with open(file, newline='') as f:
 			reader = csv.reader(f)
 			data = list(reader)
-		shutdown_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to shutdown these rooms? y/n? ")
-		if shutdown_confirmation.lower() in ["y", "yes"]:
-			for room_id in data:
-				shutdown_room(room_id[0], preset_user_ID, preset_new_room_name, preset_message, preset_purge_choice, preset_block_choice)
-				time.sleep(10)
-		elif shutdown_confirmation.lower() in ["n", "no"]:
-			print("\nSkipping this file...\n")
-		else:
-			print("\nInvalid input, skipping this file...\n")
+			room_list_data = room_list_data + data
+	# Deduplicate the room_list_data
+	room_list_data = [list(item) for item in set(tuple(row) for row in room_list_data)]
+	shutdown_confirmation = input("\n" + str(room_list_data) + "\n\nNumber of rooms being shutdown: " + str(len(room_list_data)) + "\n\nAre you sure you want to shutdown these rooms? y/n? ")
+	if shutdown_confirmation.lower() in ["y", "yes"]:
+		for room_id in room_list_data:
+			shutdown_room(room_id[0], preset_user_ID, preset_new_room_name, preset_message, preset_purge_choice, preset_block_choice)
+			time.sleep(10)
+	elif shutdown_confirmation.lower() in ["n", "no"]:
+		print("\nSkipping these files...\n")
+	else:
+		print("\nInvalid input, skipping these files...\n")
 
 # Example:
 # See shutdown_room()
