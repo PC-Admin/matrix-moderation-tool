@@ -520,29 +520,41 @@ def shutdown_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_
 
 def shutdown_multiple_rooms():
 	print("Shutdown multiple rooms selected")
-	purge_list_location = input("\nPlease enter the path of the file containing a newline seperated list of room ids: ")
-	with open(purge_list_location, newline='') as f:
-    		reader = csv.reader(f)
-    		data = list(reader)
+	purge_list_location = input("\nPlease enter the path of the file or directory containing a newline seperated list of room ids: ")
+	file_list = []
+	# check if the input path is a directory or a file
+	if os.path.isdir(purge_list_location):
+		# iterate over all files in the directory
+		for filename in os.listdir(purge_list_location):
+			# construct full file path
+			file_path = os.path.join(purge_list_location, filename)
+			# add it to the list
+			file_list.append(file_path)
+	else:
+		# it's a single file
+		file_list.append(purge_list_location)
 	preset_user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users (Example: michael): ")
 	preset_new_room_name = input("\nPlease enter the room name of the muted violation room your users will be sent to: ")
 	preset_message = input("\nPlease enter the shutdown message that will be displayed to users: ")
 	preset_purge_choice = input("\n Do you want to purge these rooms? (This deletes all the room history from your database.) y/n? ")
 	preset_block_choice = input("\n Do you want to block these rooms? (This prevents your server users re-entering the room.) y/n? ")
-	shutdown_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to shutdown these rooms? y/n? ")
-	#print(len(data[0]))
-	#print(data[0][0])
-	if shutdown_confirmation == "y" or shutdown_confirmation == "Y" or shutdown_confirmation == "yes" or shutdown_confirmation == "Yes":
-		x = 0
-		while x <= (len(data) - 1):
-			#print(data[x][0])
-			shutdown_room(data[x][0],preset_user_ID,preset_new_room_name,preset_message,preset_purge_choice,preset_block_choice)
-			x += 1
-			#print(x)
-			time.sleep(10)
-
-	if shutdown_confirmation == "n" or shutdown_confirmation == "N" or  shutdown_confirmation == "no" or  shutdown_confirmation == "No":
-		print("\nExiting...\n")
+	# Get the directory of the current script
+	script_dir = os.path.dirname(os.path.realpath(__file__))	
+	for file in file_list:
+		# Change the current working directory
+		os.chdir(script_dir)
+		with open(file, newline='') as f:
+			reader = csv.reader(f)
+			data = list(reader)
+		shutdown_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to shutdown these rooms? y/n? ")
+		if shutdown_confirmation.lower() in ["y", "yes"]:
+			for room_id in data:
+				shutdown_room(room_id[0], preset_user_ID, preset_new_room_name, preset_message, preset_purge_choice, preset_block_choice)
+				time.sleep(10)
+		elif shutdown_confirmation.lower() in ["n", "no"]:
+			print("\nSkipping this file...\n")
+		else:
+			print("\nInvalid input, skipping this file...\n")
 
 # Example:
 # See shutdown_room()
