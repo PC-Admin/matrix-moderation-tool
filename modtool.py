@@ -15,6 +15,7 @@ import csv
 import time
 import os
 import json
+import re
 
 ###########################################################################
 # These values can be hard coded for easier usage:                        #
@@ -204,8 +205,8 @@ def deactivate_multiple_accounts():
 	print("Deactivate multiple user accounts selected")
 	user_list_location = input("\nPlease enter the path of the file containing a csv list of names: ")
 	with open(user_list_location, newline='') as f:
-    		reader = csv.reader(f)
-    		data = list(reader)
+			reader = csv.reader(f)
+			data = list(reader)
 	delete_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to deactivate these users? y/n?\n")
 	#print(len(data[0]))
 	#print(data[0][0])
@@ -235,21 +236,22 @@ def list_room_details(preset_internal_ID):
 # $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org?access_token=ACCESS_TOKEN'
 
 def export_room_state(preset_internal_ID):
-    if preset_internal_ID == '':
-        internal_ID = input("\nEnter the internal id of the room with with to export the 'state' of (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
-    elif preset_internal_ID != '':
-        internal_ID = preset_internal_ID
+	if preset_internal_ID == '':
+		internal_ID = input("\nEnter the internal id of the room with with to export the 'state' of (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	elif preset_internal_ID != '':
+		internal_ID = preset_internal_ID
 
-    os.chdir(current_directory)
-    room_dir = current_directory + "/state_events"
-    os.makedirs(room_dir, exist_ok=True)
-    os.chdir(room_dir)
+	os.chdir(current_directory)
+	room_dir = current_directory + "/state_events"
+	os.makedirs(room_dir, exist_ok=True)
+	os.chdir(room_dir)
 
-    command_string = "curl -kXGET 'https://" + homeserver_url + "/_synapse/admin/v1/rooms/" + internal_ID + "/state?access_token=" + access_token + "' > ./" + internal_ID + "_state.json"
-    print("\n" + command_string + "\n")
-    process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-    output = process.stdout
-    print(output)
+	unix_time = int(time.time())
+	command_string = "curl -kXGET 'https://" + homeserver_url + "/_synapse/admin/v1/rooms/" + internal_ID + "/state?access_token=" + access_token + "' > ./" + internal_ID + "_state_" + str(unix_time) + ".json"
+	print("\n" + command_string + "\n")
+	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	output = process.stdout
+	print(output)
 
 # Example
 # $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org/state?access_token=ACCESS_TOKEN'
@@ -287,8 +289,8 @@ def remove_multiple_rooms_from_directory():
 	print("Remove multiple rooms from directory selected")
 	purge_list_location = input("\nPlease enter the path of the file containing a newline seperated list of room ids: ")
 	with open(purge_list_location, newline='') as f:
-    		reader = csv.reader(f)
-    		data = list(reader)
+			reader = csv.reader(f)
+			data = list(reader)
 	x = 0
 	while x <= (len(data) - 1):
 		print(data[x][0])
@@ -384,8 +386,8 @@ def download_media_from_multiple_rooms():
 	print("Download media from multiple rooms selected")
 	download_media_list_location = input("\nPlease enter the path of the file containing a newline seperated list of room ids: ")
 	with open(download_media_list_location, newline='') as f:
-    		reader = csv.reader(f)
-    		data = list(reader)
+			reader = csv.reader(f)
+			data = list(reader)
 	preset_print_file_list_choice = input("\n Do you want to print list files of all the media in these rooms? y/n? ")
 	preset_download_files_choice = input("\n Do you want to download all the media in these rooms? y/n? ")
 
@@ -447,11 +449,11 @@ def shutdown_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_
 	elif preset_message != '':
 		message = preset_message
 	if preset_purge_choice == '':
-		purge_choice = input("\n Do you want to purge the room? (This deletes all the room history from your database.) y/n? ")
+		purge_choice = input("\nDo you want to purge the room? (This deletes all the room history from your database.) y/n? ")
 	elif preset_purge_choice != '':
 		purge_choice = preset_purge_choice
 	if preset_block_choice == '':
-		block_choice = input("\n Do you want to block the room? (This prevents your server users re-entering the room.) y/n? ")
+		block_choice = input("\nDo you want to block the room? (This prevents your server users re-entering the room.) y/n? ")
 	elif preset_block_choice != '':
 		block_choice = preset_block_choice
 
@@ -805,8 +807,8 @@ def prepare_database_copy_of_multiple_rooms():
 	print("This command needs to be run on the target server as root, it will setup postgres commands to download the join-leave events and all-events from a list of rooms.\n\nIt mounts a ramdisk beforehand at /matrix/postgres/data/ramdisk\n\nThis function is only compatible with Spantaleevs Matrix deploy script: https://github.com/spantaleev/matrix-docker-ansible-deploy\n")
 	database_copy_list_location = input("Please enter the path of the file containing a newline seperated list of room ids: ")
 	with open(database_copy_list_location, newline='') as f:
-    		reader = csv.reader(f)
-    		data = list(reader)
+			reader = csv.reader(f)
+			data = list(reader)
 
 	make_ramdisk_command = "mkdir /matrix/postgres/data/ramdisk; mount -t ramfs -o size=512m ramfs /matrix/postgres/data/ramdisk; chown -R matrix:matrix /matrix/postgres/data/ramdisk"
 	make_ramdisk_command_process = subprocess.run([make_ramdisk_command], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
@@ -839,6 +841,77 @@ def prepare_database_copy_of_multiple_rooms():
 
 	print("\nThe sql query files have been generated, as postgres user in container run:\n# docker exec -it matrix-postgres /bin/bash\nbash-5.0$  export PGPASSWORD=your-db-password\nbash-5.0$ for f in /var/lib/postgresql/data/ramdisk/*/dump_room_data.sql; do psql --host=127.0.0.1 --port=5432 --username=synapse -w -f $f; done\n\nAfter copying the data to a cloud location law enforcement can access, clean up the ramdisk like so:\n# rm -r /matrix/postgres/data/ramdisk/*\n# umount /matrix/postgres/data/ramdisk")
 
+def sync_rdlist():
+	rdlist_dir = "./rdlist"
+	os.makedirs(rdlist_dir, exist_ok=True)
+	# Check if the rdlist repo has already been cloned
+	if os.path.isdir("./rdlist/.git"):
+		print("rdlist repo already cloned...")
+		pull_confirmation = input("\nDo you want to pull the latest changes? y/n? ")
+		if pull_confirmation.lower() in ['y', 'yes', 'Y', 'Yes']:
+			os.chdir("./rdlist/")
+			command_string = "git pull"
+			process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+			os.chdir("..")
+			print(process.stdout)
+		else:
+			print("Skipping git pull...")
+	else:
+		print("Cloning rdlist repo...")
+		command_string = "git clone https://code.glowers.club/loj/rdlist.git"
+		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+		print(process.stdout)
+
+def block_all_rooms_with_rdlist_tags():
+	# Git clone the rdlist repo to ./rdlist/
+	sync_rdlist()
+	# After the git repo has been cloned/pulled, open the file and read it into a string
+	with open(os.path.join("rdlist", "lib", "docs", "tags.md"), 'r') as file:
+		data = file.readlines()
+	# Print ./rdlist/lib/docs/tags.md README file for the user
+	print("\nPrinting details about the current tags in rdlist:\n")
+	for line in data:
+		print(line, end='')  # Print the contents of the file
+	# Take input from the user and convert it to a list
+	print("\nPlease enter a space seperated list of tags you wish to block:\n")
+	blocked_tags = input().split()
+	print('')
+	# Load the summaries JSON file
+	summaries_path = os.path.join("rdlist", "dist", "summaries.json")
+	with open(summaries_path, 'r') as file:
+		data = json.load(file)
+	# Create an empty list to store all the room_ids
+	all_room_ids = []
+	# Iterate over blocked_tags
+	for tag in blocked_tags:
+		# Filter the data to keep only the entries where the tag appears in the "tags" list
+		filtered_data = [item for item in data if 'report_info' in item and 'tags' in item['report_info'] and tag in item['report_info']['tags']]
+		# Extract the room_ids
+		room_ids = [item['room']['room_id'] for item in filtered_data if 'room' in item and 'room_id' in item['room']]
+		# Add the room_ids to the list of all room_ids
+		all_room_ids.extend(room_ids)
+		# Print the tag and corresponding room_ids
+		print(f"Tag: {tag}\nRoom IDs: {room_ids}\n")
+	# Deduplicate the list of all room_ids
+	all_room_ids = list(set(all_room_ids))
+	# Ask the user if they wish to block and purge all these rooms, then collect shutdown parameters
+	block_purge_confirmation = input("\nDo you want to block/purge all these rooms? y/n? ")
+	if block_purge_confirmation.lower() in ['y', 'yes', 'Y', 'Yes']:
+		preset_user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users (Example: michael): ")
+		preset_new_room_name = input("\nPlease enter the room name of the muted violation room your users will be sent to: ")
+		preset_message = input("\nPlease enter the shutdown message that will be displayed to users: ")
+		preset_purge_choice = input("\nDo you want to purge these rooms? (This deletes all the room history from your database.) y/n? ")
+		preset_block_choice = input("\nDo you want to block these rooms? (This prevents your server users re-entering the room.) y/n? ")
+		# Ask the user if they wish to block and purge all these rooms
+		shutdown_confirmation = input("\nNumber of rooms being shutdown: " + str(len(all_room_ids)) + "\n\nAre you sure you want to shutdown these rooms? y/n? ")
+		if shutdown_confirmation.lower() in ['y', 'yes', 'Y', 'Yes']:
+			for room_id in all_room_ids:
+				shutdown_room(room_id, preset_user_ID, preset_new_room_name, preset_message, preset_purge_choice, preset_block_choice)
+				time.sleep(10)
+		elif shutdown_confirmation.lower() in ['n', 'no', 'N', 'No']:
+			print("\nSkipping these files...\n")
+		else:
+			print("\nInvalid input, skipping these files...\n")
 
 # check if homeserver url is hard coded, if not set it
 
@@ -865,7 +938,7 @@ current_directory = os.getcwd()
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) Export the state events of a target room.\n14) List rooms in public directory.\n15) Remove a room from the public directory.\n16) Remove multiple rooms from the public directory.\n17) Redact a room event. (Like abusive avatars or display names.) \n18) List/Download all media in a room.\n19) Download media from multiple rooms.\n20) Quarantine all media in a room.\n21) Shutdown a room.\n22) Shutdown multiple rooms.\n23) Delete a room.\n24) Delete multiple rooms.\n25) Purge the event history of a room to a specific timestamp.\n26) Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n27) Delete and block a specific media. (Like an abusive avatar.) \n28) Purge remote media repository up to a certain date.\n29) Prepare database for copying events of multiple rooms.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) Export the state events of a target room.\n14) List rooms in public directory.\n15) Remove a room from the public directory.\n16) Remove multiple rooms from the public directory.\n17) Redact a room event. (Like abusive avatars or display names.) \n18) List/Download all media in a room.\n19) Download media from multiple rooms.\n20) Quarantine all media in a room.\n21) Shutdown a room.\n22) Shutdown multiple rooms.\n23) Delete a room.\n24) Delete multiple rooms.\n25) Purge the event history of a room to a specific timestamp.\n26) Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n27) Delete and block a specific media. (Like an abusive avatar.) \n28) Purge remote media repository up to a certain date.\n29) Prepare database for copying events of multiple rooms.\n#### rdlist ####\n30) Block all rooms with specific rdlist tags.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
@@ -924,9 +997,11 @@ while pass_token == False:
 		purge_remote_media_repo()
 	elif menu_input == "29":
 		prepare_database_copy_of_multiple_rooms()
+	elif menu_input == "30":
+		block_all_rooms_with_rdlist_tags()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True
 	else:
-		print("\nIncorrect input detected, please select a number from 1 to 28!\n")
+		print("\nIncorrect input detected, please select a number from 1 to 30!\n")
 
