@@ -144,7 +144,7 @@ Tag|Description
 
 Please enter a space seperated list of tags you wish to block:
 
-hub_room_links preban degen_misc beastiality degen_porn gore hub_room_trade snuff degen_larp hub_room_sussy bot_spam hub_room_underage cfm 3d_loli jailbait bot_porn toddlercon loli csam tfm anarchy abandoned degen_meet stylized_3d_loli
+hub_room_links preban degen_misc beastiality degen_porn gore hub_room_trade snuff degen_larp hub_room_sussy bot_spam cfm 3d_loli jailbait bot_porn toddlercon loli csam tfm anarchy abandoned degen_meet stylized_3d_loli
 
 Tag: csam
 Room IDs: [***REDACTED***]
