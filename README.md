@@ -69,9 +69,9 @@ You can also run the script locally on your server if you do not wish to map /_s
 
 This script can automatically load and block/purge abusive rooms from rdlist, making it **very easy** for inexperienced administrators to block this harmful content.
 
-To get started, reach out to [@jon:glowers.club](https://matrix.to/#/@jon:glowers.club) and ask for permission to access this repository: https://code.glowers.club/loj/rdlist
+To get started, just dm me at [@michael:perthchat.org](https://matrix.to/#/@michael:perthchat.org) and I can invite you to the 'Legion of Janitors' room.
 
-Once you have read access, simply run this moderation script like so:
+Once you have read access to the [rdlist repository](https://code.glowers.club/loj/rdlist), simply run this moderation script like so:
 ```
 $ python3 modtool.py 
 
