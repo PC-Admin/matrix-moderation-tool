@@ -1,5 +1,5 @@
 
-# PC-Admin's Synapse Moderation Tool
+# Matrix Moderation Tool
 
 
 This is a script i wrote to make moderating a Synapse server easier.
