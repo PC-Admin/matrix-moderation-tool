@@ -12,20 +12,24 @@
 # 3) Add reporting functions for users
 # 4) Add reporting functions for rooms
 # 5) Add a function to extract a users email
-# 6) 
+# 6) Do room shutdowns in parallel?
+# 7) Add more automated rdlist function with sane defaults - DONE
 
 import subprocess
 import csv
 import time
 import os
 import json
-import re
+import random
+import string
 
 ###########################################################################
 # These values can be hard coded for easier usage:                        #
 homeserver_url = "matrix.example.org"
 base_url = "example.org"
 access_token = ""
+# rdlist specific
+rdlist_bot_username = "mod_team"
 rdlist_recommended_tags = ['hub_room_links', 'preban', 'degen_misc', 'beastiality', 'degen_porn', 'gore', 'hub_room_trade', 'snuff', 'degen_larp', 'hub_room_sussy', 'bot_spam cfm', '3d_loli', 'jailbait', 'bot_porn', 'toddlercon', 'loli', 'csam', 'tfm', 'abandoned', 'degen_meet', 'stylized_3d_loli']
 ###########################################################################
 
@@ -50,25 +54,33 @@ def deactivate_account(preset_username):
 # Example:
 # $ curl -X POST -H "Authorization: Bearer ACCESS_TOKEN" "https://matrix.perthchat.org/_synapse/admin/v1/deactivate/@billybob:perthchat.org" --data '{"erase": true}'
 
-def reset_password():
-	username = input("\nPlease enter the username for the password reset: ")
-	password = input("Please enter the password to set: ")
+def reset_password(preset_username,preset_password):
+	if len(preset_username) == 0 and len(preset_password) == 0:
+		username = input("\nPlease enter the username for the password reset: ")
+		password = input("Please enter the password to set: ")
+	else:
+		username = parse_username(preset_username)
+		password = preset_password
 	username = parse_username(username)
 	command_string = "curl -X POST -H 'Content-Type: application/json' -d '{\"new_password\": \"" + password + "\", \"logout_devices\": true}' https://" + homeserver_url + "/_synapse/admin/v1/reset_password/@" + username + ":" + base_url + "?access_token=" + access_token
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
 	print(output)
+	return output
 
 # Example:
 # $ curl -X POST -H 'Content-Type: application/json' -d '{"new_password": "dogpoo", "logout_devices": true}' https://matrix.perthchat.org/_synapse/admin/v1/reset_password/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
 
-def set_user_server_admin():
-	# tried setting 'admin: false' here but it failed and promoted the user instead!
-	print("\nBe aware that you need to set at least 1 user to server admin already by editing the database in order to use this command. See https://github.com/PC-Admin/PC-Admins-Synapse-Moderation-Tool/blob/master/README.md for details on how to do this.")
-	username = input("\nPlease enter the username you want to promote to server admin: ")
-	username = parse_username(username)
-	passthrough = 0
+def set_user_server_admin(preset_username):
+	if len(preset_username) == 0:
+		# tried setting 'admin: false' here but it failed and promoted the user instead!
+		print("\nBe aware that you need to set at least 1 user to server admin already by editing the database in order to use this command. See https://github.com/PC-Admin/PC-Admins-Synapse-Moderation-Tool/blob/master/README.md for details on how to do this.")
+		username = input("\nPlease enter the username you want to promote to server admin: ")
+		username = parse_username(username)
+	elif len(preset_username) > 0:
+		username = parse_username(preset_username)
+	#passthrough = 0
 	server_admin_result = "true"
 	
 	command_string = "curl -X PUT -H 'Content-Type: application/json' -d '{\"admin\": \"" + server_admin_result + "\"}' https://" + homeserver_url + "/_synapse/admin/v1/users/@" + username + ":" + base_url + "/admin?access_token=" + access_token
@@ -76,13 +88,14 @@ def set_user_server_admin():
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
 	print(output)
+	return output
 
 # Example:
 # $ curl -kX POST -H 'Content-Type: application/json' -d '{"admin": "true"}' https://matrix.perthchat.org/_synapse/admin/v2/users/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
 
-def query_account(preset_username):
+def whois_account(preset_username):
 	if preset_username == '':
-		username = input("\nPlease enter the username you wish to query: ")
+		username = input("\nPlease enter the username you wish to whois: ")
 	elif preset_username != '':
 		username = preset_username
 	username = parse_username(username)
@@ -91,6 +104,7 @@ def query_account(preset_username):
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
 	print(output + "\n")
+	return(output)
 
 # Example:
 # $ curl -kXGET https://matrix.perthchat.org/_matrix/client/r0/admin/whois/@PC-Admin:perthchat.org?access_token=ACCESS_TOKEN
@@ -110,15 +124,15 @@ def list_joined_rooms(preset_username):
 # Example:
 # $ curl -kXGET https://matrix.perthchat.org/_synapse/admin/v1/users/@PC-Admin:perthchat.org/joined_rooms?access_token=ACCESS_TOKEN
 
-def query_multiple_accounts():
-	print("Query multiple user accounts selected")
+def whois_multiple_accounts():
+	print("Whois multiple user accounts selected")
 	user_list_location = input("\nPlease enter the path of the file containing a newline seperated list of Matrix usernames: ")
 	with open(user_list_location, newline='') as f:
 		reader = csv.reader(f)
 		data = list(reader)
 		print(len(data))
-	query_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to query all of these users? y/n?\n")
-	if query_confirmation == "y" or query_confirmation == "Y" or query_confirmation == "yes" or query_confirmation == "Yes":  
+	whois_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to whois all of these users? y/n?\n")
+	if whois_confirmation == "y" or whois_confirmation == "Y" or whois_confirmation == "yes" or whois_confirmation == "Yes":  
 		x = 0
 		while x <= (len(data) - 1):
 			print(data[x][0])
@@ -127,7 +141,7 @@ def query_multiple_accounts():
 			x += 1
 			#print(x)
 			time.sleep(1)
-	if query_confirmation == "n" or query_confirmation == "N" or query_confirmation == "no" or query_confirmation == "No":
+	if whois_confirmation == "n" or whois_confirmation == "N" or whois_confirmation == "no" or whois_confirmation == "No":
 		print("\nExiting...\n")
 
 def list_accounts():
@@ -168,6 +182,22 @@ def list_accounts():
 # Example:
 # $ curl -kXGET "https://matrix.perthchat.org/_synapse/admin/v2/users?from=0&limit=10&guests=false&access_token=ACCESS_TOKEN"
 
+def query_account(preset_username):
+	if len(preset_username) == 0:
+		username = input("\nPlease enter the username to query: ")
+		username = parse_username(username)
+	elif len(preset_username) > 0:
+		username = parse_username(preset_username)
+	command_string = "curl -kX GET https://" + homeserver_url + "/_synapse/admin/v2/users/@" + username + ":" + base_url + "?access_token=" + access_token
+	print("\n" + command_string + "\n")
+	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
+	output = process.stdout
+	print(output)
+	return output
+
+# Example:
+# $ curl -kX GET https://matrix.perthchat.org/_synapse/admin/v2/users/@billybob:perthchat.org?access_token=ACCESS_TOKEN
+
 def create_account(preset_username,preset_password):
 	if len(preset_username) == 0 and len(preset_password) == 0:
 		username = input("\nPlease enter the username to create: ")
@@ -183,6 +213,7 @@ def create_account(preset_username,preset_password):
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
 	print(output)
+	return output
 
 # Example:
 # $ curl -kX PUT -H 'Content-Type: application/json' -d '{"password": "user_password","admin": false,"deactivated": false}' https://matrix.perthchat.org/_synapse/admin/v2/users/@billybob:perthchat.org?access_token=ACCESS_TOKEN
@@ -847,44 +878,49 @@ def prepare_database_copy_of_multiple_rooms():
 	print("\nThe sql query files have been generated, as postgres user in container run:\n# docker exec -it matrix-postgres /bin/bash\nbash-5.0$  export PGPASSWORD=your-db-password\nbash-5.0$ for f in /var/lib/postgresql/data/ramdisk/*/dump_room_data.sql; do psql --host=127.0.0.1 --port=5432 --username=synapse -w -f $f; done\n\nAfter copying the data to a cloud location law enforcement can access, clean up the ramdisk like so:\n# rm -r /matrix/postgres/data/ramdisk/*\n# umount /matrix/postgres/data/ramdisk")
 
 def sync_rdlist():
-	rdlist_dir = "./rdlist"
-	os.makedirs(rdlist_dir, exist_ok=True)
-	# Check if the rdlist repo has already been cloned
-	if os.path.isdir("./rdlist/.git"):
-		print("rdlist repo already cloned...")
-		pull_confirmation = input("\nDo you want to pull the latest changes? y/n? ")
-		if pull_confirmation.lower() in ['y', 'yes', 'Y', 'Yes']:
-			os.chdir("./rdlist/")
-			command_string = "git pull"
-			process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-			os.chdir("..")
-			print(process.stdout)
-		else:
-			print("Skipping git pull...")
-	else:
-		print("Cloning rdlist repo...")
-		command_string = "git clone https://code.glowers.club/loj/rdlist.git"
-		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-		print(process.stdout)
+    rdlist_dir = "./rdlist"
+    os.makedirs(rdlist_dir, exist_ok=True)
+    # Check if the rdlist repo has already been cloned
+    if os.path.isdir("./rdlist/.git"):
+        print("rdlist repo already cloned...")
+        os.chdir("./rdlist/")
+        # Update git remote references and get status
+        subprocess.run(["git", "remote", "update"], check=True)
+        status = subprocess.run(["git", "status", "-uno"], stdout=subprocess.PIPE, check=True)
+        os.chdir("..")
 
-def block_all_rooms_with_rdlist_tags(rdlist_use_recommended):
+        # If "Your branch is up to date" is not in the status, then there are changes to pull
+        if "Your branch is up to date" not in status.stdout.decode():
+            print("Pulling latest changes from rdlist repo...")
+            os.chdir("./rdlist/")
+            subprocess.run(["git", "pull"], check=True)
+            os.chdir("..")
+        else:
+            print("rdlist repo is up-to-date, no need to pull changes.")
+
+    else:
+        print("Cloning rdlist repo...")
+        subprocess.run(["git", "clone", "ssh://gitea@code.glowers.club:1488/loj/rdlist.git"], check=True)
+
+def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,preset_new_room_name,preset_message,preset_purge_choice,preset_block_choice):
 	# Git clone the rdlist repo to ./rdlist/
 	sync_rdlist()
-	# After the git repo has been cloned/pulled, open the file and read it into a string
-	with open(os.path.join("rdlist", "lib", "docs", "tags.md"), 'r') as file:
-		data = file.readlines()
-	# Print ./rdlist/lib/docs/tags.md README file for the user
-	print("\nPrinting details about the current tags in rdlist:\n")
-	for line in data:
-		print(line, end='')  # Print the contents of the file
 	if rdlist_use_recommended == True:
 		# Take input from the user and convert it to a list
 		blocked_tags = rdlist_recommended_tags
+		print("\nUsing recommended rdlist tags.\n")
 	elif rdlist_use_recommended == False:
+		# After the git repo has been cloned/pulled, open the file and read it into a string
+		with open(os.path.join("rdlist", "lib", "docs", "tags.md"), 'r') as file:
+			data = file.readlines()
+		# Print ./rdlist/lib/docs/tags.md README file for the user
+		print("\nPrinting details about the current tags in rdlist:\n")
+		for line in data:
+			print(line, end='')  # Print the contents of the file
 		# Take input from the user and convert it to a list
 		print("\nPlease enter a space seperated list of tags you wish to block:\n")
 		blocked_tags = input().split()
-	print('')
+		print('')
 	# Load the summaries JSON file
 	summaries_path = os.path.join("rdlist", "dist", "summaries.json")
 	with open(summaries_path, 'r') as file:
@@ -899,32 +935,69 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended):
 		room_ids = [item['room']['room_id'] for item in filtered_data if 'room' in item and 'room_id' in item['room']]
 		# Add the room_ids to the list of all room_ids
 		all_room_ids.extend(room_ids)
-		# Print the tag and corresponding room_ids
-		print(f"Tag: {tag}\nRoom IDs: {room_ids}\n")
+		# If choosing specific tags, print the tag and corresponding room_ids
+		if rdlist_use_recommended == False:
+			# Print the tag and corresponding room_ids
+			print(f"Tag: {tag}\nRoom IDs: {room_ids}\n")
 	# Deduplicate the list of all room_ids
 	all_room_ids = list(set(all_room_ids))
 	# Ask the user if they wish to block and purge all these rooms, then collect shutdown parameters
-	block_purge_confirmation = input("\nDo you want to block/purge all these rooms? y/n? ")
-	if block_purge_confirmation.lower() in ['y', 'yes', 'Y', 'Yes']:
-		preset_user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users (Example: michael): ")
-		preset_new_room_name = input("\nPlease enter the room name of the muted violation room your users will be sent to: ")
-		preset_message = input("\nPlease enter the shutdown message that will be displayed to users: ")
-		preset_purge_choice = input("\nDo you want to purge these rooms? (This deletes all the room history from your database.) y/n? ")
-		preset_block_choice = input("\nDo you want to block these rooms? (This prevents your server users re-entering the room.) y/n? ")
-		# Ask the user if they wish to block and purge all these rooms
-		shutdown_confirmation = input("\nNumber of rooms being shutdown: " + str(len(all_room_ids)) + "\n\nAre you sure you want to shutdown these rooms? y/n? ")
-		if shutdown_confirmation.lower() in ['y', 'yes', 'Y', 'Yes']:
-			for room_id in all_room_ids:
-				shutdown_room(room_id, preset_user_ID, preset_new_room_name, preset_message, preset_purge_choice, preset_block_choice)
-				time.sleep(10)
-		elif shutdown_confirmation.lower() in ['n', 'no', 'N', 'No']:
-			print("\nSkipping these files...\n")
-		else:
-			print("\nInvalid input, skipping these files...\n")
+	if preset_user_ID == '':
+		user_ID = input("\nPlease enter the local username that will create a 'muted violation room' for your users (Example: michael): ")
+	elif preset_user_ID != '':
+		user_ID = preset_user_ID
+	if preset_new_room_name == '':
+		new_room_name = input("\nPlease enter the room name of the muted violation room your users will be sent to: ")
+	elif preset_new_room_name != '':
+		new_room_name = preset_new_room_name
+	if preset_message == '':
+		message = input("\nPlease enter the shutdown message that will be displayed to users: ")
+	elif preset_message != '':
+		message = preset_message
+	if preset_purge_choice == '':
+		purge_choice = input("\nDo you want to purge the room? (This deletes all the room history from your database.) y/n? ")
+	elif preset_purge_choice != '':
+		purge_choice = preset_purge_choice
+	if preset_block_choice == '':
+		block_choice = input("\nDo you want to block the room? (This prevents your server users re-entering the room.) y/n? ")
+	elif preset_block_choice != '':
+		block_choice = preset_block_choice
+	# Ask the user if they wish to block and purge all these rooms
+	shutdown_confirmation = input("\nNumber of rooms being shutdown: " + str(len(all_room_ids)) + "\n\nAre you sure you want to shutdown these rooms? y/n? ")
+	if shutdown_confirmation.lower() in ['y', 'yes', 'Y', 'Yes']:
+		for room_id in all_room_ids:
+			shutdown_room(room_id, user_ID, new_room_name, message, purge_choice, block_choice)
+			time.sleep(5)
+	elif shutdown_confirmation.lower() in ['n', 'no', 'N', 'No']:
+		print("\nSkipping these files...\n")
+	else:
+		print("\nInvalid input, skipping these files...\n")
 
 def block_recommended_rdlist_tags():
+	# Check if user account already exists
+	account_query = query_account(rdlist_bot_username)
+	# Generate random password
+	preset_password = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(20))
+	# If user is not found, create it
+	if 'User not found' in account_query:
+		# Create user account
+		create_account(rdlist_bot_username, preset_password)
+	else:
+		print("Account already exists.")
+		reset_password(rdlist_bot_username, preset_password)
+	# Promote bot user to server admin
+	set_user_server_admin(rdlist_bot_username)
+	# Define default valies for shutdown_room()
+	preset_new_room_name = 'POLICY VIOLATION'
+	preset_message = 'THIS ROOM VIOLATES SERVER POLICIES'
+	preset_purge_choice = 'y'
+	preset_block_choice = 'y'
 	# Block all rooms with recommended tag set
-	block_all_rooms_with_rdlist_tags(True)
+	block_all_rooms_with_rdlist_tags(True, rdlist_bot_username, preset_new_room_name, preset_message, preset_purge_choice, preset_block_choice)
+	# Print user login details
+	print("\nUser login details:\n")
+	print("Username: " + rdlist_bot_username)
+	print("Password: " + preset_password)
 
 # check if homeserver url is hard coded, if not set it
 
@@ -951,17 +1024,17 @@ current_directory = os.getcwd()
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) Export the state events of a target room.\n14) List rooms in public directory.\n15) Remove a room from the public directory.\n16) Remove multiple rooms from the public directory.\n17) Redact a room event. (Like abusive avatars or display names.) \n18) List/Download all media in a room.\n19) Download media from multiple rooms.\n20) Quarantine all media in a room.\n21) Shutdown a room.\n22) Shutdown multiple rooms.\n23) Delete a room.\n24) Delete multiple rooms.\n25) Purge the event history of a room to a specific timestamp.\n26) Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n27) Delete and block a specific media. (Like an abusive avatar.) \n28) Purge remote media repository up to a certain date.\n29) Prepare database for copying events of multiple rooms.\n#### rdlist ####\n30) Block all rooms with specific rdlist tags.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) Export the state events of a target room.\n14) List rooms in public directory.\n15) Remove a room from the public directory.\n16) Remove multiple rooms from the public directory.\n17) Redact a room event. (Like abusive avatars or display names.) \n18) List/Download all media in a room.\n19) Download media from multiple rooms.\n20) Quarantine all media in a room.\n21) Shutdown a room.\n22) Shutdown multiple rooms.\n23) Delete a room.\n24) Delete multiple rooms.\n25) Purge the event history of a room to a specific timestamp.\n26) Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n27) Delete and block a specific media. (Like an abusive avatar.) \n28) Purge remote media repository up to a certain date.\n29) Prepare database for copying events of multiple rooms.\n#### rdlist ####\n30) Block all rooms with specific rdlist tags.\n34) Block all rooms with recommended rdlist tags.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		deactivate_account('')
 	elif menu_input == "2":
 		create_account('','')
 	elif menu_input == "3":
-		query_account('')
+		whois_account('')
 	elif menu_input == "4":
 		list_joined_rooms('')
 	elif menu_input == "5":
-		query_multiple_accounts()
+		whois_multiple_accounts()
 	elif menu_input == "6":
 		reset_password()
 	elif menu_input == "7":
@@ -1011,12 +1084,12 @@ while pass_token == False:
 	elif menu_input == "29":
 		prepare_database_copy_of_multiple_rooms()
 	elif menu_input == "30":
-		block_all_rooms_with_rdlist_tags(False)
+		block_all_rooms_with_rdlist_tags(False,'','','','','')
 	elif menu_input == "34":
 		block_recommended_rdlist_tags()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True
 	else:
-		print("\nIncorrect input detected, please select a number from 1 to 30!\n")
+		print("\nIncorrect input detected, please select a number from 1 to 34!\n")
 
