@@ -2,13 +2,17 @@
 # modtool.py
 # an easy moderation tool for matrix/synapse
 #
-# created by @PC-Admin:perthchat.org
+# created by @michael:perthchat.org
 #
-# This work is licensed under AGPLv3, for more information see: https://www.gnu.org/licenses/agpl-3.0.txt
+# This work is published under the MIT license, for more information on this license see here: https://opensource.org/license/mit/
 #
 # To do:
-# https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
-# Make the menu prettier!
+# 1) Add https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
+# 2) Make the menu prettier!
+# 3) Add reporting functions for users
+# 4) Add reporting functions for rooms
+# 5) Add a function to extract a users email
+# 6) 
 
 import subprocess
 import csv
@@ -22,6 +26,7 @@ import re
 homeserver_url = "matrix.example.org"
 base_url = "example.org"
 access_token = ""
+rdlist_recommended_tags = ['hub_room_links', 'preban', 'degen_misc', 'beastiality', 'degen_porn', 'gore', 'hub_room_trade', 'snuff', 'degen_larp', 'hub_room_sussy', 'bot_spam cfm', '3d_loli', 'jailbait', 'bot_porn', 'toddlercon', 'loli', 'csam', 'tfm', 'abandoned', 'degen_meet', 'stylized_3d_loli']
 ###########################################################################
 
 def parse_username(username):
@@ -862,7 +867,7 @@ def sync_rdlist():
 		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 		print(process.stdout)
 
-def block_all_rooms_with_rdlist_tags():
+def block_all_rooms_with_rdlist_tags(rdlist_use_recommended):
 	# Git clone the rdlist repo to ./rdlist/
 	sync_rdlist()
 	# After the git repo has been cloned/pulled, open the file and read it into a string
@@ -872,9 +877,13 @@ def block_all_rooms_with_rdlist_tags():
 	print("\nPrinting details about the current tags in rdlist:\n")
 	for line in data:
 		print(line, end='')  # Print the contents of the file
-	# Take input from the user and convert it to a list
-	print("\nPlease enter a space seperated list of tags you wish to block:\n")
-	blocked_tags = input().split()
+	if rdlist_use_recommended == True:
+		# Take input from the user and convert it to a list
+		blocked_tags = rdlist_recommended_tags
+	elif rdlist_use_recommended == False:
+		# Take input from the user and convert it to a list
+		print("\nPlease enter a space seperated list of tags you wish to block:\n")
+		blocked_tags = input().split()
 	print('')
 	# Load the summaries JSON file
 	summaries_path = os.path.join("rdlist", "dist", "summaries.json")
@@ -912,6 +921,10 @@ def block_all_rooms_with_rdlist_tags():
 			print("\nSkipping these files...\n")
 		else:
 			print("\nInvalid input, skipping these files...\n")
+
+def block_recommended_rdlist_tags():
+	# Block all rooms with recommended tag set
+	block_all_rooms_with_rdlist_tags(True)
 
 # check if homeserver url is hard coded, if not set it
 
@@ -998,7 +1011,9 @@ while pass_token == False:
 	elif menu_input == "29":
 		prepare_database_copy_of_multiple_rooms()
 	elif menu_input == "30":
-		block_all_rooms_with_rdlist_tags()
+		block_all_rooms_with_rdlist_tags(False)
+	elif menu_input == "34":
+		block_recommended_rdlist_tags()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True
