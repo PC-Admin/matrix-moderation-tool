@@ -3,7 +3,7 @@
 
 A Matrix moderation tool to make managing a Synapse server easier.
 
-Contact me at: @PC-Admin:perthchat.org if you get stuck or have an edit in mind.
+Contact me at [@michael:perthchat.org](https://matrix.to/#/@michael:perthchat.org) if you get stuck or have an edit in mind.
 if it
 
 
