@@ -1,22 +1,25 @@
 
 # Matrix Moderation Tool
 
-
-This is a script i wrote to make moderating a Synapse server easier.
+A Matrix moderation tool to make managing a Synapse server easier.
 
 Contact me at: @PC-Admin:perthchat.org if you get stuck or have an edit in mind.
+if it
+
 
 ***
 ## Licensing
 
 This work is published under the MIT license, for more information on this license see here: https://opensource.org/license/mit/
 
+
 ***
 ## Setup script
 
-You can hard code the server URL, federation port and access token for faster use, it will prompt you for these values if you don't.
+You can hard code the server URL, federation port and access token into the [hardcoded_variables.py](./hardcoded_variables.py) file for faster use, it will prompt you for these values if you don't.
 
 Your access token can be found in Element > Settings > Help & About, your user account must first be upgraded to a server admin.
+
 
 ***
 ## Upgrade user to 'server admin'
@@ -41,6 +44,7 @@ It means you didn't type a complete SQL query yet.
 
 You need a semicolon to terminate the command.
 
+
 ***
 ## Make sure /_synapse/ is mapped
 
@@ -62,6 +66,33 @@ A few of the commands will not work unless /_synapse/ is mapped to port 8008. He
 
 You can also run the script locally on your server if you do not wish to map /_synapse/.
 
+
+***
+## Roadmap
+
+To do:
+1) Add https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
+2) Make the menu prettier!
+3) Modularise the functions into multiple files - DONE
+4) Use URI module for all API calls instead of curl
+5) Add fully automated (should just return a web link and decryption password) reporting functions for users:
+- User's ID
+- List of the rooms the user is participating in
+- The content of the messages they've sent (if they were sent to rooms your server is participating in)
+- The state events they have generated (such as changing their display name or avatar URL)
+- Device IDs the user has logged in from and some metadata about those devices (like last seen times)
+6) Add fully automated (should just return a web link and decryption password) reporting functions for rooms:
+- Room's ID
+- Room alias
+- List of room members
+- Room metadata (name, topic, avatar, etc.)
+- The power levels of the room (which determine what actions users are permitted to do)
+- History of messages and state events, including their timestamps and senders
+7) Add a function to extract a users email
+8) Do room shutdowns in parallel?
+9) Add more automated rdlist function with sane defaults - DONE
+
+
 ***
 ## rdlist Functionality
 
@@ -73,7 +104,7 @@ If you are running a public server, please dm me at [@michael:perthchat.org](htt
 
 Once you have read access to the [rdlist repository](https://code.glowers.club/loj/rdlist), simply run this moderation script like so:
 ```
-$ python3 modtool.py 
+$ python3 moderation_tool.py 
 
 Please select one of the following options:
 ...
