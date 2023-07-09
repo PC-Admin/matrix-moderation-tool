@@ -37,11 +37,13 @@ def sync_rdlist():
         subprocess.run(["git", "clone", "ssh://gitea@code.glowers.club:1488/loj/rdlist.git"], check=True)
 
 def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,preset_new_room_name,preset_message,preset_purge_choice,preset_block_choice):
+	# Recommended tags for rdlist
+	rdlist_recommended_tags = ['hub_room_links', 'hub_room_trade', 'preban', 'degen_misc', 'beastiality', 'degen_porn', 'gore', 'snuff', 'degen_larp', 'hub_room_sussy', 'bot_spam', 'cfm', 'jailbait', 'bot_porn', 'toddlercon', 'loli', 'csam', 'tfm', 'degen_meet', 'stylized_3d_loli', '3d_loli']
 	# Git clone the rdlist repo to ./rdlist/
 	sync_rdlist()
 	if rdlist_use_recommended == True:
 		# Take input from the user and convert it to a list
-		blocked_tags = hardcoded_variables.rdlist_recommended_tags
+		blocked_tags = rdlist_recommended_tags
 		print("\nUsing recommended rdlist tags.\n")
 	elif rdlist_use_recommended == False:
 		# After the git repo has been cloned/pulled, open the file and read it into a string
