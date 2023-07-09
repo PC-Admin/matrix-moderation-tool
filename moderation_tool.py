@@ -32,27 +32,27 @@ if length_access_token == 0:
 
 pass_token = False
 while pass_token == False:
-	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Create a user account.\n3) Query user account.\n4) List room memberships of user.\n5) Query multiple user accounts.\n6) Reset a users password.\n7) Promote a user to server admin.\n8) List all user accounts.\n9) Create multiple user accounts.\n10) Deactivate multiple user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) Export the state events of a target room.\n14) List rooms in public directory.\n15) Remove a room from the public directory.\n16) Remove multiple rooms from the public directory.\n17) Redact a room event. (Like abusive avatars or display names.) \n18) List/Download all media in a room.\n19) Download media from multiple rooms.\n20) Quarantine all media in a room.\n21) Shutdown a room.\n22) Shutdown multiple rooms.\n23) Delete a room.\n24) Delete multiple rooms.\n25) Purge the event history of a room to a specific timestamp.\n26) Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n27) Delete and block a specific media. (Like an abusive avatar.) \n28) Purge remote media repository up to a certain date.\n29) Prepare database for copying events of multiple rooms.\n#### rdlist ####\n30) Block all rooms with specific rdlist tags.\n34) Block all rooms with recommended rdlist tags.\n(\'q\' or \'e\') Exit.\n\n')
+	menu_input = input('\nPlease select one of the following options:\n#### User Account Commands ####\n1) Deactivate a user account.\n2) Deactivate multiple user accounts.\n3) Create a user account.\n4) Create multiple user accounts.\n5) Reset a users password.\n6) Whois user account.\n7) Whois multiple user accounts.\n8) List room memberships of user.\n9) Promote a user to server admin.\n10) List all user accounts.\n11) Quarantine all media a users uploaded.\n#### Room Commands ####\n12) List details of a room.\n13) Export the state events of a target room.\n14) List rooms in public directory.\n15) Remove a room from the public directory.\n16) Remove multiple rooms from the public directory.\n17) Redact a room event. (Like abusive avatars or display names.) \n18) List/Download all media in a room.\n19) Download media from multiple rooms.\n20) Quarantine all media in a room.\n21) Shutdown a room.\n22) Shutdown multiple rooms.\n23) Delete a room.\n24) Delete multiple rooms.\n25) Purge the event history of a room to a specific timestamp.\n26) Purge the event history of multiple rooms to a specific timestamp.\n#### Server Commands ####\n27) Delete and block a specific media. (Like an abusive avatar.) \n28) Purge remote media repository up to a certain date.\n29) Prepare database for copying events of multiple rooms.\n#### rdlist ####\n30) Block all rooms with specific rdlist tags.\n34) Block all rooms with recommended rdlist tags.\n(\'q\' or \'e\') Exit.\n\n')
 	if menu_input == "1":
 		user_commands.deactivate_account('')
 	elif menu_input == "2":
-		user_commands.create_account('','')
-	elif menu_input == "3":
-		user_commands.whois_account('')
-	elif menu_input == "4":
-		user_commands.list_joined_rooms('')
-	elif menu_input == "5":
-		user_commands.whois_multiple_accounts()
-	elif menu_input == "6":
-		user_commands.reset_password()
-	elif menu_input == "7":
-		user_commands.set_user_server_admin()
-	elif menu_input == "8":
-		user_commands.list_accounts()
-	elif menu_input == "9":
-		user_commands.create_multiple_accounts()
-	elif menu_input == "10":
 		user_commands.deactivate_multiple_accounts()
+	elif menu_input == "3":
+		user_commands.create_account('','')
+	elif menu_input == "4":
+		user_commands.create_multiple_accounts()
+	elif menu_input == "6":
+		user_commands.reset_password('','')
+	elif menu_input == "6":
+		user_commands.whois_account('')
+	elif menu_input == "7":
+		user_commands.whois_multiple_accounts()
+	elif menu_input == "8":
+		user_commands.list_joined_rooms('')
+	elif menu_input == "9":
+		user_commands.set_user_server_admin('')
+	elif menu_input == "10":
+		user_commands.list_accounts()
 	elif menu_input == "11":
 		user_commands.quarantine_users_media()
 	elif menu_input == "12":
