@@ -4,6 +4,7 @@ import json
 import time
 import os
 import csv
+import requests
 import hardcoded_variables
 
 def parse_username(username):
@@ -17,11 +18,13 @@ def list_room_details(preset_internal_ID):
 		internal_ID = input("\nEnter the internal id of the room you wish to query (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
 	elif preset_internal_ID != '':
 		internal_ID = preset_internal_ID
-	command_string = "curl -kXGET 'https://" + hardcoded_variables.homeserver_url + "/_synapse/admin/v1/rooms/" + internal_ID + "?access_token=" + hardcoded_variables.access_token + "'"
-	print("\n" + command_string + "\n")
-	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-	output = process.stdout
-	print(output)
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/rooms/{internal_ID}"
+	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
+
+	print("\n" + url + "\n")
+	response = requests.get(url, headers=headers, verify=True)
+
+	print(response.text)
 
 # Example
 # $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org?access_token=ACCESS_TOKEN'
@@ -31,21 +34,25 @@ def export_room_state(preset_internal_ID):
 	current_directory = os.getcwd()
 	
 	if preset_internal_ID == '':
-		internal_ID = input("\nEnter the internal id of the room with with to export the 'state' of (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+		internal_ID = input("\nEnter the internal id of the room with which to export the 'state' of (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
 	elif preset_internal_ID != '':
 		internal_ID = preset_internal_ID
 	
-	room_dir = current_directory + "/state_events"
+	room_dir = os.path.join(current_directory, "state_events")
 	os.makedirs(room_dir, exist_ok=True)
-	os.chdir(room_dir)
-	
+
 	unix_time = int(time.time())
-	command_string = "curl -kXGET 'https://" + hardcoded_variables.homeserver_url + "/_synapse/admin/v1/rooms/" + internal_ID + "/state?access_token=" + hardcoded_variables.access_token + "' > ./" + internal_ID + "_state_" + str(unix_time) + ".json"
-	print("\n" + command_string + "\n")
-	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-	output = process.stdout
-	os.chdir(current_directory)
-	print(output)
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/rooms/{internal_ID}/state"
+	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
+	filename = os.path.join(room_dir, f"{internal_ID}_state_{unix_time}.json")
+
+	print("\n" + url + "\n")
+	response = requests.get(url, headers=headers, verify=True)
+
+	with open(filename, 'w') as f:
+		f.write(response.text)
+
+	print(response.text)
 
 # Example
 # $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org/state?access_token=ACCESS_TOKEN'
@@ -54,13 +61,16 @@ def export_room_state(preset_internal_ID):
 # https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#room-state-api
 
 def list_directory_rooms():
-	command_string = "curl -kXGET https://" + hardcoded_variables.homeserver_url + "/_matrix/client/r0/publicRooms?access_token=" + hardcoded_variables.access_token
-	print("\n" + command_string + "\n")
-	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-	output = process.stdout
-	output = output.replace('\"room_id\":\"','\n')
-	output = output.replace('\",\"name','\n\",\"name')
-	print(output)
+    url = f"https://{hardcoded_variables.homeserver_url}/_matrix/client/r0/publicRooms"
+    headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
+
+    print("\n" + url + "\n")
+    response = requests.get(url, headers=headers, verify=True)
+    output = response.text
+
+    output = output.replace('\"room_id\":\"','\n')
+    output = output.replace('\",\"name','\n\",\"name')
+    print(output)
 
 # Example
 # $ curl -kXGET https://matrix.perthchat.org/_matrix/client/r0/publicRooms?access_token=ACCESS_TOKEN
@@ -70,11 +80,14 @@ def remove_room_from_directory(preset_internal_ID):
 		internal_ID = input("\nEnter the internal id of the room you wish to remove from the directory (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
 	elif preset_internal_ID != '':
 		internal_ID = preset_internal_ID
-	command_string = "curl -kX PUT -H \'Content-Type: application/json\' -d \'{\"visibility\": \"private\"}\' \'https://" + hardcoded_variables.homeserver_url + "/_matrix/client/r0/directory/list/room/" + internal_ID + "?access_token=" + hardcoded_variables.access_token + "\'"
-	print("\n" + command_string + "\n")
-	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-	output = process.stdout
-	print(output)
+	url = f"https://{hardcoded_variables.homeserver_url}/_matrix/client/r0/directory/list/room/{internal_ID}"
+	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
+	data = {"visibility": "private"}
+
+	print("\n" + url + "\n")
+	response = requests.put(url, headers=headers, json=data, verify=True)
+
+	print(response.text)
 
 # Example
 # $ curl -kX PUT -H 'Content-Type: application/json' -d '{"visibility": "private"}' 'https://matrix.perthchat.org/_matrix/client/r0/directory/list/room/!DwUPBvNapIVecNllgt:perthchat.org?access_token=ACCESS_TOKEN'
@@ -93,88 +106,80 @@ def remove_multiple_rooms_from_directory():
 		#print(x)
 		time.sleep(1)
 
-def list_and_download_media_in_room(preset_internal_ID,preset_print_file_list_choice,preset_download_files_choice,base_directory):
+def list_and_download_media_in_room(preset_internal_ID, preset_print_file_list_choice, preset_download_files_choice, base_directory):
+	headers = {
+		'Authorization': f"Bearer {hardcoded_variables.access_token}"
+	}
+
 	if preset_internal_ID == '':
 		internal_ID = input("\nEnter the internal id of the room you want to get a list of media for (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
-	elif preset_internal_ID != '':
+	else:
 		internal_ID = preset_internal_ID
-	command_string = "curl -kXGET https://" + hardcoded_variables.homeserver_url + "/_synapse/admin/v1/room/" + internal_ID + "/media?access_token=" + hardcoded_variables.access_token
-	print("\n" + command_string + "\n")
-	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-	media_list_output = process.stdout
-	#print("Full media list:\n" + media_list_output)
+    
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/room/{internal_ID}/media"
+	print("\n" + url + "\n")
+
+	response = requests.get(url, headers=headers, verify=True)
+	media_list_output = response.text
+	print("Full media list:\n" + media_list_output)
 
 	if preset_print_file_list_choice == '':
-		print_file_list_choice = input("\n Do you want to write this list to a file? y/n? ")
-	elif preset_print_file_list_choice != '':
+		print_file_list_choice = input("\nDo you want to write this list to a file? y/n? ")
+	else:
 		print_file_list_choice = preset_print_file_list_choice
 
-	if print_file_list_choice == "y" or print_file_list_choice == "Y" or print_file_list_choice == "yes" or print_file_list_choice == "Yes":
+	if print_file_list_choice.lower() in ["y", "yes", "Y", "Yes"]:
 		print_file_list_choice = "true"
-	elif print_file_list_choice == "n" or print_file_list_choice == "N" or print_file_list_choice == "no" or print_file_list_choice == "No":
+	elif print_file_list_choice.lower() in ["n", "no", "N", "No"]:
 		print_file_list_choice = "false"
 	else:
 		print("Input invalid! Defaulting to 'No'.")
 		print_file_list_choice = "false"
 
-	room_dir = "./" + internal_ID
-	room_dir = room_dir.replace('!', '')
-	room_dir = room_dir.replace(':', '-')
-	os.mkdir(room_dir)
-	os.chdir(room_dir)
+	room_dir = os.path.join(base_directory, internal_ID.replace('!', '').replace(':', '-'))
+	os.makedirs(room_dir, exist_ok=True)
 
 	if print_file_list_choice == "true":
-		media_list_filename_location = "./media_list.txt"
-		media_list_filename = open(media_list_filename_location,"w+")
-		media_list_filename.write(media_list_output)
-		media_list_filename.close()
+		media_list_filename_location = os.path.join(room_dir, "media_list.txt")
+		with open(media_list_filename_location,"w+") as media_list_filename:
+			media_list_filename.write(media_list_output)
 
 	if preset_download_files_choice == '':
-		download_files_choice = input("\n Do you also want to download a copy of these media files? y/n? ")
-	if preset_download_files_choice != '':
+		download_files_choice = input("\nDo you also want to download a copy of these media files? y/n? ")
+	else:
 		download_files_choice = preset_download_files_choice
 
-	if download_files_choice == "y" or download_files_choice == "Y" or download_files_choice == "yes" or download_files_choice == "Yes":
+	if download_files_choice.lower() in ["y", "yes", "Y", "Yes"]:
 		download_files_choice = "true"
-	elif download_files_choice == "n" or download_files_choice == "N" or download_files_choice == "no" or download_files_choice == "No":
+	elif download_files_choice.lower() in ["n", "no", "N", "No"]:
 		download_files_choice = "false"
 	else:
 		print("Input invalid! Defaulting to 'No'.")
 		download_files_choice = "false"
 
 	if download_files_choice == "true":
-		media_list_output = media_list_output.split('\"')
-		#print("New media list:\n" + str(media_list_output))
-		os.mkdir("./media-files")
-		os.chdir("./media-files")
-		count = 0
-		# Strips the newline character 
-		for line in media_list_output:
-			if "mxc" in line:
-				#print("Line is 1: \n\n" + line + "\n")
-				line = line.replace('mxc://','')
-				download_command = "wget https://" + hardcoded_variables.homeserver_url + "/_matrix/media/r0/download/" + line
-				print(download_command)
-				download_process = subprocess.run([download_command], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-		os.chdir(base_directory)
+		media_files_dir = os.path.join(room_dir, "media-files")
+		os.makedirs(media_files_dir, exist_ok=True)
+
+		media_list_output = json.loads(media_list_output)
+		for key in ['local', 'remote']:
+			for media in media_list_output.get(key, []):
+				media_url = media.replace('mxc://', f"https://{hardcoded_variables.homeserver_url}/_matrix/media/r0/download/")
+				media_response = requests.get(media_url, stream=True, headers=headers, verify=True)
+
+				if media_response.status_code == 200:
+					media_file_path = os.path.join(media_files_dir, media.split('/')[-1])
+					with open(media_file_path, 'wb') as media_file:
+						media_file.write(media_response.content)
+					print(f"Downloaded {media_url} to {media_file_path}")
+				else:
+					print(f"Failed to download {media_url}, status code: {media_response.status_code}")
 
 # Example
 # $ curl -kXGET https://matrix.perthchat.org/_synapse/admin/v1/room/<room_id>/media?access_token=ACCESS_TOKEN
 
 # To access via web:
 # https://matrix.perthchat.org/_matrix/media/r0/download/ + server_name + "/" + media_id
-
-def redact_room_event():
-	internal_ID = input("\nEnter the internal id of the room the event is in (Example: !rapAelwZkajRyeZIpm:perthchat.org): ")
-	event_ID = input("\nEnter the event id of the event you wish to redact (Example: $lQT7NYYyVvwoVpZWcj7wceYQqeOzsJg1N6aXIecys4s): ")
-	redaction_reason = input("\nEnter the reason you're redacting this content: ")
-	command_string = "curl -X POST --header \"Authorization: Bearer " + hardcoded_variables.access_token + "\" --data-raw '{\"reason\": \"" + redaction_reason + "\"}' 'https://matrix.perthchat.org/_matrix/client/v3/rooms/" + internal_ID + "/redact/" + event_ID + "'"
-	print("\n" + command_string + "\n")
-	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-	output = process.stdout
-	print(output)
-# $ curl -X POST --header "Authorization: Bearer syt_..." --data-raw '{"reason": "Indecent material"}' 'https://matrix.perthchat.org/_matrix/client/v3/rooms/!fuYHAYyXqNLDxlKsWP:perthchat.org/redact/$nyjgZguQGadRRy8MdYtIgwbAeFcUAPqOPiaj_E60XZs'
-# {"event_id":"$_m1gFtPg-5DiTyCvGfeveAX2xaA8gAv0BYLpjC8xe64"}
 
 def download_media_from_multiple_rooms():
 	print("Download media from multiple rooms selected")
@@ -202,13 +207,25 @@ def download_media_from_multiple_rooms():
 		#print(x)
 		time.sleep(1)
 
+def redact_room_event():
+	internal_ID = input("\nEnter the internal id of the room the event is in (Example: !rapAelwZkajRyeZIpm:perthchat.org): ")
+	event_ID = input("\nEnter the event id of the event you wish to redact (Example: $lQT7NYYyVvwoVpZWcj7wceYQqeOzsJg1N6aXIecys4s): ")
+	redaction_reason = input("\nEnter the reason you're redacting this content: ")
+	url = f"https://{hardcoded_variables.homeserver_url}/_matrix/client/v3/rooms/{internal_ID}/redact/{event_ID}"
+	print(f"\nRequesting: {url}\n")
+	output = requests.post(url, headers={'Authorization': f"Bearer {hardcoded_variables.access_token}"}, json={'reason': redaction_reason}, verify=True).text
+	print(output)
+
+# $ curl -X POST --header "Authorization: Bearer syt_..." --data-raw '{"reason": "Indecent material"}' 'https://matrix.perthchat.org/_matrix/client/v3/rooms/!fuYHAYyXqNLDxlKsWP:perthchat.org/redact/$nyjgZguQGadRRy8MdYtIgwbAeFcUAPqOPiaj_E60XZs'
+# {"event_id":"$_m1gFtPg-5DiTyCvGfeveAX2xaA8gAv0BYLpjC8xe64"}
+
 def quarantine_media_in_room():
 	internal_ID = input("\nEnter the internal id of the room you want to quarantine, this makes local and remote data inaccessible (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
-	command_string = "curl -X POST \'https://" + hardcoded_variables.homeserver_url + "/_synapse/admin/v1/room/" + internal_ID + "/media/quarantine?access_token=" + hardcoded_variables.access_token + "\'"
-	print("\n" + command_string + "\n")
-	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-	output = process.stdout
-	print(output)
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/room/{internal_ID}/media/quarantine"
+	print(f"\nRequesting: {url}\n")
+	headers = {'Authorization': f'Bearer {hardcoded_variables.access_token}'}
+	response = requests.post(url, headers=headers, verify=True)
+	print(response.text)
 
 # Example
 # $ curl -X POST 'https://matrix.perthchat.org/_synapse/admin/v1/room/!DwUPBvNapIVecNllgt:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN'
