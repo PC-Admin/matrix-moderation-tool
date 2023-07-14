@@ -4,7 +4,6 @@
 A Matrix moderation tool to make managing a Synapse server easier.
 
 Contact me at [@michael:perthchat.org](https://matrix.to/#/@michael:perthchat.org) if you get stuck or have an edit in mind.
-if it
 
 
 ***
@@ -65,6 +64,10 @@ A few of the commands will not work unless /_synapse/ is mapped to port 8008. He
 ```
 
 You can also run the script locally on your server if you do not wish to map /_synapse/.
+
+With the popular [matrix-docker-ansible-deploy](https://github.com/spantaleev/matrix-docker-ansible-deploy) playbook you can expose this API interface by enabling 'Synapse Admin':
+
+`matrix_synapse_admin_enabled: true`
 
 
 ***

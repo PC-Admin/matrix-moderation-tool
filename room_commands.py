@@ -35,7 +35,6 @@ def export_room_state(preset_internal_ID):
 	elif preset_internal_ID != '':
 		internal_ID = preset_internal_ID
 	
-	os.chdir(current_directory)
 	room_dir = current_directory + "/state_events"
 	os.makedirs(room_dir, exist_ok=True)
 	os.chdir(room_dir)
@@ -45,6 +44,7 @@ def export_room_state(preset_internal_ID):
 	print("\n" + command_string + "\n")
 	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
 	output = process.stdout
+	os.chdir(current_directory)
 	print(output)
 
 # Example
