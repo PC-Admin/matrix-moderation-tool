@@ -77,23 +77,23 @@ To do:
 1) Add https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
 2) Make the menu prettier!
 3) Modularise the functions into multiple files - DONE
-4) Use URI module for all API calls instead of curl
-5) Add fully automated (should just return a web link and decryption password) reporting functions for users:
+4) Use URI module for all API calls instead of curl - DONE
+5) Add more automated rdlist function with sane defaults - DONE
+6) Add fully automated (should just return a web link and decryption password) reporting functions for users:
 - User's ID
 - List of the rooms the user is participating in
 - The content of the messages they've sent (if they were sent to rooms your server is participating in)
 - The state events they have generated (such as changing their display name or avatar URL)
 - Device IDs the user has logged in from and some metadata about those devices (like last seen times)
-6) Add fully automated (should just return a web link and decryption password) reporting functions for rooms:
+7) Add fully automated (should just return a web link and decryption password) reporting functions for rooms:
 - Room's ID
 - Room alias
 - List of room members
 - Room metadata (name, topic, avatar, etc.)
 - The power levels of the room (which determine what actions users are permitted to do)
 - History of messages and state events, including their timestamps and senders
-7) Add a function to extract a users email
-8) Do room shutdowns in parallel?
-9) Add more automated rdlist function with sane defaults - DONE
+8) Add a function to extract a users email
+9) Do room shutdowns in parallel?
 
 
 ***
@@ -118,31 +118,38 @@ Please select one of the following options:
 
 34
 
+Successfully set user as server admin.
 rdlist repo already cloned...
 Fetching origin
 rdlist repo is up-to-date, no need to pull changes.
 
 Using recommended rdlist tags.
 
-Number of rooms being shutdown: 305
 
-Are you sure you want to shutdown these rooms? y/n?
+Number of rooms being shutdown: 318
 
-curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!***REDACTED***:matrix.org/state?access_token=***REDACTED***' > ./!***REDACTED***:matrix.org_state_1688238203.json
+Are you sure you want to shutdown these rooms? y/n? y
 
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100    50    0    50    0     0    891      0 --:--:-- --:--:-- --:--:--   892
+https://matrix.perthchat.org/_synapse/admin/v1/rooms/!***REDACTED***:matrix.org/state
 
-Exported room state events to file, this data can be useful for profiling a room after you've blocked/purged it: ./state_events!***REDACTED***:matrix.org_state_1688238203.json
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100   226    0    32  100   194    341   2069 --:--:-- --:--:-- --:--:--  2430
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100   318    0   318    0     0   7095      0 --:--:-- --:--:-- --:--:--  7227
-status: complete
-!***REDACTED***:matrix.org has been successfully shutdown!
+{"errcode":"M_NOT_FOUND","error":"Room not found"}
+The room was not found.
+
+https://matrix.perthchat.org/_synapse/admin/v1/rooms/!***REDACTED***:cuteworld.space/state
+
+{"errcode":"M_NOT_FOUND","error":"Room not found"}
+The room was not found.
+
+https://matrix.perthchat.org/_synapse/admin/v1/rooms/!***REDACTED***:matrix.org/state
+
+{"errcode":"M_NOT_FOUND","error":"Room not found"}
+The room was not found.
+
+https://matrix.perthchat.org/_synapse/admin/v1/rooms/!***REDACTED***:matrix.org/state
+
+{"errcode":"M_NOT_FOUND","error":"Room not found"}
+The room was not found.
+...
 ```
 
-Note that this script before shutting these rooms down will save the state events to the "./state_events" folder, this data is important for law enforcement. Please collect these files and send them back to the [Legion of Janitors](https://matrix.to/#/#janitors:glowers.club) for collection and analysis.
+Note that this script before shutting these rooms down will save the state events to the "./state_events" folder, please keep this data as it's important for law enforcement.
