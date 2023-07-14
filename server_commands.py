@@ -3,6 +3,8 @@ import subprocess
 import csv
 import time
 import os
+import requests
+import datetime
 import hardcoded_variables
 
 def delete_block_media():
@@ -68,21 +70,24 @@ def delete_block_media():
 # $ ssh matrix.perthchat.org "chattr +i /matrix/synapse/storage/media-store/remote_content/matrix.org/eh/ck/zWWeUkDhhPfNFkcfCFNv"
 
 def purge_remote_media_repo():
-	purge_from = input("\nEnter the number of days to purge from: ")
-	purge_too = input("\nEnter the number of days to purge too: ")
+	purge_from = int(input("\nEnter the number of days to purge from: "))
+	purge_too = int(input("\nEnter the number of days to purge too: "))
 
-	while int(purge_from) >= int(purge_too):
-		epoche_command = "date --date '" + str(purge_from) + " days ago' +%s"
-		print(epoche_command)
-		epoche_time_process  = subprocess.run([epoche_command], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-		print(epoche_time_process.stdout)
-		epoche_time = epoche_time_process.stdout
-		epoche_time_stripped = epoche_time.replace("\n", "")
-		command_string = "curl -X POST --header \"Authorization: Bearer " + hardcoded_variables.access_token + "\" 'https://" + hardcoded_variables.homeserver_url + "/_synapse/admin/v1/purge_media_cache?before_ts=" + epoche_time_stripped + "000'"
-		print(command_string)
-		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-		print(process.stdout)
-		purge_from = int(purge_from) - 1
+	while purge_from >= purge_too:
+		# Calculate the epoch timestamp for 'purge_from' days ago
+		epoch_time = int((datetime.datetime.now() - datetime.timedelta(days=purge_from)).timestamp())
+		# Convert to milliseconds (as per your original code)
+		epoch_time_millis = epoch_time * 1000
+
+		# Make the request
+		headers = {"Authorization": "Bearer " + hardcoded_variables.access_token}
+		url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/purge_media_cache"
+		params = {"before_ts": epoch_time_millis}
+		response = requests.post(url, headers=headers, params=params)
+
+		print(response.text)
+
+		purge_from -= 1
 		time.sleep(2)
 
 # This loop is quite slow, our server was having disk issues.
