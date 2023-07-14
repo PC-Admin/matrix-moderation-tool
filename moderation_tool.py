@@ -1,10 +1,4 @@
 
-# import subprocess
-# import csv
-# import time
-# import json
-# import random
-# import string
 import user_commands
 import room_commands
 import server_commands
@@ -107,5 +101,5 @@ while pass_token == False:
 		print("\nExiting...\n")
 		pass_token = True
 	else:
-		print("\nIncorrect input detected, please select a number from 1 to 34!\n")
+		print("\nIncorrect input detected, please select a number from 1 to 41!\n")
 
