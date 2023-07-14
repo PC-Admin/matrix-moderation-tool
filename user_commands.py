@@ -1,9 +1,11 @@
 
+import os
 import requests
 import json
 import time
 import csv
 import hardcoded_variables
+import socket
 
 def parse_username(username):
 	tail_end = ':' + hardcoded_variables.base_url
@@ -183,7 +185,7 @@ def set_user_server_admin(preset_username):
 # Example:
 # $ curl -kX POST -H 'Content-Type: application/json' -d '{"admin": "true"}' https://matrix.perthchat.org/_synapse/admin/v2/users/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
 
-def whois_account(preset_username):
+def whois_account(preset_username, output_file=None):
 	if preset_username == '':
 		username = input("\nPlease enter the username you wish to whois: ")
 	elif preset_username != '':
@@ -196,10 +198,17 @@ def whois_account(preset_username):
 	print("\n" + url + "\n")
 	response = requests.get(url, verify=True)
 
+	output_text = ""
 	if response.status_code == 200:
-		print(response.text + "\n")
+		output_text = response.text + "\n"
 	else:
-		print(f"Error retrieving account info: {response.status_code}, {response.text}\n")
+		output_text = f"Error retrieving account info: {response.status_code}, {response.text}\n"
+
+	if output_file:
+		with open(output_file, 'a') as f:
+			f.write(output_text)
+	else:
+		print(output_text)
 
 	return response.text
 
@@ -207,24 +216,110 @@ def whois_account(preset_username):
 # $ curl -kXGET https://matrix.perthchat.org/_matrix/client/r0/admin/whois/@PC-Admin:perthchat.org?access_token=ACCESS_TOKEN
 
 def whois_multiple_accounts():
-	print("Whois multiple user accounts selected")
-	user_list_location = input("\nPlease enter the path of the file containing a newline seperated list of Matrix usernames: ")
-	with open(user_list_location, newline='') as f:
-		reader = csv.reader(f)
-		data = list(reader)
-		print(len(data))
-	whois_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to whois all of these users? y/n?\n")
-	if whois_confirmation == "y" or whois_confirmation == "Y" or whois_confirmation == "yes" or whois_confirmation == "Yes":  
-		x = 0
-		while x <= (len(data) - 1):
-			print(data[x][0])
-			query_account(data[x][0])
-			list_joined_rooms(data[x][0])
-			x += 1
-			#print(x)
-			time.sleep(1)
-	if whois_confirmation == "n" or whois_confirmation == "N" or whois_confirmation == "no" or whois_confirmation == "No":
-		print("\nExiting...\n")
+    print("Whois multiple user accounts selected")
+    user_list_location = input("\nPlease enter the path of the file containing a newline seperated list of Matrix usernames: ")
+    with open(user_list_location, newline='') as f:
+        reader = csv.reader(f)
+        data = list(reader)
+        print(len(data))
+
+    print("\n" + str(data))
+
+    output_file = None
+    if len(data) > 10:
+        file_confirmation = input("\nThere are more than 10 users. Would you like to save the output to a file? y/n?\n")
+        if file_confirmation.lower() in ("y", "yes"):
+            output_file = input("\nPlease enter the desired output file path:\n")
+
+    whois_confirmation = input("\n\nAre you sure you want to whois all of these users? y/n?\n")
+
+    if whois_confirmation.lower() in ("y", "yes"):  
+        x = 0
+        while x <= (len(data) - 1):
+            output = whois_account(data[x][0])
+
+            # if output file is specified, append to file
+            if output_file:
+                with open(output_file, 'a') as f:
+                    f.write(output + "\n")
+            x += 1
+            time.sleep(1)
+
+    if whois_confirmation.lower() in ("n", "no"):
+        print("\nExiting...\n")
+
+    if output_file and os.path.isfile(output_file):
+        print(f"Output saved to {output_file}")
+
+def is_valid_ipv4(ip):
+    try:
+        socket.inet_pton(socket.AF_INET, ip)
+    except socket.error:  # not a valid address
+        return False
+    return True
+
+def analyse_account_ip(preset_username):
+    if not preset_username:
+        preset_username = input("\nPlease enter a username to analyse their country of origin: ")
+    user_info = whois_account(preset_username=preset_username)
+
+    data = json.loads(user_info)
+    
+    user_id = data['user_id']
+    #print(f'user_id: {user_id}')
+    device_data = data['devices']
+    #print(f'device_data: {device_data}')
+
+    countries = []
+    for device_id, device_info in device_data.items():
+        for session in device_info['sessions']:
+            for connection in session['connections']:
+                ip = connection['ip']
+                if is_valid_ipv4(ip):
+                    res = requests.get(f"https://ipinfo.io/{ip}", 
+                                       headers={"Authorization": f"Bearer {hardcoded_variables.ipinfo_token}"})
+                    if res.status_code == 200:
+                        country = res.json().get('country')
+                        countries.append(country)
+
+    print(f"User: {user_id} from Countries: {countries}")
+    return(f"User: {user_id} from Countries: {countries}")
+
+def analyse_multiple_account_ips():
+    print("Analyse multiple user IPs selected")
+    user_list_location = input("\nPlease enter the path of the file containing a newline seperated list of Matrix usernames: ")
+    with open(user_list_location, newline='') as f:
+        reader = csv.reader(f)
+        data = list(reader)
+        print(len(data))
+
+    print("\n" + str(data))
+
+    output_file = None
+    if len(data) > 10:
+        file_confirmation = input("\nThere are more than 10 users. Would you like to save the output to a file? y/n?\n")
+        if file_confirmation.lower() in ("y", "yes"):
+            output_file = input("\nPlease enter the desired output file path:\n")
+
+    analyse_confirmation = input("\n\nAre you sure you want to analyse the IP of all of these users? y/n?\n")
+
+    if analyse_confirmation.lower() in ("y", "yes"):  
+        x = 0
+        while x <= (len(data) - 1):
+            output = analyse_account_ip(data[x][0])
+
+            # if output file is specified, append to file
+            if output_file:
+                with open(output_file, 'a') as f:
+                    f.write(output + "\n")
+            x += 1
+            time.sleep(1)
+
+    if analyse_confirmation.lower() in ("n", "no"):
+        print("\nExiting...\n")
+
+    if output_file and os.path.isfile(output_file):
+        print(f"Output saved to {output_file}")
 
 def list_joined_rooms(preset_username):
 	if preset_username == '':
@@ -298,6 +393,42 @@ def query_account(preset_username):
 
 # Example:
 # $ curl -kX GET https://matrix.perthchat.org/_synapse/admin/v2/users/@billybob:perthchat.org?access_token=ACCESS_TOKEN
+
+def query_multiple_accounts():
+    print("Query multiple user accounts selected")
+    user_list_location = input("\nPlease enter the path of the file containing a newline seperated list of Matrix usernames: ")
+    with open(user_list_location, newline='') as f:
+        reader = csv.reader(f)
+        data = list(reader)
+        print(len(data))
+
+    print("\n" + str(data))
+
+    output_file = None
+    if len(data) > 10:
+        file_confirmation = input("\nThere are more than 10 users. Would you like to save the output to a file? y/n?\n")
+        if file_confirmation.lower() in ("y", "yes"):
+            output_file = input("\nPlease enter the desired output file path:\n")
+
+    query_confirmation = input("\n\nAre you sure you want to query all of these users? y/n?\n")
+
+    if query_confirmation.lower() in ("y", "yes"):  
+        x = 0
+        while x <= (len(data) - 1):
+            output = query_account(data[x][0])
+
+            # if output file is specified, append to file
+            if output_file:
+                with open(output_file, 'a') as f:
+                    f.write(output + "\n")
+            x += 1
+            time.sleep(1)
+
+    if query_confirmation.lower() in ("n", "no"):
+        print("\nExiting...\n")
+
+    if output_file and os.path.isfile(output_file):
+        print(f"Output saved to {output_file}")
 
 def quarantine_users_media():
 	username = input("\nPlease enter the username of the user who's media you want to quarantine: ")
