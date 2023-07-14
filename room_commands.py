@@ -53,6 +53,7 @@ def export_room_state(preset_internal_ID):
 		f.write(response.text)
 
 	print(response.text)
+	return(response.text)
 
 # Example
 # $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org/state?access_token=ACCESS_TOKEN'
@@ -274,42 +275,51 @@ def shutdown_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_
 		print("Input invalid! exiting.")
 		return
 
-    # First export the state events of the room to examine them later or import them to rdlist
-	export_room_state(internal_ID)
-	print ("Exported room state events to file, this data can be useful for profiling a room after you've blocked/purged it: ./state_events" + internal_ID + "_state.json")
+	# First export the state events of the room to examine them later or import them to rdlist
+	room_status = export_room_state(internal_ID)
 
-	command_string = 'curl -H "Authorization: Bearer ' + hardcoded_variables.access_token + "\" --data '{ \"new_room_user_id\": \"@" + username + ":" + hardcoded_variables.base_url + "\" , \"room_name\": \"" + new_room_name + "\", \"message\": \"" + message + "\", \"block\": " + block_choice + ", \"purge\": " + purge_choice + " }' -X DELETE 'https://" + hardcoded_variables.homeserver_url + "/_synapse/admin/v2/rooms/" + internal_ID + "'"
-	#print("\n" + command_string + "\n")
-	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-	output = process.stdout
-	#print(output)
+	# Convert the string to a dictionary
+	room_status_dict = json.loads(room_status)
 
-	status = "null"
-	count = 0
-	sleep_time = 1
+	if "Room not found" not in room_status_dict.get('error', ''):
+		print(f"Exported room state events to file, this data can be useful for profiling a room after you've blocked/purged it: ./state_events{internal_ID}_state.json")
 
-	while status != "complete" and count < 8:
-		time.sleep(sleep_time)
-		count = count + 1
-		sleep_time = sleep_time * 2
-		command_string = 'curl -H "Authorization: Bearer ' + hardcoded_variables.access_token + "\" -kX GET 'https://" + hardcoded_variables.homeserver_url + '/_synapse/admin/v2/rooms/' + internal_ID + "/delete_status'"
-		#print("\n" + command_string + "\n")
-		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-		output_json = json.loads(process.stdout)
-		#print(output_json)
-		status = output_json["results"][0]["status"]
-		print("status: " + status)
-		#print("count: " + str(count))
-		if status != "complete":
-			print("Sleeping for " + str(sleep_time) + " seconds...")
+		headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
+		data = {
+			"new_room_user_id": f"@{username}:{hardcoded_variables.base_url}",
+			"room_name": new_room_name,
+			"message": message,
+			"block": block_choice,
+			"purge": purge_choice
+		}
+		delete_room_url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v2/rooms/{internal_ID}"
+		response = requests.delete(delete_room_url, headers=headers, json=data, verify=True)
 
-	if status == "complete":
-		print(internal_ID + " has been successfully shutdown!")
-		if str(output_json["results"][0]["shutdown_room"]["kicked_users"]) != '[]':
-			print("List of kicked users:")
-			for entry in output_json["results"][0]["shutdown_room"]["kicked_users"]:
-				print(entry)
-		print("")
+		status = "null"
+		count = 0
+		sleep_time = 1
+
+		while status != "complete" and count < 8:
+			time.sleep(sleep_time)
+			count += 1
+			sleep_time *= 2
+			check_status_url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v2/rooms/{internal_ID}/delete_status"
+			status_response = requests.get(check_status_url, headers=headers, verify=True)
+			output_json = status_response.json()
+			status = output_json["results"][0]["status"]
+			print(f"status: {status}")
+			if status != "complete":
+				print(f"Sleeping for {sleep_time} seconds...")
+
+		if status == "complete":
+			print(f"{internal_ID} has been successfully shutdown!")
+			if str(output_json["results"][0]["shutdown_room"]["kicked_users"]) != '[]':
+				print("List of kicked users:")
+				for entry in output_json["results"][0]["shutdown_room"]["kicked_users"]:
+					print(entry)
+			print("")
+	else:
+		print("The room was not found.")
 
 # Example:
 #$ curl -H "Authorization: Bearer ACCESS_TOKEN" --data '{ "new_room_user_id": "@PC-Admin:perthchat.org", "room_name": "VIOLATION ROOM", "message": "YOU HAVE BEEN NAUGHTY!", "block": true, "purge": true }' -X DELETE 'https://matrix.perthchat.org/_synapse/admin/v2/rooms/!yUykDcYIEtrbSxOyPD:perthchat.org'
@@ -368,14 +378,13 @@ def shutdown_multiple_rooms():
 def delete_room(preset_internal_ID):
 	if preset_internal_ID == '':
 		internal_ID = input("\nEnter the internal id of the room you want to delete (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
-	elif preset_internal_ID != '':
+	else:
 		internal_ID = preset_internal_ID
-
-	command_string = 'curl -H "Authorization: Bearer ' + hardcoded_variables.access_token + "\" --data '{ \"block\":  false, \"purge\": true }' -X DELETE 'https://" + hardcoded_variables.homeserver_url + "/_synapse/admin/v2/rooms/" + internal_ID + "'"
-	print("\n" + command_string + "\n")
-	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-	output = process.stdout
-	print(output)
+	headers = {"Authorization": "Bearer " + hardcoded_variables.access_token}
+	data = {"block": False, "purge": True}
+	url = f'https://{hardcoded_variables.homeserver_url}/_synapse/admin/v2/rooms/{internal_ID}'
+	response = requests.delete(url, headers=headers, data=json.dumps(data))
+	print("\n", response.text, "\n")
 
 	status = "null"
 	count = 0
@@ -383,27 +392,23 @@ def delete_room(preset_internal_ID):
 
 	while status != "complete" and count < 8:
 		time.sleep(sleep_time)
-		count = count + 1
-		sleep_time = sleep_time * 2
-		command_string = 'curl -H "Authorization: Bearer ' + hardcoded_variables.access_token + "\" -kX GET 'https://" + hardcoded_variables.homeserver_url + '/_synapse/admin/v2/rooms/' + internal_ID + "/delete_status'"
-		#print("\n" + command_string + "\n")
-		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-		#print("\nOutput type: " + str(type(process.stdout)))
-		#print("Output value: " + str(process.stdout) + "\n")
-		output_json = json.loads(process.stdout)
-		#print(output_json)
-		status = output_json["results"][0]["status"]
+		count += 1
+		sleep_time *= 2
+		url_status = f'https://{hardcoded_variables.homeserver_url}/_synapse/admin/v2/rooms/{internal_ID}/delete_status'
+		response = requests.get(url_status, headers=headers, verify=True)
+		response_json = response.json()
+		status = response_json["results"][0]["status"]
 		print("status: " + status)
-		#print("count: " + str(count))
 		if status != "complete":
-			print("Sleeping for " + str(sleep_time) + " seconds...")
+			print(f"Sleeping for {sleep_time} seconds...")
 
 	if status == "complete":
-		print(internal_ID + " has been successfully deleted!")
-		if str(output_json["results"][0]["shutdown_room"]["kicked_users"]) != '[]':
+		print(f"{internal_ID} has been successfully deleted!")
+		kicked_users = response_json["results"][0]["shutdown_room"]["kicked_users"]
+		if kicked_users:
 			print("List of kicked users:")
-			for entry in output_json["results"][0]["shutdown_room"]["kicked_users"]:
-				print(entry)
+			for user in kicked_users:
+				print(user)
 		print("")
 
 # Example:
@@ -441,44 +446,48 @@ def delete_multiple_rooms():
 def purge_room_to_timestamp(preset_internal_ID, preset_timestamp):
 	if preset_internal_ID == '':
 		internal_ID = input("\nEnter the internal id of the room you want to delete (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
-	elif preset_internal_ID != '':
+	else:
 		internal_ID = preset_internal_ID
+
 	if preset_timestamp == '':
-		timestamp = input("\nEnter the epoche timestamp in microseconds (Example: 1661058683000): ")
-	elif preset_timestamp != '':
+		timestamp = input("\nEnter the epoch timestamp in microseconds (Example: 1661058683000): ")
+	else:
 		timestamp = preset_timestamp
+	
+	headers = {"Authorization": "Bearer " + hardcoded_variables.access_token, "Content-Type": "application/json"}
+	data = {"delete_local_events": False, "purge_up_to_ts": int(timestamp)}
+	url = f'https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/purge_history/{internal_ID}'
+	
+	response = requests.post(url, headers=headers, data=json.dumps(data))
+	print("\n", response.text, "\n")
 
-	command_string = 'curl --header "Authorization: Bearer ' + hardcoded_variables.access_token + "\" -X POST -H \"Content-Type: application/json\" -d '{ \"delete_local_events\": false, \"purge_up_to_ts\": " + timestamp + " }' 'https://" + hardcoded_variables.homeserver_url + "/_synapse/admin/v1/purge_history/" + internal_ID + "'"
-	print("\n" + command_string + "\n")
-	process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-	output = process.stdout
-	print(output)
-	output_json = json.loads(process.stdout)
-	purge_id = output_json["purge_id"]
+	response_json = response.json()
+	if "errcode" in response_json:
+		print(f"Error: {response_json['error']}")
+		return
 
+	purge_id = response_json.get("purge_id")
 	status = "null"
 	count = 0
 	sleep_time = 0.5
 
 	while status != "complete" and count < 8:
 		time.sleep(sleep_time)
-		count = count + 1
-		sleep_time = sleep_time * 2
-		command_string = 'curl -H "Authorization: Bearer ' + hardcoded_variables.access_token + "\" -kX GET 'https://" + hardcoded_variables.homeserver_url + '/_synapse/admin/v1/purge_history_status/' + purge_id + "'"
-		print("\n" + command_string + "\n")
-		process = subprocess.run([command_string], shell=True, stdout=subprocess.PIPE, universal_newlines=True)
-		#print("\nOutput type: " + str(type(process.stdout)))
-		#print("Output value: " + str(process.stdout) + "\n")
-		output_json = json.loads(process.stdout)
-		#print(output_json)
-		status = output_json["status"]
+		count += 1
+		sleep_time *= 2
+		
+		url_status = f'https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/purge_history_status/{purge_id}'
+		response = requests.get(url_status, headers=headers)
+		response_json = response.json()
+
+		status = response_json.get("status")
 		print("status: " + status)
-		#print("count: " + str(count))
+
 		if status != "complete":
-			print("Sleeping for " + str(sleep_time) + " seconds...")
+			print(f"Sleeping for {sleep_time} seconds...")
 
 	if status == "complete":
-		print(internal_ID + " has successfully had its history purged!")
+		print(f"{internal_ID} has successfully had its history purged!")
 		print("")
 
 # Example:
