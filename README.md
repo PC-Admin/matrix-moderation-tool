@@ -101,6 +101,7 @@ To do:
 9) Do room shutdowns in parallel?
 10) Add function for probing the support email of another server automatically
 11) Automated incident report email to other server owners for more scalable coordination
+12) Automated public room joining and reminder if reporting email is not available
 
 ***
 ## rdlist Functionality
