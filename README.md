@@ -75,13 +75,13 @@ With the popular [matrix-docker-ansible-deploy](https://github.com/spantaleev/ma
 
 To do:
 1) Add the following functions:
-    A) https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
-    B) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#account-data
-    C) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-all-pushers
-    D) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#override-ratelimiting-for-users
-    E) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#check-username-availability
-    F) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-id-in-an-auth-provider
-    G) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-third-party-id-threepid-or-3pid
+- https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
+- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#account-data
+- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-all-pushers
+- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#override-ratelimiting-for-users
+- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#check-username-availability
+- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-id-in-an-auth-provider
+- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-third-party-id-threepid-or-3pid
 2) Make the menu prettier! - DONE
 3) Modularise the functions into multiple files - DONE
 4) Use URI module for all API calls instead of curl - DONE
