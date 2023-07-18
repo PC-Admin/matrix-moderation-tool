@@ -87,6 +87,7 @@ To do:
 4) Use URI module for all API calls instead of curl - DONE
 5) Add more automated rdlist function with sane defaults - DONE
 6) Add fully automated (should just return a web link and decryption password) reporting functions for users:
+- Description of why the report was made (what happened)
 - User's ID
 - Whois Data
 - Account Data
