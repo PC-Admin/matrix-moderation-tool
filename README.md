@@ -74,26 +74,30 @@ With the popular [matrix-docker-ansible-deploy](https://github.com/spantaleev/ma
 ## Roadmap
 
 To do:
-1) Add https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
-2) Make the menu prettier!
+1) Add the following functions:
+    A) https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
+    B) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#account-data
+    C) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-all-pushers
+    D) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#override-ratelimiting-for-users
+    E) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#check-username-availability
+    F) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-id-in-an-auth-provider
+    G) https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-third-party-id-threepid-or-3pid
+2) Make the menu prettier! - DONE
 3) Modularise the functions into multiple files - DONE
 4) Use URI module for all API calls instead of curl - DONE
 5) Add more automated rdlist function with sane defaults - DONE
 6) Add fully automated (should just return a web link and decryption password) reporting functions for users:
 - User's ID
-- List of the rooms the user is participating in
+- Whois Data
+- Account Data
+- Query Data
+- Pushers List
+- List of the rooms the user is participating in, divided into 1:1 conversations and larger rooms
 - The content of the messages they've sent (if they were sent to rooms your server is participating in)
-- The state events they have generated (such as changing their display name or avatar URL)
-- Device IDs the user has logged in from and some metadata about those devices (like last seen times)
-7) Add fully automated (should just return a web link and decryption password) reporting functions for rooms:
-- Room's ID
-- Room alias
-- List of room members
-- Room metadata (name, topic, avatar, etc.)
-- The power levels of the room (which determine what actions users are permitted to do)
-- History of messages and state events, including their timestamps and senders
-8) Add a function to extract a users email
-9) Do room shutdowns in parallel?
+- Copies of any media they've sent
+7) Add a room report function to create a properly formatted report for rdlist
+8) Add a function to extract a users email or 3PID
+9) Do room shutdowns in parallel
 
 
 ***
