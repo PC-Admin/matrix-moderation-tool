@@ -98,8 +98,9 @@ To do:
 - Copies of any media they've sent
 7) Add a room report function to create a properly formatted report for rdlist
 8) Add a function to extract a users email or 3PID
-9) Do room shutdowns in parallel
-
+9) Do room shutdowns in parallel?
+10) Add function for probing the support email of another server automatically
+11) Automated incident report email to other server owners for more scalable coordination
 
 ***
 ## rdlist Functionality
