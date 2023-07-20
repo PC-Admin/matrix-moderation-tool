@@ -75,13 +75,13 @@ With the popular [matrix-docker-ansible-deploy](https://github.com/spantaleev/ma
 
 To do:
 1) Add the following functions:
-- https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
-- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#account-data
-- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-all-pushers
-- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#override-ratelimiting-for-users
-- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#check-username-availability
+- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#account-data - DONE
+- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-all-pushers - DONE
+- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#override-ratelimiting-for-users - DONE
+- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#check-username-availability - DONE
 - https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-id-in-an-auth-provider
 - https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-third-party-id-threepid-or-3pid
+- https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
 2) Make the menu prettier! - DONE
 3) Modularise the functions into multiple files - DONE
 4) Use URI module for all API calls instead of curl - DONE
@@ -95,7 +95,8 @@ To do:
 - Pushers List
 - List of the rooms the user is participating in, divided into 1:1 conversations and larger rooms
 - The content of the messages they've sent (if they were sent to rooms your server is participating in)
-- Copies of any media they've sent
+- Copies of any media they've sent?
+- Description of report format and contents (to guide the reader)
 7) Add a room report function to create a properly formatted report for rdlist
 8) Add a function to extract a users email or 3PID
 9) Do room shutdowns in parallel?

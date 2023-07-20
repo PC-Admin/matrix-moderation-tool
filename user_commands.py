@@ -213,7 +213,7 @@ def whois_account(preset_username, output_file=None):
 	return response.text
 
 # Example:
-# $ curl -kXGET https://matrix.perthchat.org/_matrix/client/r0/admin/whois/@PC-Admin:perthchat.org?access_token=ACCESS_TOKEN
+# $ curl -kXGET https://matrix.perthchat.org/_matrix/client/r0/admin/whois/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
 
 def whois_multiple_accounts():
 	print("Whois multiple user accounts selected")
@@ -339,7 +339,7 @@ def list_joined_rooms(preset_username):
 		print(f"Error querying joined rooms: {response.status_code}, {response.text}")
 
 # Example:
-# $ curl -kXGET https://matrix.perthchat.org/_synapse/admin/v1/users/@PC-Admin:perthchat.org/joined_rooms?access_token=ACCESS_TOKEN
+# $ curl -kXGET https://matrix.perthchat.org/_synapse/admin/v1/users/@dogpoo:perthchat.org/joined_rooms?access_token=ACCESS_TOKEN
 
 def list_accounts():
 	deactivated_choice = input("Do you want to include deactivated accounts y/n? ")
@@ -445,4 +445,136 @@ def quarantine_users_media():
 		print(f"Error quarantining user's media: {response.status_code}, {response.text}")
 
 # Example:
-# $ curl -X POST https://matrix.perthchat.org/_synapse/admin/v1/user/@PC-Admin:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN
+# $ curl -X POST https://matrix.perthchat.org/_synapse/admin/v1/user/@dogpoo:perthchat.org/media/quarantine?access_token=ACCESS_TOKEN
+
+def collect_account_data(preset_username):
+	if len(preset_username) == 0:
+		username = input("\nPlease enter the username to collect account data: ")
+		username = parse_username(username)
+	elif len(preset_username) > 0:
+		username = parse_username(preset_username)
+
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/accountdata?access_token={hardcoded_variables.access_token}"
+
+	print("\n" + url + "\n")
+	response = requests.get(url, verify=True)
+
+	if response.status_code == 200:
+		print(response.text)
+	else:
+		print(f"Error querying account: {response.status_code}, {response.text}")
+
+	return response.text
+
+# Example:
+# $ curl -X GET https://matrix.perthchat.org/_synapse/admin/v1/users/@dogpoo:perthchat.org/accountdata?access_token=ACCESS_TOKEN
+
+def list_account_pushers(preset_username):
+	if len(preset_username) == 0:
+		username = input("\nPlease enter the username to list all pushers: ")
+		username = parse_username(username)
+	elif len(preset_username) > 0:
+		username = parse_username(preset_username)
+
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/pushers?access_token={hardcoded_variables.access_token}"
+
+	print("\n" + url + "\n")
+	response = requests.get(url, verify=True)
+
+	if response.status_code == 200:
+		print(response.text)
+	else:
+		print(f"Error querying account: {response.status_code}, {response.text}")
+
+	return response.text
+
+# Example:
+# $ curl -X GET https://matrix.perthchat.org/_synapse/admin/v1/users/@dogpoo:perthchat.org/pushers
+
+def get_rate_limit():
+	username = input("\nPlease enter the username to get its ratelimiting: ")
+
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/override_ratelimit?access_token={hardcoded_variables.access_token}"
+
+	print("\n" + url + "\n")
+	response = requests.get(url, verify=True)
+
+	if response.status_code == 200:
+		print(response.text)
+	else:
+		print(f"Error querying account: {response.status_code}, {response.text}")
+
+	return response.text
+
+# Example:
+# $ curl -X GET https://matrix.perthchat.org/_synapse/admin/v1/users/@dogpoo:perthchat.org/override_ratelimit?access_token=ACCESS_TOKEN
+
+def set_rate_limit():
+	username = input("\nPlease enter the username to adjust its ratelimiting: ")
+
+	messages_per_second = input("\nPlease enter the desired messages per second: ")
+	burst_count = input("\nPlease enter the desired burst count: ")
+
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/override_ratelimit?access_token={hardcoded_variables.access_token}"
+
+	headers = {'Content-Type': 'application/json'}
+	data = {
+		"messages_per_second": int(messages_per_second),
+		"burst_count": int(burst_count)
+	}
+
+	print("\n" + url + "\n")
+
+	response = requests.post(url, headers=headers, data=json.dumps(data), verify=True)
+
+	if response.status_code == 200:
+		print(response.text)
+	else:
+		print(f"Error querying account: {response.status_code}, {response.text}")
+
+	return response.text
+
+# Example:
+# $ curl -X POST -H "Content-Type: application/json" -d '{"messages_per_second": 0,"burst_count": 0}' https://matrix.perthchat.org/_synapse/admin/v1/users/@dogpoo:perthchat.org/override_ratelimit?access_token=ACCESS_TOKEN
+
+def delete_rate_limit():
+	username = input("\nPlease enter the username to delete its ratelimiting: ")
+
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/override_ratelimit?access_token={hardcoded_variables.access_token}"
+
+	print("\n" + url + "\n")
+	response = requests.delete(url, verify=True)
+
+	if response.status_code == 200:
+		print(response.text)
+	else:
+		print(f"Error querying account: {response.status_code}, {response.text}")
+
+	return response.text
+
+# Example:
+# $ curl -X DELETE https://matrix.perthchat.org/_synapse/admin/v1/users/@dogpoo:perthchat.org/override_ratelimit?access_token=ACCESS_TOKEN
+
+def check_user_account_exists(preset_username):
+	if len(preset_username) == 0:
+		username = input("\nPlease enter the username to check if it exists: ")
+		username = parse_username(username)
+	elif len(preset_username) > 0:
+		username = parse_username(preset_username)
+
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/username_available?username={username}&access_token={hardcoded_variables.access_token}"
+
+	print("\n" + url + "\n")
+	response = requests.get(url, verify=True)
+
+	if response.status_code == 200:
+		print("User ID is available.")
+	elif response.status_code == 400:
+		print(f"User ID already taken.")
+	else:
+		print(f"Error querying account: {response.status_code}, {response.text}")
+
+	return response.text
+
+# Example:
+# $ curl -X GET /_synapse/admin/v1/username_available?username=dogpoo&access_token=ACCESS_TOKEN
