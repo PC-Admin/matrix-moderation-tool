@@ -42,7 +42,7 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 	if rdlist_use_recommended == True:
 		# Take input from the user and convert it to a list
 		blocked_tags = hardcoded_variables.rdlist_recommended_tags
-		print("\nUsing recommended rdlist tags.\n")
+		print("\nUsing recommended rdlist tags. Rooms matching the following tags will be blocked and purged:\n\n" + str(hardcoded_variables.rdlist_recommended_tags))
 	elif rdlist_use_recommended == False:
 		# After the git repo has been cloned/pulled, open the file and read it into a string
 		with open(os.path.join("rdlist", "lib", "docs", "tags.md"), 'r') as file:
@@ -129,6 +129,6 @@ def block_recommended_rdlist_tags():
 	# Block all rooms with recommended tag set
 	block_all_rooms_with_rdlist_tags(True, hardcoded_variables.rdlist_bot_username, preset_new_room_name, preset_message, preset_purge_choice, preset_block_choice)
 	# Print user login details
-	print("\nUser login details:\n")
+	print("\n\nUser login details for your moderator account:\n")
 	print("Username: " + hardcoded_variables.rdlist_bot_username)
 	print("Password: " + preset_password)
