@@ -41,7 +41,7 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 	sync_rdlist()
 	if rdlist_use_recommended == True:
 		# Take input from the user and convert it to a list
-		blocked_tags = rdlist_recommended_tags
+		blocked_tags = hardcoded_variables.rdlist_recommended_tags
 		print("\nUsing recommended rdlist tags.\n")
 	elif rdlist_use_recommended == False:
 		# After the git repo has been cloned/pulled, open the file and read it into a string
