@@ -210,7 +210,9 @@ def whois_account(preset_username, output_file=None):
 	else:
 		print(output_text)
 
-	return response.text
+	whois_account_dict = json.loads(response.text)
+
+	return whois_account_dict
 
 # Example:
 # $ curl -kXGET https://matrix.perthchat.org/_matrix/client/r0/admin/whois/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
@@ -251,76 +253,6 @@ def whois_multiple_accounts():
 	if output_file and os.path.isfile(output_file):
 		print(f"Output saved to {output_file}")
 
-def is_valid_ipv4(ip):
-	try:
-		socket.inet_pton(socket.AF_INET, ip)
-	except socket.error:  # not a valid address
-		return False
-	return True
-
-def analyse_account_ip(preset_username):
-	if not preset_username:
-		preset_username = input("\nPlease enter a username to analyse their country of origin: ")
-	user_info = whois_account(preset_username=preset_username)
-
-	data = json.loads(user_info)
-	
-	user_id = data['user_id']
-	#print(f'user_id: {user_id}')
-	device_data = data['devices']
-	#print(f'device_data: {device_data}')
-
-	countries = []
-	for device_id, device_info in device_data.items():
-		for session in device_info['sessions']:
-			for connection in session['connections']:
-				ip = connection['ip']
-				if is_valid_ipv4(ip):
-					res = requests.get(f"https://ipinfo.io/{ip}", 
-								   headers={"Authorization": f"Bearer {hardcoded_variables.ipinfo_token}"})
-					if res.status_code == 200:
-						country = res.json().get('country')
-						countries.append(country)
-
-	print(f"User: {user_id} from Countries: {countries}")
-	return(f"User: {user_id} from Countries: {countries}")
-
-def analyse_multiple_account_ips():
-	print("Analyse multiple user IPs selected")
-	user_list_location = input("\nPlease enter the path of the file containing a newline seperated list of Matrix usernames: ")
-	with open(user_list_location, newline='') as f:
-		reader = csv.reader(f)
-		data = list(reader)
-		print(len(data))
-
-	print("\n" + str(data))
-
-	output_file = None
-	if len(data) > 10:
-		file_confirmation = input("\nThere are more than 10 users. Would you like to save the output to a file? y/n?\n")
-		if file_confirmation.lower() in ("y", "yes"):
-			output_file = input("\nPlease enter the desired output file path:\n")
-
-	analyse_confirmation = input("\n\nAre you sure you want to analyse the IP of all of these users? y/n?\n")
-
-	if analyse_confirmation.lower() in ("y", "yes"):  
-		x = 0
-		while x <= (len(data) - 1):
-			output = analyse_account_ip(data[x][0])
-
-			# if output file is specified, append to file
-			if output_file:
-				with open(output_file, 'a') as f:
-					f.write(output + "\n")
-			x += 1
-			time.sleep(1)
-
-	if analyse_confirmation.lower() in ("n", "no"):
-		print("\nExiting...\n")
-
-	if output_file and os.path.isfile(output_file):
-		print(f"Output saved to {output_file}")
-
 def list_joined_rooms(preset_username):
 	if preset_username == '':
 		username = input("\nPlease enter the username you wish to query: ")
@@ -337,6 +269,10 @@ def list_joined_rooms(preset_username):
 		print(response.text + "\n")
 	else:
 		print(f"Error querying joined rooms: {response.status_code}, {response.text}")
+
+	joined_rooms_dict = json.loads(response.text)
+
+	return joined_rooms_dict
 
 # Example:
 # $ curl -kXGET https://matrix.perthchat.org/_synapse/admin/v1/users/@dogpoo:perthchat.org/joined_rooms?access_token=ACCESS_TOKEN
@@ -358,7 +294,7 @@ def list_accounts():
 		number_of_users = len(users)
 		print("\nTotal amount of users: " + str(number_of_users))
 
-		if number_of_users < 100:    
+		if number_of_users < 100:
 			print(users)
 		else:
 			accounts_output_file = input("\nThere are too many users to list here, please specify a filename to print this data too: ")
@@ -389,7 +325,9 @@ def query_account(preset_username):
 	else:
 		print(f"Error querying account: {response.status_code}, {response.text}")
 
-	return response.text
+	query_account_dict = json.loads(response.text)
+
+	return query_account_dict
 
 # Example:
 # $ curl -kX GET https://matrix.perthchat.org/_synapse/admin/v2/users/@billybob:perthchat.org?access_token=ACCESS_TOKEN
@@ -435,7 +373,7 @@ def quarantine_users_media():
 	username = parse_username(username)
 
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/user/@{username}:{hardcoded_variables.base_url}/media/quarantine?access_token={hardcoded_variables.access_token}"
-	
+
 	print("\n" + url + "\n")
 	response = requests.post(url, verify=True)
 
@@ -464,7 +402,9 @@ def collect_account_data(preset_username):
 	else:
 		print(f"Error querying account: {response.status_code}, {response.text}")
 
-	return response.text
+	account_data_dict = json.loads(response.text)
+
+	return account_data_dict
 
 # Example:
 # $ curl -X GET https://matrix.perthchat.org/_synapse/admin/v1/users/@dogpoo:perthchat.org/accountdata?access_token=ACCESS_TOKEN
@@ -486,7 +426,9 @@ def list_account_pushers(preset_username):
 	else:
 		print(f"Error querying account: {response.status_code}, {response.text}")
 
-	return response.text
+	pusher_data_dict = json.loads(response.text)
+
+	return pusher_data_dict
 
 # Example:
 # $ curl -X GET https://matrix.perthchat.org/_synapse/admin/v1/users/@dogpoo:perthchat.org/pushers
@@ -569,12 +511,12 @@ def check_user_account_exists(preset_username):
 
 	if response.status_code == 200:
 		print("User ID is available.")
+		return True
 	elif response.status_code == 400:
 		print(f"User ID already taken.")
+		return False
 	else:
 		print(f"Error querying account: {response.status_code}, {response.text}")
-
-	return response.text
 
 # Example:
 # $ curl -X GET /_synapse/admin/v1/username_available?username=dogpoo&access_token=ACCESS_TOKEN

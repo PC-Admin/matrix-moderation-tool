@@ -24,21 +24,28 @@ def list_room_details(preset_internal_ID):
 	print("\n" + url + "\n")
 	response = requests.get(url, headers=headers, verify=True)
 
-	print(response.text)
+	room_details_dict = json.loads(response.text)
+	print(json.dumps(room_details_dict, indent=4, sort_keys=True))
+
+	return room_details_dict
 
 # Example
 # $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org?access_token=ACCESS_TOKEN'
 
-def export_room_state(preset_internal_ID):
+def export_room_state(preset_internal_ID, preset_directory):
 	# record the current directory location
 	current_directory = os.getcwd()
-	
+
 	if preset_internal_ID == '':
 		internal_ID = input("\nEnter the internal id of the room with which to export the 'state' of (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
 	elif preset_internal_ID != '':
 		internal_ID = preset_internal_ID
-	
-	room_dir = os.path.join(current_directory, "state_events")
+
+	if preset_directory == '':
+		room_dir = os.path.join(current_directory, "state_events")
+	elif preset_directory != '':
+		room_dir = preset_directory
+
 	os.makedirs(room_dir, exist_ok=True)
 
 	unix_time = int(time.time())
@@ -52,8 +59,9 @@ def export_room_state(preset_internal_ID):
 	with open(filename, 'w') as f:
 		f.write(response.text)
 
-	print(response.text)
-	return(response.text)
+	state_events_dict = json.loads(response.text)
+
+	return state_events_dict
 
 # Example
 # $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org/state?access_token=ACCESS_TOKEN'
@@ -71,7 +79,8 @@ def list_directory_rooms():
 
     output = output.replace('\"room_id\":\"','\n')
     output = output.replace('\",\"name','\n\",\"name')
-    print(output)
+
+    print(json.dumps(output, indent=4, sort_keys=True))
 
 # Example
 # $ curl -kXGET https://matrix.perthchat.org/_matrix/client/r0/publicRooms?access_token=ACCESS_TOKEN
@@ -244,7 +253,7 @@ def shutdown_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_
 		new_room_name = input("\nPlease enter the room name of the muted violation room your users will be sent to: ")
 	elif preset_new_room_name != '':
 		new_room_name = preset_new_room_name
-	if preset_message == '':	
+	if preset_message == '':
 		message = input("\nPlease enter the shutdown message that will be displayed to users: ")
 	elif preset_message != '':
 		message = preset_message
@@ -351,7 +360,7 @@ def shutdown_multiple_rooms():
 	preset_block_choice = input("\n Do you want to block these rooms? (This prevents your server users re-entering the room.) y/n? ")
 	# Get the directory of the current script
 	script_dir = os.path.dirname(os.path.realpath(__file__))
-	room_list_data = []	
+	room_list_data = []
 	for file in file_list:
 		print("Processing file: " + file)
 		# Change the current working directory
@@ -453,11 +462,11 @@ def purge_room_to_timestamp(preset_internal_ID, preset_timestamp):
 		timestamp = input("\nEnter the epoch timestamp in microseconds (Example: 1661058683000): ")
 	else:
 		timestamp = preset_timestamp
-	
+
 	headers = {"Authorization": "Bearer " + hardcoded_variables.access_token, "Content-Type": "application/json"}
 	data = {"delete_local_events": False, "purge_up_to_ts": int(timestamp)}
 	url = f'https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/purge_history/{internal_ID}'
-	
+
 	response = requests.post(url, headers=headers, data=json.dumps(data))
 	print("\n", response.text, "\n")
 
@@ -475,7 +484,7 @@ def purge_room_to_timestamp(preset_internal_ID, preset_timestamp):
 		time.sleep(sleep_time)
 		count += 1
 		sleep_time *= 2
-		
+
 		url_status = f'https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/purge_history_status/{purge_id}'
 		response = requests.get(url_status, headers=headers)
 		response_json = response.json()

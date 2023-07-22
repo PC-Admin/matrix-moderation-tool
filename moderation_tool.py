@@ -2,7 +2,9 @@
 import user_commands
 import room_commands
 import server_commands
+import ipinfo_commands
 import rdlist_commands
+import report_commands
 import hardcoded_variables
 
 # check if homeserver url is hard coded, if not set it
@@ -51,9 +53,9 @@ while pass_token == False:
 	print("17) Set rate limit of a user account.")
 	print("18) Delete rate limit of a user account.")
 	print("19) Check if user account exists.")
-	print("\n#### Server Commands ####")
-	print("40) Delete and block a specific media.")
-	print("41) Purge remote media repository up to a certain date.")
+	print("\n#### Server Commands ####\t\t\t\t\t#### Report Generation ####")
+	print("40) Delete and block a specific media.\t\t\t\t70) Generate user report.")
+	print("41) Purge remote media repository up to a certain date.\t\t71) Decrypt user report .zip file.")
 	print("42) Prepare database for copying events of multiple rooms.")
 	print("\n#### rdlist ####")
 	print("50) Block all rooms with specific rdlist tags.")
@@ -142,9 +144,13 @@ while pass_token == False:
 	elif menu_input == "51":
 		rdlist_commands.block_recommended_rdlist_tags()
 	elif menu_input == "60":
-		user_commands.analyse_account_ip('')
+		ipinfo_commands.analyse_account_ip('')
 	elif menu_input == "61":
-		user_commands.analyse_multiple_account_ips()
+		ipinfo_commands.analyse_multiple_account_ips()
+	elif menu_input == "70":
+		report_commands.generate_user_report('')
+	elif menu_input == "71":
+		report_commands.decrypt_zip_file()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True

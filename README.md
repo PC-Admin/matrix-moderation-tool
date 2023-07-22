@@ -88,21 +88,23 @@ To do:
 5) Add more automated rdlist function with sane defaults - DONE
 6) Add fully automated (should just return a web link and decryption password) reporting functions for users:
 - Description of why the report was made (what happened)
-- User's ID
-- Whois Data
-- Account Data
-- Query Data
-- Pushers List
+- User's ID - DONE
+- Whois Data - DONE
+- Account Data - DONE
+- Query Data - DONE
+- Pushers List - DONE
+- IPs + ipinfo Data - DONE
 - List of the rooms the user is participating in, divided into 1:1 conversations and larger rooms
-- The content of the messages they've sent (if they were sent to rooms your server is participating in)
-- Copies of any media they've sent?
+- Any other usernames associated with that IP
+- Timestamp for when illegal material was accessed
 - Description of report format and contents (to guide the reader)
 7) Add a room report function to create a properly formatted report for rdlist
 8) Add a function to extract a users email or 3PID
 9) Do room shutdowns in parallel?
 10) Add function for probing the support email of another server automatically
 11) Automated incident report email to other server owners for more scalable coordination
-12) Automated public room joining and reminder if reporting email is not available
+12) Automated public room joining and reminder if reporting email is not available?
+
 
 ***
 ## rdlist Functionality
@@ -161,3 +163,31 @@ The room was not found.
 ```
 
 Note that this script before shutting these rooms down will save the state events to the "./state_events" folder, please keep this data as it's important for law enforcement.
+
+
+***
+## One-touch Reporting
+
+WARNING: This section is under heavy development and shouldn't be used by anyone!!!
+
+This script can automatically generate reports about user accounts for law enforcement.
+
+It collects as much data about the target user account as possible, then packages it into an encrypted ZIP file that can be shared:
+```
+
+Please enter a number from the above menu, or enter 'q' or 'e' to exit.
+
+70
+
+Please enter the username to automatically generate a report: michael
+
+...
+
+Report generated successfully on user: "michael"
+
+You can send this .zip file and password when reporting a user to law enforcement.
+
+Password: RwiFrw9zouhVO7Dy9kW7
+Encrypted .zip file location: ./reports/michael_2023-07-23_02-21-56.zip.aes
+Encrypted .zip file size: 0.503927 MB
+```
