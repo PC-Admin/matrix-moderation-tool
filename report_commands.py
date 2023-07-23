@@ -6,6 +6,12 @@ import string
 import datetime
 import zipfile
 import pyAesCrypt
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email.utils import COMMASPACE
+from email import encoders
 import user_commands
 import room_commands
 import ipinfo_commands
@@ -164,3 +170,49 @@ def decrypt_zip_file():
 	pyAesCrypt.decryptFile(encrypted_zip_file_name, encrypted_zip_file_name[:-4], strong_password, 64 * 1024)
 	# Print the location of the decrypted ZIP file
 	print("\nDecrypted .zip file location: " + encrypted_zip_file_name[:-4] + "\n")
+
+def send_email(email_address, email_subject, email_content, email_attachments):
+    assert isinstance(email_attachments, list)
+
+    msg = MIMEMultipart()  # Create a multipart message
+    msg['From'] = hardcoded_variables.smtp_user
+    msg['To'] = COMMASPACE.join([email_address])
+    msg['Subject'] = email_subject
+
+    msg.attach(MIMEText(email_content))  # Attach the email body
+
+    # Attach files
+    for file in email_attachments:
+        part = MIMEBase('application', "octet-stream")
+        with open(file, 'rb') as f:
+            part.set_payload(f.read())
+        encoders.encode_base64(part)
+        part.add_header('Content-Disposition', 'attachment', filename=os.path.basename(file))
+        msg.attach(part)
+
+    try:
+        # Send the email via SMTP server
+        smtp = smtplib.SMTP(hardcoded_variables.smtp_server, hardcoded_variables.smtp_port)
+        smtp.starttls()
+        smtp.login(hardcoded_variables.smtp_user, hardcoded_variables.smtp_password)
+        smtp.sendmail(hardcoded_variables.smtp_user, email_address, msg.as_string())
+        smtp.close()
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return False
+
+def test_send_email():
+    # Ask the user for the destination email address
+    email_address = input("\nPlease enter the destination email address to send this test email too: ")
+
+    # Example email parameters
+    email_subject = "Test Email"
+    email_content = "This is a test email."
+    email_attachments = ["./test_data/evil_clown.jpeg"]  # List of file paths. Adjust this to the actual files you want to attach.
+
+    # Try to send the email
+    if send_email(email_address, email_subject, email_content, email_attachments):
+        print("\nEmail successfully sent.")
+    else:
+        print("\nFailed to send email.")
