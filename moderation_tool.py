@@ -57,6 +57,7 @@ while pass_token == False:
 	print("40) Delete and block a specific media.\t\t\t\t70) Generate user report.")
 	print("41) Purge remote media repository up to a certain date.\t\t71) Decrypt user report .zip file.")
 	print("42) Prepare database for copying events of multiple rooms.")
+	print("43) Lookup homeserver admin contact email.")
 	print("\n#### rdlist ####")
 	print("50) Block all rooms with specific rdlist tags.")
 	print("51) Block all rooms with recommended rdlist tags.")
@@ -139,6 +140,8 @@ while pass_token == False:
 		server_commands.purge_remote_media_repo()
 	elif menu_input == "42":
 		server_commands.prepare_database_copy_of_multiple_rooms()
+	elif menu_input == "43":
+		server_commands.lookup_homeserver_admin_email('')
 	elif menu_input == "50":
 		rdlist_commands.block_all_rooms_with_rdlist_tags(False,'','','','','')
 	elif menu_input == "51":

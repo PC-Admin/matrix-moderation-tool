@@ -19,6 +19,13 @@ You can hard code the server URL, federation port and access token into the [har
 
 Your access token can be found in Element > Settings > Help & About, your user account must first be upgraded to a server admin.
 
+This script also requires you to install the following PIP packages:
+```
+pip3 install python-whois
+pip3 install requests
+pip3 install pyAesCrypt
+```
+
 
 ***
 ## Upgrade user to 'server admin'
