@@ -3,8 +3,6 @@ import os
 import subprocess
 import csv
 import time
-import json
-import whois
 import requests
 import datetime
 import hardcoded_variables
@@ -138,53 +136,3 @@ def prepare_database_copy_of_multiple_rooms():
 	print(chown_command_process.stdout)
 
 	print("\nThe sql query files have been generated, as postgres user in container run:\n# docker exec -it matrix-postgres /bin/bash\nbash-5.0$  export PGPASSWORD=your-db-password\nbash-5.0$ for f in /var/lib/postgresql/data/ramdisk/*/dump_room_data.sql; do psql --host=127.0.0.1 --port=5432 --username=synapse -w -f $f; done\n\nAfter copying the data to a cloud location law enforcement can access, clean up the ramdisk like so:\n# rm -r /matrix/postgres/data/ramdisk/*\n# umount /matrix/postgres/data/ramdisk")
-
-def lookup_homeserver_admin_email(preset_baseurl):
-    if preset_baseurl == '':
-        baseurl = input("\nEnter the base URL to collect the admin contact details (Example: matrix.org): ")
-    elif preset_baseurl != '':
-        baseurl = preset_baseurl
-
-    # If baseurl is matrix.org, return 'abuse@matrix.org' as a hardcoded response
-    if baseurl == "matrix.org":
-        print("\nAdmin contact email(s) for " + baseurl + " are: abuse@matrix.org")
-        return {"matrix.org": ["abuse@matrix.org"]}, False
-
-    # Check target homserver for MSC1929 support email
-    url = f"https://{baseurl}/.well-known/matrix/support"
-    try:
-        response = requests.get(url)
-    except requests.exceptions.RequestException as e:
-        print(f"Error: Unable to connect to server {baseurl}. Trying WHOIS data...")
-        response = None
-
-    # If the request was successful, the status code will be 200
-    if response and response.status_code == 200:
-        # Parse the response as JSON
-        data = json.loads(response.text)
-
-        # Extract the emails from the admins field and remove duplicates
-        admin_emails = list({admin['email_address'] for admin in data['admins']})
-
-        print("\nAdmin contact emails for " + baseurl + " are: " + str(admin_emails))
-
-        # Create a dictionary with baseurl as key and emails as value
-        email_dict = {baseurl: admin_emails}
-
-        return email_dict, False
-    else:
-        print(f"Error: Unable to collect admin email from server {baseurl}")
-        print("Attempting to collect admin email from WHOIS data...")
-
-        # Get WHOIS data
-        try:
-            w = whois.whois(baseurl)
-            if w.emails:
-                print("\nAdmin contact email(s) for " + baseurl + " are: " + str(w.emails))
-                return {baseurl: list(w.emails)}, True
-            else:
-                print(f"Error: Unable to collect admin email from WHOIS data for {baseurl}")
-                return None, False
-        except:
-            print(f"Error: Unable to collect WHOIS data for {baseurl}")
-            return None, False
