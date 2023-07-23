@@ -56,9 +56,9 @@ while pass_token == False:
 	print("\n#### Server Commands ####\t\t\t\t\t#### Report Generation ####")
 	print("40) Delete and block a specific media.\t\t\t\t70) Generate user report.")
 	print("41) Purge remote media repository up to a certain date.\t\t71) Decrypt user report .zip file.")
-	print("42) Prepare database for copying events of multiple rooms.\t72) Send a test email.")
-	print("43) Lookup homeserver admin contact email.\t\t\t73) Send a test incident report to yourself.")
-	print("\n#### rdlist ####")
+	print("42) Prepare database for copying events of multiple rooms.\t72) Lookup homeserver admin contact email.")
+	print("\t\t\t\t\t\t\t\t72) Send a test email.")
+	print("#### rdlist ####\t\t\t\t\t\t73) Send a test incident report to yourself.")
 	print("50) Block all rooms with specific rdlist tags.")
 	print("51) Block all rooms with recommended rdlist tags.")
 	print("\n#### ipinfo.io ####")
@@ -140,8 +140,6 @@ while pass_token == False:
 		server_commands.purge_remote_media_repo()
 	elif menu_input == "42":
 		server_commands.prepare_database_copy_of_multiple_rooms()
-	elif menu_input == "43":
-		report_commands.lookup_homeserver_admin_email('')
 	elif menu_input == "50":
 		rdlist_commands.block_all_rooms_with_rdlist_tags(False,'','','','','')
 	elif menu_input == "51":
@@ -155,8 +153,10 @@ while pass_token == False:
 	elif menu_input == "71":
 		report_commands.decrypt_zip_file()
 	elif menu_input == "72":
-		report_commands.test_send_email()
+		report_commands.lookup_homeserver_admin_email('')
 	elif menu_input == "73":
+		report_commands.test_send_email()
+	elif menu_input == "74":
 		report_commands.test_send_incident_report()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
