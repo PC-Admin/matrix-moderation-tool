@@ -62,6 +62,7 @@ while pass_token == False:
 	print("#### rdlist ####\t\t\t\t\t\t74) Send test incident reports to yourself.")
 	print("50) Block all rooms with specific rdlist tags.")
 	print("51) Block all rooms with recommended rdlist tags.")
+	print("52) Get rdlist tags for a room.")
 	print("\n#### ipinfo.io ####")
 	print("60) Analyse a users country of origin.")
 	print("61) Analyse multiple users country of origin.")
@@ -158,6 +159,9 @@ while pass_token == False:
 		rdlist_commands.block_all_rooms_with_rdlist_tags(False,'','','')
 	elif menu_input == "51":
 		rdlist_commands.block_recommended_rdlist_tags()
+	elif menu_input == "52":
+		rdlist_tags = rdlist_commands.get_rdlist_tags('')
+		print(json.dumps(rdlist_tags, indent=4, sort_keys=True))
 	elif menu_input == "60":
 		ipinfo_commands.analyse_account_ip('')
 	elif menu_input == "61":

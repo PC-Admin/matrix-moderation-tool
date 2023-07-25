@@ -77,6 +77,29 @@ def sync_rdlist():
 # 	# 	}
 # 	# }
 
+# A function to return the rdlist tags associated with a room
+def get_rdlist_tags(preset_internal_ID):
+	if preset_internal_ID == '':
+		internal_ID = input("\nEnter the internal id of the room you wish to query (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	elif preset_internal_ID != '':
+		internal_ID = preset_internal_ID
+
+	# Git clone the rdlist repo to ./rdlist/
+	sync_rdlist()
+
+	# Load the summaries JSON file
+	summaries_path = os.path.join("rdlist", "dist", "summaries.json")
+	with open(summaries_path, 'r') as file:
+		data = json.load(file)
+
+	# Find the room with the given id and return its tags
+	for item in data:
+		if 'room' in item and 'room_id' in item['room'] and item['room']['room_id'] == internal_ID:
+			if 'report_info' in item and 'tags' in item['report_info']:
+				return item['report_info']['tags']
+
+	return None
+
 def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,preset_new_room_name,preset_message):
 	# Git clone the rdlist repo to ./rdlist/
 	sync_rdlist()
