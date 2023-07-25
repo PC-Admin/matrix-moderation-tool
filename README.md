@@ -101,16 +101,19 @@ To do:
 - Query Data - DONE
 - Pushers List - DONE
 - IPs + ipinfo Data - DONE
-- List of the rooms the user is participating in, divided into 1:1 conversations and larger rooms
+- List of the rooms the user is participating in, divided into 1:1 conversations and larger rooms - DONE
 - Any other usernames associated with that IP
 - Timestamp for when illegal material was accessed
 - Description of report format and contents (to guide the reader)
-7) Add a room report function to create a properly formatted report for rdlist
-8) Add a function to extract a users email or 3PID
-9) Do room shutdowns in parallel?
-10) Add function for probing the support email of another server automatically
-11) Automated incident report email to other server owners for more scalable coordination
-12) Automated public room joining and reminder if reporting email is not available?
+- Summary of key information
+7) Have recommended rdlist function return a list of offending accounts and the tags they accessed
+8) Only email reportID in incident report?
+9) Add a room report function to create a properly formatted report for rdlist
+10) Skip already shutdown rooms for speeding up rdlist blocking
+11) Add function for probing the support email of another server automatically
+12) Automated incident report email to other server owners who has users in rdlist rooms for more scalable coordination
+13) Automated public room joining and reminder if reporting email is not available?
+14) Refine ipinfo module to also return region/state of IP
 
 
 ***
@@ -128,44 +131,47 @@ $ python3 moderation_tool.py
 
 Please select one of the following options:
 ...
-#### rdlist ####
-30) Block all rooms with specific rdlist tags.
-34) Block all rooms with recommended rdlist tags.
-('q' or 'e') Exit.
+Please enter a number from the above menu, or enter 'q' or 'e' to exit.
 
-34
+51
 
-Successfully set user as server admin.
+@mod_team:perthchat.org account already exists. Resetting account password.
+
+Ensuring @mod_team:perthchat.org account is a server admin.
+
 rdlist repo already cloned...
 Fetching origin
 rdlist repo is up-to-date, no need to pull changes.
 
-Using recommended rdlist tags.
+Using recommended rdlist tags. Rooms matching the following tags will be purged and/or blocked:
+['hub_room_links', 'hub_room_trade', 'preban', 'degen_misc', 'beastiality', 'degen_porn', 'gore', 'snuff', 'degen_larp', 'hub_room_sussy', 'bot_spam', 'cfm', 'jailbait', 'bot_porn', 'toddlercon', 'loli', 'csam', 'tfm', 'degen_meet', 'stylized_3d_loli', '3d_loli']
+
+WARNING! The following local users are current members of rooms tagged in rdlist: ['***REDACTED***:perthchat.org']
+
+Do you want to generate a user report file for each of these users? y/n? n
+
+Skipping user report generation...
 
 
-Number of rooms being shutdown: 318
+Number of rdlist rooms being shutdown: 337
 
 Are you sure you want to shutdown these rooms? y/n? y
 
-https://matrix.perthchat.org/_synapse/admin/v1/rooms/!***REDACTED***:matrix.org/state
 
-{"errcode":"M_NOT_FOUND","error":"Room not found"}
-The room was not found.
+Shutting down room: !***REDACTED***:matrix.org
+!***REDACTED***:matrix.org has been successfully shutdown!
 
-https://matrix.perthchat.org/_synapse/admin/v1/rooms/!***REDACTED***:cuteworld.space/state
 
-{"errcode":"M_NOT_FOUND","error":"Room not found"}
-The room was not found.
+Shutting down room: !***REDACTED***:matrix.org
+!***REDACTED***:matrix.org has been successfully shutdown!
 
-https://matrix.perthchat.org/_synapse/admin/v1/rooms/!***REDACTED***:matrix.org/state
 
-{"errcode":"M_NOT_FOUND","error":"Room not found"}
-The room was not found.
+Shutting down room: !***REDACTED***:anontier.nl
+!***REDACTED***:anontier.nl has been successfully shutdown!
 
-https://matrix.perthchat.org/_synapse/admin/v1/rooms/!***REDACTED***:matrix.org/state
 
-{"errcode":"M_NOT_FOUND","error":"Room not found"}
-The room was not found.
+Shutting down room: !***REDACTED***:anontier.nl
+!***REDACTED***:anontier.nl has been successfully shutdown!
 ...
 ```
 
