@@ -21,18 +21,53 @@ def list_room_details(preset_internal_ID):
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/rooms/{internal_ID}"
 	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.get(url, headers=headers, verify=True)
 
 	room_details_dict = json.loads(response.text)
-	print(json.dumps(room_details_dict, indent=4, sort_keys=True))
 
 	return room_details_dict
 
 # Example
 # $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org?access_token=ACCESS_TOKEN'
 
-def export_room_state(preset_internal_ID, preset_directory):
+def get_room_members(preset_internal_ID, local_only):
+	if preset_internal_ID == '':
+		internal_ID = input("\nEnter the internal id of the room you wish to query (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	elif preset_internal_ID != '':
+		internal_ID = preset_internal_ID
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/rooms/{internal_ID}/members"
+	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
+
+	response = requests.get(url, headers=headers, verify=True)
+
+	room_members_dict = json.loads(response.text)
+
+	# Print room_members_dict for debugging
+	#print("room_members_dict: " + json.dumps(room_members_dict, indent=4, sort_keys=True))
+
+	# Check if the 'members' key is in the response
+	if 'members' in room_members_dict:
+		# List of all members
+		room_members = room_members_dict['members']
+
+		if local_only:
+			# Filter to get only local members
+			room_members = [member for member in room_members if member.split(':')[1] == hardcoded_variables.base_url]
+
+	else:
+		# If 'members' key is not found, return an empty dictionary
+		room_members = {}
+
+	# Print room_members for debugging
+	#print("room_members: " + str(room_members))
+	return room_members
+
+# Example
+# $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org/members?access_token=ACCESS_TOKEN'
+
+# This function returns the state of a room as output and optionally writes it to a json file
+def export_room_state(preset_internal_ID, preset_directory, save_to_file):
 	# record the current directory location
 	current_directory = os.getcwd()
 
@@ -46,20 +81,27 @@ def export_room_state(preset_internal_ID, preset_directory):
 	elif preset_directory != '':
 		room_dir = preset_directory
 
-	os.makedirs(room_dir, exist_ok=True)
-
-	unix_time = int(time.time())
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/rooms/{internal_ID}/state"
 	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
-	filename = os.path.join(room_dir, f"{internal_ID}_state_{unix_time}.json")
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.get(url, headers=headers, verify=True)
 
-	with open(filename, 'w') as f:
-		f.write(response.text)
-
 	state_events_dict = json.loads(response.text)
+
+	# If save_to_file is True, write the output to a file
+	if save_to_file == True:
+		if "Room not found" not in state_events_dict.get('error', ''):
+			# If save_to_file is True, create the directory if it doesn't exist
+			os.makedirs(room_dir, exist_ok=True)
+			# Define the filename and write to it
+			unix_time = int(time.time())
+			filename = os.path.join(room_dir, f"{internal_ID}_state_{unix_time}.json")
+			#print(f"Writing room state events to {filename}")
+			with open(filename, 'w') as f:
+				f.write(json.dumps(state_events_dict, indent=4, sort_keys=True))
+		elif "Room not found" in state_events_dict.get('error', ''):
+			print("Room not found, skipping write to file...")
 
 	return state_events_dict
 
@@ -69,18 +111,22 @@ def export_room_state(preset_internal_ID, preset_directory):
 # See
 # https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#room-state-api
 
-def list_directory_rooms():
-    url = f"https://{hardcoded_variables.homeserver_url}/_matrix/client/r0/publicRooms"
-    headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
+def public_directory_rooms():
+	url = f"https://{hardcoded_variables.homeserver_url}/_matrix/client/r0/publicRooms"
+	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
 
-    print("\n" + url + "\n")
-    response = requests.get(url, headers=headers, verify=True)
-    output = response.text
+	#print("\n" + url + "\n")
+	response = requests.get(url, headers=headers, verify=True)
+	output = response.text
 
-    output = output.replace('\"room_id\":\"','\n')
-    output = output.replace('\",\"name','\n\",\"name')
+	output = output.replace('\"room_id\":\"','\n')
+	output = output.replace('\",\"name','\n\",\"name')
 
-    print(json.dumps(output, indent=4, sort_keys=True))
+	print(json.dumps(output, indent=4, sort_keys=True))
+
+	public_room_directories_dict = json.loads(response.text)
+
+	return public_room_directories_dict
 
 # Example
 # $ curl -kXGET https://matrix.perthchat.org/_matrix/client/r0/publicRooms?access_token=ACCESS_TOKEN
@@ -94,7 +140,7 @@ def remove_room_from_directory(preset_internal_ID):
 	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
 	data = {"visibility": "private"}
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.put(url, headers=headers, json=data, verify=True)
 
 	print(response.text)
@@ -127,7 +173,7 @@ def list_and_download_media_in_room(preset_internal_ID, preset_print_file_list_c
 		internal_ID = preset_internal_ID
     
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/room/{internal_ID}/media"
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 
 	response = requests.get(url, headers=headers, verify=True)
 	media_list_output = response.text
@@ -268,67 +314,65 @@ def shutdown_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_
 
 	username = parse_username(user_ID)
 
-	if purge_choice == "y" or purge_choice == "Y" or purge_choice == "yes" or purge_choice == "Yes":
+	if purge_choice == "y" or purge_choice == "Y" or purge_choice == "yes" or purge_choice == "Yes" or purge_choice == True:
 		purge_choice = "true"
-	elif purge_choice == "n" or purge_choice == "N" or purge_choice == "no" or purge_choice == "No":
+	elif purge_choice == "n" or purge_choice == "N" or purge_choice == "no" or purge_choice == "No" or purge_choice == False:
 		purge_choice = "false"
 	else:
 		print("Input invalid! exiting.")
 		return
 
-	if block_choice == "y" or block_choice == "Y" or block_choice == "yes" or block_choice == "Yes":
+	if block_choice == "y" or block_choice == "Y" or block_choice == "yes" or block_choice == "Yes" or block_choice == True:
 		block_choice = "true"
-	elif block_choice == "n" or block_choice == "N" or block_choice == "no" or block_choice == "No":
+	elif block_choice == "n" or block_choice == "N" or block_choice == "no" or block_choice == "No" or block_choice == False:
 		block_choice = "false"
 	else:
 		print("Input invalid! exiting.")
 		return
 
-	# First export the state events of the room to examine them later or import them to rdlist
-	room_status = export_room_state(internal_ID)
+	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
+	data = {
+		"new_room_user_id": f"@{username}:{hardcoded_variables.base_url}",
+		"room_name": new_room_name,
+		"message": message,
+		"block": bool(block_choice),
+		"purge": bool(purge_choice)
+	}
+	delete_room_url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v2/rooms/{internal_ID}"
+	response = requests.delete(delete_room_url, headers=headers, json=data, verify=True)
+	#print(response.text)
 
-	# Convert the string to a dictionary
-	room_status_dict = json.loads(room_status)
+	status = "null"
+	count = 0
+	sleep_time = 1
 
-	if "Room not found" not in room_status_dict.get('error', ''):
-		print(f"Exported room state events to file, this data can be useful for profiling a room after you've blocked/purged it: ./state_events{internal_ID}_state.json")
+	while status != "complete" and count < 8:
+		time.sleep(sleep_time)
+		count += 1
+		sleep_time *= 2
+		check_status_url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v2/rooms/{internal_ID}/delete_status"
+		status_response = requests.get(check_status_url, headers=headers, verify=True)
+		#print(f"status_response: {status_response.text}")
+		output_json = status_response.json()
+		#print(f"output_json: {output_json}")
+		status = output_json["results"][0]["status"]
+		#print(f"status: {status}")
+		if status != "complete":
+			print(f"Sleeping for {sleep_time} seconds...")
 
-		headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
-		data = {
-			"new_room_user_id": f"@{username}:{hardcoded_variables.base_url}",
-			"room_name": new_room_name,
-			"message": message,
-			"block": block_choice,
-			"purge": purge_choice
-		}
-		delete_room_url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v2/rooms/{internal_ID}"
-		response = requests.delete(delete_room_url, headers=headers, json=data, verify=True)
-
-		status = "null"
-		count = 0
-		sleep_time = 1
-
-		while status != "complete" and count < 8:
-			time.sleep(sleep_time)
-			count += 1
-			sleep_time *= 2
-			check_status_url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v2/rooms/{internal_ID}/delete_status"
-			status_response = requests.get(check_status_url, headers=headers, verify=True)
-			output_json = status_response.json()
-			status = output_json["results"][0]["status"]
-			print(f"status: {status}")
-			if status != "complete":
-				print(f"Sleeping for {sleep_time} seconds...")
-
-		if status == "complete":
-			print(f"{internal_ID} has been successfully shutdown!")
-			if str(output_json["results"][0]["shutdown_room"]["kicked_users"]) != '[]':
-				print("List of kicked users:")
-				for entry in output_json["results"][0]["shutdown_room"]["kicked_users"]:
-					print(entry)
-			print("")
+	if status == "complete":
+		print(f"{internal_ID} has been successfully shutdown!")
+		list_kicked_users = []
+		if str(output_json["results"][0]["shutdown_room"]["kicked_users"]) != '[]':
+			print("List of kicked users:")
+			for entry in output_json["results"][0]["shutdown_room"]["kicked_users"]:
+				list_kicked_users.append(entry)
+				print(entry)
 	else:
-		print("The room was not found.")
+		print(f"Failed to shutdown {internal_ID}!")
+		list_kicked_users = []
+
+	return list_kicked_users
 
 # Example:
 #$ curl -H "Authorization: Bearer ACCESS_TOKEN" --data '{ "new_room_user_id": "@PC-Admin:perthchat.org", "room_name": "VIOLATION ROOM", "message": "YOU HAVE BEEN NAUGHTY!", "block": true, "purge": true }' -X DELETE 'https://matrix.perthchat.org/_synapse/admin/v2/rooms/!yUykDcYIEtrbSxOyPD:perthchat.org'
@@ -357,7 +401,15 @@ def shutdown_multiple_rooms():
 	preset_new_room_name = input("\nPlease enter the room name of the muted violation room your users will be sent to: ")
 	preset_message = input("\nPlease enter the shutdown message that will be displayed to users: ")
 	preset_purge_choice = input("\n Do you want to purge these rooms? (This deletes all the room history from your database.) y/n? ")
+	if preset_purge_choice.lower() in ["y", "yes", "Y", "Yes"]:
+		preset_purge_choice = True
+	elif preset_purge_choice.lower() in ["n", "no", "N", "No"]:
+		preset_purge_choice = False
 	preset_block_choice = input("\n Do you want to block these rooms? (This prevents your server users re-entering the room.) y/n? ")
+	if preset_block_choice.lower() in ["y", "yes", "Y", "Yes"]:
+		preset_block_choice = True
+	elif preset_block_choice.lower() in ["n", "no", "N", "No"]:
+		preset_block_choice = False
 	# Get the directory of the current script
 	script_dir = os.path.dirname(os.path.realpath(__file__))
 	room_list_data = []

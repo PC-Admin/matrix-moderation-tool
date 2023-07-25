@@ -54,6 +54,11 @@ def encrypt_user_folder(user_report_folder, username):
 	# Delete the original zip file
 	os.remove(zip_file_name)
 
+	# Write the password to a file
+	password_file = open(zip_file_name + ".aes" + ".password", "w")
+	password_file.write(strong_password)
+	password_file.close()
+
 	# You can return the password if you need to use it later, or you can directly print it here
 	return strong_password, zip_file_name + ".aes"
 
@@ -65,10 +70,11 @@ def generate_user_report(preset_username):
 		username = user_commands.parse_username(preset_username)
 
 	# Check if user exists
-	if user_commands.check_user_account_exists(username) == True:
-		print("\nUser exists, continuing with report generation.")
+	if user_commands.check_user_account_exists(username) == False:
+		print("\nUser does not exist, exiting report generation.")
 		return
-
+	elif user_commands.check_user_account_exists(username) == True:
+		print(f"\nGenerating user report for {username}...")
 	# If report_folder ends in a slash, remove it
 	report_folder = get_report_folder()
 
@@ -117,10 +123,31 @@ def generate_user_report(preset_username):
 	ipinfo_file.write(json.dumps(ipinfo, indent=4, sort_keys=True))
 	ipinfo_file.close()
 
-	# For each room the user is in, get the room state and write to ./report/username/room_states/
-	room_states_folder = user_report_folder + "room_states/"
-	if os.path.exists(room_states_folder) == False:
-		os.mkdir(room_states_folder)
+	# Prepare folder structures
+	room_folder = user_report_folder + "rooms/"
+	dm_folder = user_report_folder + "dms/"
+	details_folder = "details/"
+	states_folder = "states/"
+
+	# For each room the user is in, get the room state and write to ./report/username/rooms/states/
+	room_states_folder = room_folder + states_folder
+	if not os.path.exists(room_states_folder):
+		os.makedirs(room_states_folder, exist_ok=True)
+
+	# For each room the user is in, get the room details and write to ./report/username/rooms/details/
+	room_details_folder = room_folder + details_folder
+	if not os.path.exists(room_details_folder):
+		os.makedirs(room_details_folder, exist_ok=True)
+
+	# For DM, get the state and write to ./report/username/dms/states/
+	dm_states_folder = dm_folder + states_folder
+	if not os.path.exists(dm_states_folder):
+		os.makedirs(dm_states_folder, exist_ok=True)
+
+	# For DM, get the details and write to ./report/username/dms/details/
+	dm_details_folder = dm_folder + details_folder
+	if not os.path.exists(dm_details_folder):
+		os.makedirs(dm_details_folder, exist_ok=True)
 
 	room_list = joined_rooms_dict.get('joined_rooms', [])
 
@@ -128,23 +155,19 @@ def generate_user_report(preset_username):
 	for room in room_list:
 		count += 1
 		room = room.split(" ")[0]
-		room_commands.export_room_state(room, room_states_folder)
-		if count > 4 and hardcoded_variables.testing_mode == True:
-			break
-
-	# For each room the user is in, get the room details and write to ./report/username/room_details/
-	room_details_folder = user_report_folder + "room_details/"
-	if os.path.exists(room_details_folder) == False:
-		os.mkdir(room_details_folder)
-
-	count = 0
-	for room in room_list:
-		count += 1
-		room = room.split(" ")[0]
 		room_details = room_commands.list_room_details(room)
-		room_details_file = open(room_details_folder + room + ".json", "w")
-		room_details_file.write(str(room_details))
+
+		# Check the room conditions to select the proper output folders
+		if room_details['joined_members'] == 2 and room_details['public'] == False:
+			room_details_file = open(dm_details_folder + room + ".json", "w")
+			state_events = room_commands.export_room_state(room, dm_states_folder, True)
+		else:
+			room_details_file = open(room_details_folder + room + ".json", "w")
+			state_events = room_commands.export_room_state(room, room_states_folder, True)
+
+		room_details_file.write(json.dumps(room_details, indent=4, sort_keys=True))
 		room_details_file.close()
+
 		if count > 4 and hardcoded_variables.testing_mode == True:
 			break
 
@@ -155,7 +178,7 @@ def generate_user_report(preset_username):
 	encrypted_zip_file_size = os.path.getsize(encrypted_zip_file_name) / 1000000
 
 	# Print the password and the encrypted .zip file name
-	print("\nReport generated successfully on user: \"" + username + "\"\n\nYou can send this .zip file and password when reporting a user to law enforcement.")
+	print("Report generated successfully on user: \"" + username + "\"\n\nYou can send this .zip file and password when reporting a user to law enforcement.")
 	print("\nPassword: " + strong_password)
 	print("Encrypted .zip file location: " + encrypted_zip_file_name)
 	print("Encrypted .zip file size: " + str(encrypted_zip_file_size) + " MB\n")
@@ -173,136 +196,124 @@ def decrypt_zip_file():
 	print("\nDecrypted .zip file location: " + encrypted_zip_file_name[:-4] + "\n")
 
 def lookup_homeserver_admin_email(preset_baseurl):
-    if preset_baseurl == '':
-        baseurl = input("\nEnter the base URL to collect the admin contact details (Example: matrix.org): ")
-    elif preset_baseurl != '':
-        baseurl = preset_baseurl
+	if preset_baseurl == '':
+		baseurl = input("\nEnter the base URL to collect the admin contact details (Example: matrix.org): ")
+	elif preset_baseurl != '':
+		baseurl = preset_baseurl
 
-    # If baseurl is matrix.org, return 'abuse@matrix.org' as a hardcoded response
-    if baseurl == "matrix.org":
-        print("\nAdmin contact email(s) for " + baseurl + " are: abuse@matrix.org")
-        return {"matrix.org": ["abuse@matrix.org"]}, False
+	# If baseurl is matrix.org, return 'abuse@matrix.org' as a hardcoded response
+	if baseurl == "matrix.org":
+		print("\nAdmin contact email(s) for " + baseurl + " are: abuse@matrix.org")
+		return {"matrix.org": ["abuse@matrix.org"]}, False
 
-    # Check target homserver for MSC1929 support email
-    url = f"https://{baseurl}/.well-known/matrix/support"
-    try:
-        response = requests.get(url)
-    except requests.exceptions.RequestException as e:
-        print(f"Error: Unable to connect to server {baseurl}. Trying WHOIS data...")
-        response = None
+	# Check target homserver for MSC1929 support email
+	url = f"https://{baseurl}/.well-known/matrix/support"
+	try:
+		response = requests.get(url)
+	except requests.exceptions.RequestException as e:
+		print(f"Error: Unable to connect to server {baseurl}. Trying WHOIS data...")
+		response = None
 
-    # If the request was successful, the status code will be 200
-    if response and response.status_code == 200:
-        # Parse the response as JSON
-        data = json.loads(response.text)
+	# If the request was successful, the status code will be 200
+	if response and response.status_code == 200:
+		# Parse the response as JSON
+		data = json.loads(response.text)
 
-        # Extract the emails from the admins field and remove duplicates
-        admin_emails = list({admin['email_address'] for admin in data['admins']})
+		# Extract the emails from the admins field and remove duplicates
+		admin_emails = list({admin['email_address'] for admin in data['admins']})
 
-        print("\nAdmin contact emails for " + baseurl + " are: " + str(admin_emails))
+		print("\nAdmin contact emails for " + baseurl + " are: " + str(admin_emails))
 
-        # Create a dictionary with baseurl as key and emails as value
-        email_dict = {baseurl: admin_emails}
+		# Create a dictionary with baseurl as key and emails as value
+		email_dict = {baseurl: admin_emails}
 
-        return email_dict, False
-    else:
-        print(f"Error: Unable to collect admin email from server {baseurl}")
-        print("Attempting to collect admin email from WHOIS data...")
+		return email_dict, False
+	else:
+		print(f"Error: Unable to collect admin email from server {baseurl}")
+		print("Attempting to collect admin email from WHOIS data...")
 
-        # Get WHOIS data
-        try:
-            w = whois.whois(baseurl)
-            if w.emails:
-                print("\nAdmin contact email(s) for " + baseurl + " are: " + str(w.emails))
-                return {baseurl: list(w.emails)}, True
-            else:
-                print(f"Error: Unable to collect admin email from WHOIS data for {baseurl}")
-                return None, False
-        except:
-            print(f"Error: Unable to collect WHOIS data for {baseurl}")
-            return None, False
+		# Get WHOIS data
+		try:
+			w = whois.whois(baseurl)
+			if w.emails:
+				print("\nAdmin contact email(s) for " + baseurl + " are: " + str(w.emails))
+				return {baseurl: list(w.emails)}, True
+			else:
+				print(f"Error: Unable to collect admin email from WHOIS data for {baseurl}")
+				return None, False
+		except:
+			print(f"Error: Unable to collect WHOIS data for {baseurl}")
+			return None, False
 
 def send_email(email_address, email_subject, email_content, email_attachments):
-    assert isinstance(email_attachments, list)
+	assert isinstance(email_attachments, list)
 
-    msg = MIMEMultipart()  # Create a multipart message
-    msg['From'] = hardcoded_variables.smtp_user
-    msg['To'] = COMMASPACE.join([email_address])
-    msg['Subject'] = email_subject
+	msg = MIMEMultipart()  # Create a multipart message
+	msg['From'] = hardcoded_variables.smtp_user
+	msg['To'] = COMMASPACE.join([email_address])
+	msg['Subject'] = email_subject
 
-    msg.attach(MIMEText(email_content))  # Attach the email body
+	msg.attach(MIMEText(email_content))  # Attach the email body
 
-    # Attach files
-    for file in email_attachments:
-        part = MIMEBase('application', "octet-stream")
-        with open(file, 'rb') as f:
-            part.set_payload(f.read())
-        encoders.encode_base64(part)
-        part.add_header('Content-Disposition', 'attachment', filename=os.path.basename(file))
-        msg.attach(part)
+	# Attach files
+	for file in email_attachments:
+		part = MIMEBase('application', "octet-stream")
+		with open(file, 'rb') as f:
+			part.set_payload(f.read())
+		encoders.encode_base64(part)
+		part.add_header('Content-Disposition', 'attachment', filename=os.path.basename(file))
+		msg.attach(part)
 
-    try:
-        # Send the email via SMTP server
-        smtp = smtplib.SMTP(hardcoded_variables.smtp_server, hardcoded_variables.smtp_port)
-        smtp.starttls()
-        smtp.login(hardcoded_variables.smtp_user, hardcoded_variables.smtp_password)
-        smtp.sendmail(hardcoded_variables.smtp_user, email_address, msg.as_string())
-        smtp.close()
-        return True
-    except Exception as e:
-        print(f"Failed to send email: {e}")
-        return False
+	try:
+		# Send the email via SMTP server
+		smtp = smtplib.SMTP(hardcoded_variables.smtp_server, hardcoded_variables.smtp_port)
+		smtp.starttls()
+		smtp.login(hardcoded_variables.smtp_user, hardcoded_variables.smtp_password)
+		smtp.sendmail(hardcoded_variables.smtp_user, email_address, msg.as_string())
+		smtp.close()
+		return True
+	except Exception as e:
+		print(f"Failed to send email: {e}")
+		return False
 
 def test_send_email():
-    # Ask the user for the destination email address
-    email_address = input("\nPlease enter the destination email address to send this test email too: ")
+	# Ask the user for the destination email address
+	email_address = input("\nPlease enter the destination email address to send this test email too: ")
 
-    # Example email parameters
-    email_subject = "Test Email"
-    email_content = "This is a test email."
-    email_attachments = ["./test_data/evil_clown.jpeg"]  # List of file paths. Adjust this to the actual files you want to attach.
+	# Example email parameters
+	email_subject = "Test Email"
+	email_content = "This is a test email."
+	email_attachments = ["./test_data/evil_clown.jpeg"]  # List of file paths. Adjust this to the actual files you want to attach.
 
-    # Try to send the email
-    if send_email(email_address, email_subject, email_content, email_attachments):
-        print("\nEmail successfully sent.")
-    else:
-        print("\nFailed to send email.")
+	# Try to send the email
+	if send_email(email_address, email_subject, email_content, email_attachments):
+		print("\nEmail successfully sent.")
+	else:
+		print("\nFailed to send email.")
 
-def send_incident_report(full_username, room_id, rdlist_tags):
-    # First extract the baseurl from the username, for example '@billybob:matrix.org' becomes 'matrix.org'
-    baseurl = full_username.split(":")[1]
+def prepare_email_content(user_dict, from_whois, baseurl):
+	email_content = f"""Dear Administrator,
 
-    # Use the lookup function to get the admin's email
-    if hardcoded_variables.testing_mode == True:
-        admin_email_dict = {hardcoded_variables.base_url: [hardcoded_variables.report_return_email]}
-        print("admin_email_dict: " + str(admin_email_dict))
-        from_whois = True
-    elif hardcoded_variables.testing_mode == False:
-        admin_email_dict, from_whois = lookup_homeserver_admin_email(baseurl)
+We regret to inform you that there have been incidents involving the following users in your homeserver:
+	"""
 
-    # If no admin emails are found, return False
-    if not admin_email_dict or baseurl not in admin_email_dict:
-        print(f"Unable to find any admin emails for {baseurl}")
-        return False
+	for full_username, room_dict in user_dict.items():
+		email_content += f"\nUser: {full_username}\n"
+		for room_id, rdlist_tags in room_dict.items():
+			email_content += f"Is in the room {room_id}, this room has been flagged with the following rdlist tags:\n{', '.join(rdlist_tags)}\n"
 
-    # Prepare the incident report email content
-    email_subject = f"Incident Report for user: {full_username}"
-    email_content = f"""Dear Administrator,
-
-We regret to inform you that your user {full_username} has been involved in an incident in the following room: {room_id}
-
-In that room they were exposed to the following content: {', '.join(rdlist_tags)}
+	email_content += f"""
 
 We request your immediate attention to this matter. It is recommended that you:
-- Generate a report on this user's account and send it to law enforcement.
-- Block and purge this room from your homeserver.
-- Deactivate this users account.
+- Generate a report on these users' accounts and send it to law enforcement.
+- Block and purge these rooms from your homeserver.
+- Deactivate these users' accounts.
 
 All of these actions can be done automatically using this moderation tool:
 https://github.com/PC-Admin/matrix-moderation-tool
 
 **********************************************************************
-THIS EMAIL IS UNMONITORED, PLEASE DO NOT REPLY TO IT
+\tTHIS EMAIL IS UNMONITORED, PLEASE DO NOT REPLY TO IT
 **********************************************************************
 
 To contact us please email {hardcoded_variables.report_return_email}.
@@ -312,64 +323,105 @@ Thank you for helping us make Matrix safer.
 Best regards,
 Incident Report Team
 https://{hardcoded_variables.base_url}
-    """
+"""
 
-    # If email address is collected from WHOIS data, append an extra paragraph
-    if from_whois:
-        email_content += f"""\n\n**********************************************************************
-ATTENTION DOMAIN REGISTRAR, YOUR ACTION IS REQUIRED HERE
+	if from_whois:
+		email_content += f"""\n\n**********************************************************************
+\tATTENTION DOMAIN REGISTRAR, YOUR ACTION IS REQUIRED HERE
 **********************************************************************
 \nThis email is intended for the owner of the domain {baseurl}, but they have not published their email address.
 \nAs the recipient of this email, you have a legal obligation to ensure that this email reaches them.
 \nTo avoid receiving these emails in the future, please ask them to configure MSC1929 for their Matrix server:
 https://github.com/matrix-org/matrix-spec-proposals/pull/1929
-    """
+		"""
 
-    # Confidentiality warning
-    confidentiality_warning = """\n\n**********************************************************************
-                    WARNING! CONFIDENTIALITY NOTICE!
-    \nThis email message and any attached files may contain information
-that is confidential and subject of legal privilege intended only for
-use by the individual or entity to whom they are addressed. If you
-are not the intended recipient or the person responsible for
-delivering the message to the intended recipient be advised that you
-have received this message in error and that any use, copying,
-circulation, forwarding, printing or publication of this message or
-attached files is strictly forbidden, as is the disclosure of the
-information contained therein. If you have received this message in
-error, please notify the sender immediately and delete it from your
-inbox.
-    \n**********************************************************************
-    """
+	confidentiality_warning = f"""\n\n**********************************************************************
+\t\tATTENTION! CONFIDENTIALITY NOTICE!
+\nThis electronic mail and any files linked to it may hold information
+that is privileged, confidential, and intended exclusively for the use of
+the designated recipient or entity. If you're not the expected recipient or
+the individual tasked with delivering the electronic mail to the intended recipient,
+be aware that you've received this mail in error. Any utilization, duplication,
+distribution, forwarding, printing, or publicizing of this email or the attached files
+is strictly prohibited, as is revealing the information contained within.
+If you've received this email in error, please promptly inform the sender and
+remove it from your electronic mailbox.
+	\n**********************************************************************
+	"""
 
-    # Append the confidentiality warning
-    email_content += confidentiality_warning
+	email_content += confidentiality_warning
+	return email_content
 
-    # Prepare the email attachments. This can be modified based on what you want to attach.
-    email_attachments = []
 
-    # Loop over each admin email address and send them the email
-    success = True
-    for email_address in admin_email_dict[baseurl]:
-        if not send_email(email_address, email_subject, email_content, email_attachments):
-            print(f"Failed to send email to {email_address}")
-            success = False
+def send_incident_report(incidents_dict):
+	success = True
+	homeserver_dict = {}
 
-    return success
+	# Aggregate incidents by homeserver.
+	for full_username, room_dict in incidents_dict.items():
+		baseurl = full_username.split(":")[1]
 
-def test_send_incident_report():
-    # Preset the parameters
-    full_username = f"@billybob:{hardcoded_variables.base_url}"
-    room_id = "!dummyid:matrix.org"
-    rdlist_tags = ["csam", "lolicon", "beastiality"]
+		if baseurl not in homeserver_dict:
+			homeserver_dict[baseurl] = {}
+		homeserver_dict[baseurl][full_username] = room_dict
 
-    # Try to send the incident report
-    try:
-        if hardcoded_variables.testing_mode == True:
-            print("\nWARNING: TESTING MODE ENABLED, SENDING EMAIL TO: " + hardcoded_variables.report_return_email + "\n")
-        if send_incident_report(full_username, room_id, rdlist_tags):
-            print("\nIncident report successfully sent.")
-        else:
-            print("\nFailed to send the incident report.")
-    except Exception as e:
-        print(f"\nFailed to send incident report: {e}")
+	print("homeserver_dict: " + str(homeserver_dict))
+	# Prepare and send one email per homeserver, including all users and rooms.
+	for baseurl, user_dict in homeserver_dict.items():
+		if hardcoded_variables.testing_mode == True:
+			admin_email_dict = {baseurl: [hardcoded_variables.report_return_email]}
+			print("admin_email_dict: " + str(admin_email_dict))
+			from_whois = True
+		elif hardcoded_variables.testing_mode == False:
+			admin_email_dict, from_whois = lookup_homeserver_admin_email(baseurl)
+
+		if not admin_email_dict or baseurl not in admin_email_dict:
+			print(f"Unable to find any admin emails for {baseurl}")
+			success = False
+			continue
+
+		# Prepare and send one email per homeserver, including all users and rooms.
+		for email_address in admin_email_dict[baseurl]:
+			email_subject = f"Incident Report for users from {baseurl}"
+			email_content = prepare_email_content(user_dict, from_whois, baseurl)
+
+			email_attachments = []
+			if not send_email(email_address, email_subject, email_content, email_attachments):
+				print(f"Failed to send email to {email_address}")
+				success = False
+
+	return success
+
+def test_send_incident_reports():
+	incidents_dict = {
+		f"@billybob:matrix.org": {
+			"!dummyid1:matrix.org": ["csam", "lolicon", "beastiality"],
+			"!dummyid2:matrix.org": ["csam", "anarchy"]
+		},
+		f"@johndoe:matrix.org": {
+			"!dummyid3:matrix.org": ["csam", "lolicon", "toddlercon"],
+			"!dummyid4:matrix.org": ["csam", "terrorism"]
+		},
+		f"@pedobear:perthchat.org": {
+			"!dummyid5:matrix.org": ["csam", "lolicon", "jailbait"],
+			"!dummyid6:matrix.org": ["csam", "hub_links"]
+		},
+		f"@randomcreep:perthchat.org": {
+			"!dummyid7:matrix.org": ["csam", "jailbait"],
+			"!dummyid8:matrix.org": ["csam", "pre_ban"]
+		},
+		f"@fatweeb:grin.hu": {
+			"!dummyid9:matrix.org": ["csam", "lolicon"],
+			"!dummyid10:matrix.org": ["csam", "degen"]
+		}
+	}
+
+	try:
+		if hardcoded_variables.testing_mode == True:
+			print("\nWARNING: TESTING MODE ENABLED, SENDING EMAIL TO: " + hardcoded_variables.report_return_email + "\n")
+		if send_incident_report(incidents_dict):
+			print("\nIncident reports successfully sent.")
+		else:
+			print("\nFailed to send the incident reports.")
+	except Exception as e:
+		print(f"\nFailed to send incident reports: {e}")

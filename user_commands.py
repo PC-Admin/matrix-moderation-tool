@@ -87,7 +87,7 @@ def create_account(preset_username, preset_password):
 		"password": user_password
 	}
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.put(url, headers=headers, data=json.dumps(data), verify=True)
 
 	if response.status_code == 201:
@@ -97,7 +97,9 @@ def create_account(preset_username, preset_password):
 	else:
 		print(f"Error creating account: {response.status_code}, {response.text}")
 
-	return response.text
+	create_account_dict = json.loads(response.text)
+
+	return create_account_dict
 
 # Example:
 # $ curl -kX PUT -H 'Content-Type: application/json' -d '{"password": "user_password","admin": false,"deactivated": false}' https://matrix.perthchat.org/_synapse/admin/v2/users/@billybob:perthchat.org?access_token=ACCESS_TOKEN
@@ -136,16 +138,16 @@ def reset_password(preset_username, preset_password):
 	headers = {'Content-Type': 'application/json'}
 	data = {'new_password': password, 'logout_devices': True}
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 
 	response = requests.post(url, headers=headers, data=json.dumps(data), verify=True)
 
-	if response.status_code == 200:
-		print(response.text)
-	else:
+	if response.status_code != 200:
 		print(f"Error resetting password: {response.status_code}, {response.text}")
 
-	return response.text
+	reset_password_dict = json.loads(response.text)
+
+	return reset_password_dict
 
 # Example:
 # $ curl -X POST -H 'Content-Type: application/json' -d '{"new_password": "dogpoo", "logout_devices": true}' https://matrix.perthchat.org/_synapse/admin/v1/reset_password/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
@@ -172,20 +174,20 @@ def set_user_server_admin(preset_username):
 		"admin": server_admin_result
 	}
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.put(url, headers=headers, data=json.dumps(data), verify=True)
 
-	if response.status_code == 200:
-		print("Successfully set user as server admin.")
-	else:
+	if response.status_code != 200:
 		print(f"Error setting user as server admin: {response.status_code}, {response.text}")
 
-	return response.text
+	set_user_server_admin_dict = json.loads(response.text)
+
+	return set_user_server_admin_dict
 
 # Example:
 # $ curl -kX POST -H 'Content-Type: application/json' -d '{"admin": "true"}' https://matrix.perthchat.org/_synapse/admin/v2/users/@dogpoo:perthchat.org?access_token=ACCESS_TOKEN
 
-def whois_account(preset_username, output_file=None):
+def whois_account(preset_username):
 	if preset_username == '':
 		username = input("\nPlease enter the username you wish to whois: ")
 	elif preset_username != '':
@@ -195,20 +197,11 @@ def whois_account(preset_username, output_file=None):
 	url = f"https://{hardcoded_variables.homeserver_url}/_matrix/client/r0/admin/whois/@{username}:{hardcoded_variables.base_url}"
 	url += f"?access_token={hardcoded_variables.access_token}"
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.get(url, verify=True)
 
-	output_text = ""
-	if response.status_code == 200:
-		output_text = response.text + "\n"
-	else:
-		output_text = f"Error retrieving account info: {response.status_code}, {response.text}\n"
-
-	if output_file:
-		with open(output_file, 'a') as f:
-			f.write(output_text)
-	else:
-		print(output_text)
+	if response.status_code != 200:
+		print(f"Error retrieving account info: {response.status_code}, {response.text}\n")
 
 	whois_account_dict = json.loads(response.text)
 
@@ -265,9 +258,7 @@ def list_joined_rooms(preset_username):
 
 	response = requests.get(url, verify=True)
 
-	if response.status_code == 200:
-		print(response.text + "\n")
-	else:
+	if response.status_code != 200:
 		print(f"Error querying joined rooms: {response.status_code}, {response.text}")
 
 	joined_rooms_dict = json.loads(response.text)
@@ -317,12 +308,10 @@ def query_account(preset_username):
 
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v2/users/@{username}:{hardcoded_variables.base_url}?access_token={hardcoded_variables.access_token}"
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.get(url, verify=True)
 
-	if response.status_code == 200:
-		print(response.text)
-	else:
+	if response.status_code != 200:
 		print(f"Error querying account: {response.status_code}, {response.text}")
 
 	query_account_dict = json.loads(response.text)
@@ -394,12 +383,10 @@ def collect_account_data(preset_username):
 
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/accountdata?access_token={hardcoded_variables.access_token}"
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.get(url, verify=True)
 
-	if response.status_code == 200:
-		print(response.text)
-	else:
+	if response.status_code != 200:
 		print(f"Error querying account: {response.status_code}, {response.text}")
 
 	account_data_dict = json.loads(response.text)
@@ -418,12 +405,10 @@ def list_account_pushers(preset_username):
 
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/pushers?access_token={hardcoded_variables.access_token}"
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.get(url, verify=True)
 
-	if response.status_code == 200:
-		print(response.text)
-	else:
+	if response.status_code != 200:
 		print(f"Error querying account: {response.status_code}, {response.text}")
 
 	pusher_data_dict = json.loads(response.text)
@@ -438,7 +423,7 @@ def get_rate_limit():
 
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/override_ratelimit?access_token={hardcoded_variables.access_token}"
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.get(url, verify=True)
 
 	if response.status_code == 200:
@@ -465,7 +450,7 @@ def set_rate_limit():
 		"burst_count": int(burst_count)
 	}
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 
 	response = requests.post(url, headers=headers, data=json.dumps(data), verify=True)
 
@@ -484,7 +469,7 @@ def delete_rate_limit():
 
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/override_ratelimit?access_token={hardcoded_variables.access_token}"
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.delete(url, verify=True)
 
 	if response.status_code == 200:
@@ -506,15 +491,15 @@ def check_user_account_exists(preset_username):
 
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/username_available?username={username}&access_token={hardcoded_variables.access_token}"
 
-	print("\n" + url + "\n")
+	#print("\n" + url + "\n")
 	response = requests.get(url, verify=True)
 
 	if response.status_code == 200:
-		print("User ID is available.")
-		return True
-	elif response.status_code == 400:
-		print(f"User ID already taken.")
+		#print("User ID is available.")
 		return False
+	elif response.status_code == 400:
+		#print(f"User ID already exists.")
+		return True
 	else:
 		print(f"Error querying account: {response.status_code}, {response.text}")
 

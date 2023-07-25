@@ -1,4 +1,5 @@
 
+import json
 import user_commands
 import room_commands
 import server_commands
@@ -35,21 +36,21 @@ while pass_token == False:
 	print("\n----------------------------------------------")
 	print("\n#### User Account Commands ####\t\t\t#### Room Commands ####")
 	print("1) Deactivate a user account.\t\t\t20) List details of a room.")
-	print("2) Deactivate multiple user accounts.\t\t21) Export the state events of a target room.")
-	print("3) Create a user account.\t\t\t22) List rooms in public directory.")
-	print("4) Create multiple user accounts.\t\t23) Remove a room from the public directory.")
-	print("5) Reset a users password.\t\t\t24) Remove multiple rooms from the public directory.")
-	print("6) Whois user account.\t\t\t\t25) Redact a room event.")
-	print("7) Whois multiple user accounts.\t\t26) List/Download all media in a room.")
-	print("8) Query user account.\t\t\t\t27) Download media from multiple rooms.")
-	print("9) Query multiple user accounts.\t\t28) Quarantine all media in a room.")
-	print("10) List room memberships of user.\t\t29) Shutdown a room.")
-	print("11) Promote a user to server admin.\t\t30) Shutdown multiple rooms.")
-	print("12) List all user accounts.\t\t\t31) Delete a room.")
-	print("13) Quarantine all media a users uploaded.\t32) Delete multiple rooms.")
-	print("14) Collect account data.\t\t\t33) Purge the event history of a room to a specific timestamp.")
-	print("15) List account pushers.\t\t\t34) Purge the event history of multiple rooms to a specific timestamp.")
-	print("16) Get rate limit of a user account.")
+	print("2) Deactivate multiple user accounts.\t\t21) List the members of a room.")
+	print("3) Create a user account.\t\t\t22) Export the state events of a target room.")
+	print("4) Create multiple user accounts.\t\t23) List rooms in public directory.")
+	print("5) Reset a users password.\t\t\t24) Remove a room from the public directory.")
+	print("6) Whois user account.\t\t\t\t25) Remove multiple rooms from the public directory.")
+	print("7) Whois multiple user accounts.\t\t26) Redact a room event.")
+	print("8) Query user account.\t\t\t\t27) List/Download all media in a room.")
+	print("9) Query multiple user accounts.\t\t28) Download media from multiple rooms.")
+	print("10) List room memberships of user.\t\t29) Quarantine all media in a room.")
+	print("11) Promote a user to server admin.\t\t30) Shutdown a room.")
+	print("12) List all user accounts.\t\t\t31) Shutdown multiple rooms.")
+	print("13) Quarantine all media a users uploaded.\t32) Delete a room.")
+	print("14) Collect account data.\t\t\t33) Delete multiple rooms.")
+	print("15) List account pushers.\t\t\t34) Purge the event history of a room to a specific timestamp.")
+	print("16) Get rate limit of a user account.\t\t35) Purge the event history of multiple rooms to a specific timestamp.")
 	print("17) Set rate limit of a user account.")
 	print("18) Delete rate limit of a user account.")
 	print("19) Check if user account exists.")
@@ -58,7 +59,7 @@ while pass_token == False:
 	print("41) Purge remote media repository up to a certain date.\t\t71) Decrypt user report .zip file.")
 	print("42) Prepare database for copying events of multiple rooms.\t72) Lookup homeserver admin contact email.")
 	print("\t\t\t\t\t\t\t\t73) Send a test email.")
-	print("#### rdlist ####\t\t\t\t\t\t74) Send a test incident report to yourself.")
+	print("#### rdlist ####\t\t\t\t\t\t74) Send test incident reports to yourself.")
 	print("50) Block all rooms with specific rdlist tags.")
 	print("51) Block all rooms with recommended rdlist tags.")
 	print("\n#### ipinfo.io ####")
@@ -77,23 +78,28 @@ while pass_token == False:
 	elif menu_input == "5":
 		user_commands.reset_password('','')
 	elif menu_input == "6":
-		user_commands.whois_account('')
+		whois_account_dict = user_commands.whois_account('')
+		print(json.dumps(whois_account_dict, indent=4, sort_keys=True))
 	elif menu_input == "7":
 		user_commands.whois_multiple_accounts()
 	elif menu_input == "8":
-		user_commands.query_account()
+		query_account_dict = user_commands.query_account()
+		print(json.dumps(query_account_dict, indent=4, sort_keys=True))
 	elif menu_input == "9":
 		user_commands.query_multiple_accounts()
 	elif menu_input == "10":
-		user_commands.list_joined_rooms('')
+		joined_rooms_dict = user_commands.list_joined_rooms('')
+		print(json.dumps(joined_rooms_dict, indent=4, sort_keys=True))
 	elif menu_input == "11":
-		user_commands.set_user_server_admin('')
+		set_user_server_admin_dict = user_commands.set_user_server_admin('')
+		print(json.dumps(set_user_server_admin_dict, indent=4, sort_keys=True))
 	elif menu_input == "12":
 		user_commands.list_accounts()
 	elif menu_input == "13":
 		user_commands.quarantine_users_media()
 	elif menu_input == "14":
-		user_commands.collect_account_data('')
+		account_data_dict = user_commands.collect_account_data('')
+		print(json.dumps(account_data_dict, indent=4, sort_keys=True))
 	elif menu_input == "15":
 		user_commands.list_account_pushers('')
 	elif menu_input == "16":
@@ -103,36 +109,44 @@ while pass_token == False:
 	elif menu_input == "18":
 		user_commands.delete_rate_limit()
 	elif menu_input == "19":
-		user_commands.check_user_account_exists('')
+		user_account_exists = user_commands.check_user_account_exists('')
+		if user_account_exists == True:
+			print("\nUser account exists.\n")
+		elif user_account_exists == False:
+			print("\nUser account does not exist.\n")
 	elif menu_input == "20":
-		room_commands.list_room_details('')
+		room_details_dict = room_commands.list_room_details('')
+		print(json.dumps(room_details_dict, indent=4, sort_keys=True))
 	elif menu_input == "21":
-		room_commands.export_room_state('')
+		room_members_dict = room_commands.get_room_members('',False)
+		print(json.dumps(room_members_dict, indent=4, sort_keys=True))
 	elif menu_input == "22":
-		room_commands.list_directory_rooms()
+		room_commands.export_room_state('','',True)
 	elif menu_input == "23":
-		room_commands.remove_room_from_directory('')
+		room_commands.public_directory_rooms()
 	elif menu_input == "24":
-		room_commands.remove_multiple_rooms_from_directory()
+		room_commands.remove_room_from_directory('')
 	elif menu_input == "25":
-		room_commands.redact_room_event()
+		room_commands.remove_multiple_rooms_from_directory()
 	elif menu_input == "26":
-		room_commands.list_and_download_media_in_room('','','','./')
+		room_commands.redact_room_event()
 	elif menu_input == "27":
-		room_commands.download_media_from_multiple_rooms()
+		room_commands.list_and_download_media_in_room('','','','./')
 	elif menu_input == "28":
-		room_commands.quarantine_media_in_room()
+		room_commands.download_media_from_multiple_rooms()
 	elif menu_input == "29":
-		room_commands.shutdown_room('','','','','','')
+		room_commands.quarantine_media_in_room()
 	elif menu_input == "30":
-		room_commands.shutdown_multiple_rooms()
+		room_commands.shutdown_room('','','','','','')
 	elif menu_input == "31":
-		room_commands.delete_room('')
+		room_commands.shutdown_multiple_rooms()
 	elif menu_input == "32":
-		room_commands.delete_multiple_rooms()
+		room_commands.delete_room('')
 	elif menu_input == "33":
-		room_commands.purge_room_to_timestamp('','')
+		room_commands.delete_multiple_rooms()
 	elif menu_input == "34":
+		room_commands.purge_room_to_timestamp('','')
+	elif menu_input == "35":
 		room_commands.purge_multiple_rooms_to_timestamp()
 	elif menu_input == "40":
 		server_commands.delete_block_media()
@@ -141,7 +155,7 @@ while pass_token == False:
 	elif menu_input == "42":
 		server_commands.prepare_database_copy_of_multiple_rooms()
 	elif menu_input == "50":
-		rdlist_commands.block_all_rooms_with_rdlist_tags(False,'','','','','')
+		rdlist_commands.block_all_rooms_with_rdlist_tags(False,'','','')
 	elif menu_input == "51":
 		rdlist_commands.block_recommended_rdlist_tags()
 	elif menu_input == "60":
@@ -157,10 +171,10 @@ while pass_token == False:
 	elif menu_input == "73":
 		report_commands.test_send_email()
 	elif menu_input == "74":
-		report_commands.test_send_incident_report()
+		report_commands.test_send_incident_reports()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True
 	else:
-		print("\nIncorrect input detected, please select a number from 1 to 41!\n")
+		print("\nIncorrect input detected, please select a number from 1 to 74!\n")
 
