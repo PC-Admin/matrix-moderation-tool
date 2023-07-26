@@ -51,9 +51,9 @@ while pass_token == False:
 	print("14) Collect account data.\t\t\t33) Delete multiple rooms.")
 	print("15) List account pushers.\t\t\t34) Purge the event history of a room to a specific timestamp.")
 	print("16) Get rate limit of a user account.\t\t35) Purge the event history of multiple rooms to a specific timestamp.")
-	print("17) Set rate limit of a user account.")
-	print("18) Delete rate limit of a user account.")
-	print("19) Check if user account exists.")
+	print("17) Set rate limit of a user account.\t\t36) Get blocked status for room.")
+	print("18) Delete rate limit of a user account.\t37) Block a room.")
+	print("19) Check if user account exists.\t\t38) Unblock a room.")
 	print("\n#### Server Commands ####\t\t\t\t\t#### Report Generation ####")
 	print("40) Delete and block a specific media.\t\t\t\t70) Generate user report.")
 	print("41) Purge remote media repository up to a certain date.\t\t71) Decrypt user report .zip file.")
@@ -116,7 +116,7 @@ while pass_token == False:
 		elif user_account_exists == False:
 			print("\nUser account does not exist.\n")
 	elif menu_input == "20":
-		room_details_dict = room_commands.list_room_details('')
+		room_details_dict = room_commands.get_room_details('')
 		print(json.dumps(room_details_dict, indent=4, sort_keys=True))
 	elif menu_input == "21":
 		room_members_dict = room_commands.get_room_members('',False)
@@ -149,6 +149,17 @@ while pass_token == False:
 		room_commands.purge_room_to_timestamp('','')
 	elif menu_input == "35":
 		room_commands.purge_multiple_rooms_to_timestamp()
+	elif menu_input == "36":
+		blocked_status = room_commands.get_block_status('')
+		if blocked_status == True:
+			print("\nRoom is blocked.\n")
+		elif blocked_status == False:
+			print("\nRoom is not blocked.\n")
+		print(json.dumps(blocked_status, indent=4, sort_keys=True))
+	elif menu_input == "37":
+		room_commands.set_block_status('', True)
+	elif menu_input == "38":
+		room_commands.set_block_status('', False)
 	elif menu_input == "40":
 		server_commands.delete_block_media()
 	elif menu_input == "41":
@@ -167,7 +178,7 @@ while pass_token == False:
 	elif menu_input == "61":
 		ipinfo_commands.analyse_multiple_account_ips()
 	elif menu_input == "70":
-		report_commands.generate_user_report('')
+		report_commands.generate_user_report('','')
 	elif menu_input == "71":
 		report_commands.decrypt_zip_file()
 	elif menu_input == "72":

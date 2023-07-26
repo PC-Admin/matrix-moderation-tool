@@ -10,7 +10,32 @@ import room_commands
 import report_commands
 import hardcoded_variables
 
-#rdlist_bot_username = hardcoded_variables.rdlist_bot_username
+rdlist_tag_descriptions = {
+    "csam": "Child Sexual Abuse Material",
+    "cfm": "An abundance of content which would directly appeal to those seeking csam.",
+    "jailbait": "Photos which contain underage individuals in questionable or suggestive situations.",
+    "tfm": "An abundance of content which would directly appeal to those seeking jailbait.",
+    "beastiality": "Self explanatory.",
+    "3d_loli": "Pornography which depicts photorealistic underage characters.",
+    "stylized_3d_loli": "Pornography which depicts underage characters that are not depicted in a realistic style.",
+    "gore": "Self explanatory.",
+    "snuff": "Self explanatory.",
+    "degen_misc": "Other types of coomers rooms.",
+    "degen_larp": "Coomer larp rooms.",
+    "degen_meet": "Coomer socializing rooms.",
+    "degen_porn": "Rooms dedicated to pornography, excluding types which have dedicated tags.",
+    "bot_porn": "Rooms which contain bots that spam pornographic content.",
+    "bot_spam": "Rooms which contain bots that spam content. Primarily for malvertising and cryptospam",
+    "preban": "Rooms which may not contain tagged content, however have clear intent. i.e: Rooms with names like 'CP Room', 'Child Porn', etc",
+    "hub_room_trade": "Rooms which exist solely to trade illegal or questionable content. i.e: csam, jailbait",
+    "hub_room_sussy": "A room which is sussy. This tag does not have a solid definition, see existing tagged rooms",
+    "abandoned": "Similar to 'anarchy', primarily for rooms which have automated spam bots.",
+    "anarchy": "Unmoderated rooms.",
+    "hub_room_underage": "Rooms which contain a disproportionate amount of underage users.",
+    "hub_room_links": "Rooms which exist to share links to other rooms.",
+    "toddlercon": "Lolicon but younger.",
+    "loli": "Rooms which exist to host lolicon.",
+}
 
 def sync_rdlist():
 	rdlist_dir = "./rdlist"
@@ -148,7 +173,7 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 	# Deduplicate the list of all room_ids
 	all_room_ids = list(set(all_room_ids))
 
-	# Examine these room_ids for local users
+	# Examine these room_ids for local and remote users
 	all_local_users = []
 	all_remote_users = []
 	for room_id in all_room_ids:
@@ -203,27 +228,42 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 	elif preset_message != '':
 		message = preset_message
 
+	#print(f"all_room_ids: {all_room_ids}")
+
 	# Ask the user if they wish to block and purge all these rooms
-	shutdown_confirmation = input("\nNumber of rdlist rooms being shutdown: " + str(len(all_room_ids)) + "\n\nAre you sure you want to shutdown these rooms? y/n? ")
+	shutdown_confirmation = input("\nNumber of rdlist rooms being shutdown: " + str(len(all_room_ids)) + "\n\nAre you sure you want to block/shutdown these rooms? y/n? ")
 
 	total_list_kicked_users = []
 	num_rooms_blocked = 0
+	num_rooms_purged = 0
 
-	#print(f"all_room_ids: {all_room_ids}")
 	if shutdown_confirmation.lower() in ['y', 'yes', 'Y', 'Yes']:
 		for room_id in all_room_ids:
-			print(f"\n\nShutting down room: {room_id}")
-			room_state_dict = room_commands.export_room_state(room_id, "", False)
-			#print(f"\nroom_state_dict: {room_state_dict}")
-			if "Room not found" in room_state_dict.get('error', ''):
-				list_kicked_users = room_commands.shutdown_room(room_id, user_ID, new_room_name, message, False, True)
-			else:
-				list_kicked_users = room_commands.shutdown_room(room_id, user_ID, new_room_name, message, True, True)
-			num_rooms_blocked += 1
-			total_list_kicked_users.extend(list_kicked_users)
-			time.sleep(5)
+			blocked_status = room_commands.get_block_status(room_id)
+			#print(f"\nroom_details_dict: {room_details_dict}")
+			#print(f"\nblock_status: {blocked_status}")
+			# If room is already blocked, skip it
+			if blocked_status == False:
+				# Examine if unblocked room is known, if not block it
+				room_details_dict = room_commands.get_room_details(room_id)
+				if "Room not found" in room_details_dict.get('error', ''):
+					print(f"\n\nBlocking unknown room: {room_id}")
+					room_commands.set_block_status(room_id, True)
+					num_rooms_blocked += 1
+				# If unblocked room is known, perform a shutdown of the room
+				else:
+					print(f"\n\nShutting down known room: {room_id}")
+					list_kicked_users = room_commands.shutdown_room(room_id, user_ID, new_room_name, message, True, True)
+					num_rooms_purged += 1
+					total_list_kicked_users.extend(list_kicked_users)
+				if hardcoded_variables.testing_mode == True:
+					time.sleep(5)
+			elif blocked_status == True:
+				print(f"\n\nSkipping already blocked room: {room_id}")
+				if hardcoded_variables.testing_mode == True:
+					time.sleep(5)
 	elif shutdown_confirmation.lower() in ['n', 'no', 'N', 'No']:
-		print("\nSkipping these files...\n")
+		print("\nSkipping blocking/shutdown of rooms...\n")
 		return
 	else:
 		print("\nInvalid input, skipping these files...\n")
@@ -236,22 +276,26 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 	print(f"\n\nList of all kicked users: {total_list_kicked_users}\n")
 	
 	# Return the list of all kicked users
-	return num_rooms_blocked, total_list_kicked_users
+	return num_rooms_blocked, num_rooms_purged, total_list_kicked_users
 
 def block_recommended_rdlist_tags():
+	# Print warning if testing mode is enabled
+	if hardcoded_variables.testing_mode == True:
+		print("\nWARNING! Testing mode is enabled, this will reduce the amount of data generated in reports and greatly slow down rdlist blocking!\n")
+
 	# Check if user account already exists
 	account_query = user_commands.query_account(hardcoded_variables.rdlist_bot_username)
 
 	# Generate random password
-	preset_password = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(20))
+	rdlist_bot_password = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(20))
 
 	# If user is not found, create it
 	if 'User not found' in account_query:
 		# Create user account
-		user_commands.create_account(hardcoded_variables.rdlist_bot_username, preset_password)
+		user_commands.create_account(hardcoded_variables.rdlist_bot_username, rdlist_bot_password)
 	else:
 		print(f"\n@{hardcoded_variables.rdlist_bot_username}:{hardcoded_variables.base_url} account already exists. Resetting account password.")
-		user_commands.reset_password(hardcoded_variables.rdlist_bot_username, preset_password)
+		user_commands.reset_password(hardcoded_variables.rdlist_bot_username, rdlist_bot_password)
 
 	# Promote bot user to server admin
 	print(f"\nEnsuring @{hardcoded_variables.rdlist_bot_username}:{hardcoded_variables.base_url} account is a server admin.")
@@ -262,16 +306,17 @@ def block_recommended_rdlist_tags():
 	preset_message = 'THIS ROOM VIOLATES SERVER POLICIES'
 
 	# Block all rooms with recommended tag set
-	num_rooms_blocked, total_list_kicked_users = block_all_rooms_with_rdlist_tags(True, hardcoded_variables.rdlist_bot_username, preset_new_room_name, preset_message)
+	num_rooms_blocked, num_rooms_purged, total_list_kicked_users = block_all_rooms_with_rdlist_tags(True, hardcoded_variables.rdlist_bot_username, preset_new_room_name, preset_message)
 
 	# Print user login details
 	print("\n\nRoom shutdowns completed!\n\nUser login details for your moderator account:\n")
 	print("Username: " + hardcoded_variables.rdlist_bot_username)
-	print("Password: " + preset_password)
+	print("Password: " + rdlist_bot_password)
 
 	# Print statistics for the admin
 	print(f"\nPrint rdlist statistics:")
-	print(f"\nNumber of rooms blocked/purged: {num_rooms_blocked}")
+	print(f"\nNumber of rooms blocked: {num_rooms_blocked}")
+	print(f"Number of rooms purged: {num_rooms_purged}")
 	print(f"Number of local users located in rdlist rooms and kicked: {len(total_list_kicked_users)}")
 	print(f"\nThe following users were current members of rooms tagged in rdlist: {total_list_kicked_users}")
 

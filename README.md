@@ -82,18 +82,10 @@ With the popular [matrix-docker-ansible-deploy](https://github.com/spantaleev/ma
 
 To do:
 1) Add the following functions:
-- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#account-data - DONE
-- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-all-pushers - DONE
-- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#override-ratelimiting-for-users - DONE
-- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#check-username-availability - DONE
 - https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-id-in-an-auth-provider
 - https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-third-party-id-threepid-or-3pid
 - https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
-2) Make the menu prettier! - DONE
-3) Modularise the functions into multiple files - DONE
-4) Use URI module for all API calls instead of curl - DONE
-5) Add more automated rdlist function with sane defaults - DONE
-6) Add fully automated (should just return a web link and decryption password) reporting functions for users:
+2) Add fully automated (should just return a web link and decryption password) reporting functions for users:
 - Description of why the report was made (what happened)
 - User's ID - DONE
 - Whois Data - DONE
@@ -106,14 +98,14 @@ To do:
 - Timestamp for when illegal material was accessed
 - Description of report format and contents (to guide the reader)
 - Summary of key information
-7) Have recommended rdlist function return a list of offending accounts and the tags they accessed
-8) Only email reportID in incident report?
-9) Add a room report function to create a properly formatted report for rdlist
-10) Skip already shutdown rooms for speeding up rdlist blocking
-11) Add function for probing the support email of another server automatically
-12) Automated incident report email to other server owners who has users in rdlist rooms for more scalable coordination
-13) Automated public room joining and reminder if reporting email is not available?
-14) Refine ipinfo module to also return region/state of IP
+3) Have recommended rdlist function return a list of offending accounts and the tags they accessed
+4) Only email reportID in incident report?
+5) Add a room report function to create a properly formatted report for rdlist
+6) Skip already shutdown rooms for speeding up rdlist blocking
+7) Add function for probing the support email of another server automatically
+8) Automated incident report email to other server owners who has users in rdlist rooms for more scalable coordination
+9) Automated public room joining and reminder if reporting email is not available?
+10) Refine ipinfo module to also return region/state of IP
 
 
 ***
@@ -146,32 +138,66 @@ rdlist repo is up-to-date, no need to pull changes.
 Using recommended rdlist tags. Rooms matching the following tags will be purged and/or blocked:
 ['hub_room_links', 'hub_room_trade', 'preban', 'degen_misc', 'beastiality', 'degen_porn', 'gore', 'snuff', 'degen_larp', 'hub_room_sussy', 'bot_spam', 'cfm', 'jailbait', 'bot_porn', 'toddlercon', 'loli', 'csam', 'tfm', 'degen_meet', 'stylized_3d_loli', '3d_loli']
 
-WARNING! The following local users are current members of rooms tagged in rdlist: ['***REDACTED***:perthchat.org']
+WARNING! The following local users are current members of rooms tagged in rdlist: ['@***REDACTED***:perthchat.org']
 
 Do you want to generate a user report file for each of these users? y/n? n
 
 Skipping user report generation...
 
 
-Number of rdlist rooms being shutdown: 337
+Number of rdlist rooms being shutdown: 346
 
-Are you sure you want to shutdown these rooms? y/n? y
-
-
-Shutting down room: !***REDACTED***:matrix.org
-!***REDACTED***:matrix.org has been successfully shutdown!
+Are you sure you want to block/shutdown these rooms? y/n? y
 
 
-Shutting down room: !***REDACTED***:matrix.org
-!***REDACTED***:matrix.org has been successfully shutdown!
+Skipping already blocked room: !***REDACTED***:matrix.org
 
 
-Shutting down room: !***REDACTED***:anontier.nl
-!***REDACTED***:anontier.nl has been successfully shutdown!
+Skipping already blocked room: !***REDACTED***:matrix.org
 
 
-Shutting down room: !***REDACTED***:anontier.nl
-!***REDACTED***:anontier.nl has been successfully shutdown!
+Skipping already blocked room: !***REDACTED***:matrix.org
+
+
+Blocking unknown room: !***REDACTED***:matrix.org
+Successfully blocked room !***REDACTED***:matrix.org
+
+
+Blocking unknown room: !***REDACTED***:matrix.org
+Successfully blocked room !***REDACTED***:matrix.org
+
+
+Skipping already blocked room: !***REDACTED***:matrix.org
+
+
+Shutting down known room: !***REDACTED***:sibnsk.net
+Sleeping for 2 seconds...
+Sleeping for 4 seconds...
+Sleeping for 8 seconds...
+!***REDACTED***:sibnsk.net has been successfully shutdown!
+List of kicked users:
+@***REDACTED***:perthchat.org
+
+
+Skipping already blocked room: !***REDACTED***:anontier.nl
+
+
+Room shutdowns completed!
+
+User login details for your moderator account:
+
+Username: mod_team
+Password: ***REDACTED***
+
+Print rdlist statistics:
+
+Number of rooms blocked: 4
+Number of rooms purged: 2
+Number of local users located in rdlist rooms and kicked: 1
+
+The following users were current members of rooms tagged in rdlist: ['@***REDACTED***:perthchat.org']
+
+Do you want to also deactivate all these accounts that were kicked from rdlist rooms? y/n?
 ...
 ```
 

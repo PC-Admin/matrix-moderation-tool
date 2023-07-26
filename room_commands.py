@@ -13,7 +13,7 @@ def parse_username(username):
 	username = username.replace(tail_end,'')
 	return username
 
-def list_room_details(preset_internal_ID):
+def get_room_details(preset_internal_ID):
 	if preset_internal_ID == '':
 		internal_ID = input("\nEnter the internal id of the room you wish to query (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
 	elif preset_internal_ID != '':
@@ -345,6 +345,7 @@ def shutdown_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_
 	status = "null"
 	count = 0
 	sleep_time = 1
+	list_kicked_users = []
 
 	while status != "complete" and count < 8:
 		time.sleep(sleep_time)
@@ -362,7 +363,6 @@ def shutdown_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_
 
 	if status == "complete":
 		print(f"{internal_ID} has been successfully shutdown!")
-		list_kicked_users = []
 		if str(output_json["results"][0]["shutdown_room"]["kicked_users"]) != '[]':
 			print("List of kicked users:")
 			for entry in output_json["results"][0]["shutdown_room"]["kicked_users"]:
@@ -370,7 +370,6 @@ def shutdown_room(preset_internal_ID,preset_user_ID,preset_new_room_name,preset_
 				print(entry)
 	else:
 		print(f"Failed to shutdown {internal_ID}!")
-		list_kicked_users = []
 
 	return list_kicked_users
 
@@ -582,3 +581,55 @@ def purge_multiple_rooms_to_timestamp():
 
 # Example:
 # See purge_room_to_timestamp()
+
+def get_block_status(preset_internal_ID):
+	if preset_internal_ID == '':
+		internal_ID = input("\nEnter the internal id of a room to examine if it's blocked (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	else:
+		internal_ID = preset_internal_ID
+
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/rooms/{internal_ID}/block"
+	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}
+
+	response = requests.get(url, headers=headers, verify=True)
+
+	# Ensure the request was successful
+	if response.status_code == 200:
+		block_status = json.loads(response.text)['block']
+	else:
+		print(f"Error: Unable to fetch block status for room {internal_ID}")
+		block_status = None
+
+	return block_status
+
+# Example:
+# $ curl -X GET -H 'Authorization: Bearer ACCESS_TOKEN' 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!IdieserRBwPdaCGYuKk:matrix.org/block'
+# {"block":false}
+
+def set_block_status(preset_internal_ID, block):
+	if preset_internal_ID == '':
+		internal_ID = input("\nEnter the internal id of a room to block/unblock (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
+	else:
+		internal_ID = preset_internal_ID
+
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/rooms/{internal_ID}/block"
+	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}", "Content-Type": "application/json"}
+	data = {"block": block}
+
+	response = requests.put(url, headers=headers, json=data, verify=True)
+
+	# Ensure the request was successful
+	if response.status_code == 200:
+		block_status = json.loads(response.text)['block']
+		if block_status == block and block == True:
+			print(f"Successfully blocked room {internal_ID}")
+		elif block_status == block and block == False:
+			print(f"Successfully unblocked room {internal_ID}")
+		else:
+			print(f"Failed to set block status for room {internal_ID} to {block}")
+	else:
+		print(f"Error: Unable to set block status for room {internal_ID}")
+
+# Example:
+#$ curl -X PUT -H 'Authorization: Bearer ACCESS_TOKEN' -H 'Content-Type: application/json' -d '{"block": true}' 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!UQEvAyhSqHxohkIyvm:perthchat.org/block'
+#{"block":true}

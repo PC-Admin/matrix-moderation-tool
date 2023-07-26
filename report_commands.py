@@ -62,7 +62,7 @@ def encrypt_user_folder(user_report_folder, username):
 	# You can return the password if you need to use it later, or you can directly print it here
 	return strong_password, zip_file_name + ".aes"
 
-def generate_user_report(preset_username):
+def generate_user_report(preset_username, report_details):
 	if len(preset_username) == 0:
 		username = input("\nPlease enter the username to automatically generate a report: ")
 		username = user_commands.parse_username(username)
@@ -86,6 +86,13 @@ def generate_user_report(preset_username):
 
 	if os.path.exists(user_report_folder) == False:
 		os.mkdir(user_report_folder)
+
+	# Collect and write the report details to ./report/username/report_details.txt
+	if report_details == '':
+		report_details = input("\nPlease enter the details for this report. Include as much detail as possible, including:\n A description of what happened.\n Timestamps of events. \n Whether this user was a repeat offender, if so include details about previous incidents. \n Other user or rooms involved. \n Other evidence you've collected against this user. \n Whether the offending users were deactivated. \n Whether the offending rooms were shut down.")
+	report_details_file = open(user_report_folder + "report_details.txt", "w")
+	report_details_file.write(report_details)
+	report_details_file.close()
 
 	# Get user account data and write to ./report/username/account_data.json
 	account_data = user_commands.collect_account_data(username)
@@ -155,7 +162,7 @@ def generate_user_report(preset_username):
 	for room in room_list:
 		count += 1
 		room = room.split(" ")[0]
-		room_details = room_commands.list_room_details(room)
+		room_details = room_commands.get_room_details(room)
 
 		# Check the room conditions to select the proper output folders
 		if room_details['joined_members'] == 2 and room_details['public'] == False:
@@ -215,7 +222,7 @@ def lookup_homeserver_admin_email(preset_baseurl):
 		response = None
 
 	# If the request was successful, the status code will be 200
-	if response and response.status_code == 200:
+	if response.status_code == 200 and "email_address" in response.text:
 		# Parse the response as JSON
 		data = json.loads(response.text)
 
