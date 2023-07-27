@@ -35,37 +35,38 @@ while pass_token == False:
 	print("\nA tool for making common Synapse moderation tasks easier. Created by @PC-Admin.")
 	print("\n----------------------------------------------")
 	print("\n#### User Account Commands ####\t\t\t#### Room Commands ####")
-	print("1) Deactivate a user account.\t\t\t20) List details of a room.")
-	print("2) Deactivate multiple user accounts.\t\t21) List the members of a room.")
-	print("3) Create a user account.\t\t\t22) Export the state events of a target room.")
-	print("4) Create multiple user accounts.\t\t23) List rooms in public directory.")
-	print("5) Reset a users password.\t\t\t24) Remove a room from the public directory.")
-	print("6) Whois user account.\t\t\t\t25) Remove multiple rooms from the public directory.")
-	print("7) Whois multiple user accounts.\t\t26) Redact a room event.")
-	print("8) Query user account.\t\t\t\t27) List/Download all media in a room.")
-	print("9) Query multiple user accounts.\t\t28) Download media from multiple rooms.")
-	print("10) List room memberships of user.\t\t29) Quarantine all media in a room.")
-	print("11) Promote a user to server admin.\t\t30) Shutdown a room.")
-	print("12) List all user accounts.\t\t\t31) Shutdown multiple rooms.")
-	print("13) Quarantine all media a users uploaded.\t32) Delete a room.")
-	print("14) Collect account data.\t\t\t33) Delete multiple rooms.")
-	print("15) List account pushers.\t\t\t34) Purge the event history of a room to a specific timestamp.")
-	print("16) Get rate limit of a user account.\t\t35) Purge the event history of multiple rooms to a specific timestamp.")
-	print("17) Set rate limit of a user account.\t\t36) Get blocked status for room.")
-	print("18) Delete rate limit of a user account.\t37) Block a room.")
-	print("19) Check if user account exists.\t\t38) Unblock a room.")
+	print("1) Deactivate a user account.\t\t\t50) List details of a room.")
+	print("2) Deactivate multiple user accounts.\t\t51) List the members of a room.")
+	print("3) Create a user account.\t\t\t52) Export the state events of a room.")
+	print("4) Create multiple user accounts.\t\t53) Export the state events of multiple rooms.")
+	print("5) Reset a users password.\t\t\t54) List rooms in public directory.")
+	print("6) Whois user account.\t\t\t\t55) Remove a room from the public directory.")
+	print("7) Whois multiple user accounts.\t\t56) Remove multiple rooms from the public directory.")
+	print("8) Query user account.\t\t\t\t57) Redact a room event.")
+	print("9) Query multiple user accounts.\t\t58) List/Download all media in a room.")
+	print("10) List room memberships of user.\t\t59) Download media from multiple rooms.")
+	print("11) Promote a user to server admin.\t\t60) Quarantine all media in a room.")
+	print("12) List all user accounts.\t\t\t61) Shutdown a room.")
+	print("13) Quarantine all media a users uploaded.\t62) Shutdown multiple rooms.")
+	print("14) Collect account data.\t\t\t63) Delete a room.")
+	print("15) List account pushers.\t\t\t64) Delete multiple rooms.")
+	print("16) Get rate limit of a user account.\t\t65) Purge the event history of a room to a specific timestamp.")
+	print("17) Set rate limit of a user account.\t\t66) Purge the event history of multiple rooms to a specific timestamp.")
+	print("18) Delete rate limit of a user account.\t67) Get blocked status for room.")
+	print("19) Check if user account exists.\t\t68) Block a room.")
+	print("\t\t\t\t\t\t69) Unblock a room.")
 	print("\n#### Server Commands ####\t\t\t\t\t#### Report Generation ####")
-	print("40) Delete and block a specific media.\t\t\t\t70) Generate user report.")
-	print("41) Purge remote media repository up to a certain date.\t\t71) Decrypt user report .zip file.")
-	print("42) Prepare database for copying events of multiple rooms.\t72) Lookup homeserver admin contact email.")
-	print("\t\t\t\t\t\t\t\t73) Send a test email.")
-	print("#### rdlist ####\t\t\t\t\t\t74) Send test incident reports to yourself.")
-	print("50) Block all rooms with specific rdlist tags.")
-	print("51) Block all rooms with recommended rdlist tags.")
-	print("52) Get rdlist tags for a room.")
+	print("100) Delete and block a specific media.\t\t\t\t150) Generate user report.")
+	print("101) Purge remote media repository up to a certain date.\t\t151) Decrypt user report .zip file.")
+	print("102) Prepare database for copying events of multiple rooms.\t152) Lookup homeserver admin contact email.")
+	print("\t\t\t\t\t\t\t\t153) Send a test email.")
+	print("#### rdlist ####\t\t\t\t\t\t154) Send test incident reports to yourself.")
+	print("120) Block all rooms with specific rdlist tags.")
+	print("121) Block all rooms with recommended rdlist tags.")
+	print("122) Get rdlist tags for a room.")
 	print("\n#### ipinfo.io ####")
-	print("60) Analyse a users country of origin.")
-	print("61) Analyse multiple users country of origin.")
+	print("140) Analyse a users country of origin.")
+	print("141) Analyse multiple users country of origin.")
 	print("\nPlease enter a number from the above menu, or enter 'q' or 'e' to exit.\n")
 	menu_input = input()
 	if menu_input == "1":
@@ -115,81 +116,83 @@ while pass_token == False:
 			print("\nUser account exists.\n")
 		elif user_account_exists == False:
 			print("\nUser account does not exist.\n")
-	elif menu_input == "20":
+	elif menu_input == "50":
 		room_details_dict = room_commands.get_room_details('')
 		print(json.dumps(room_details_dict, indent=4, sort_keys=True))
-	elif menu_input == "21":
+	elif menu_input == "51":
 		room_members_dict = room_commands.get_room_members('',False)
 		print(json.dumps(room_members_dict, indent=4, sort_keys=True))
-	elif menu_input == "22":
+	elif menu_input == "52":
 		room_commands.export_room_state('','',True)
-	elif menu_input == "23":
+	elif menu_input == "53":
+		room_commands.export_multiple_room_states()
+	elif menu_input == "54":
 		room_commands.public_directory_rooms()
-	elif menu_input == "24":
+	elif menu_input == "55":
 		room_commands.remove_room_from_directory('')
-	elif menu_input == "25":
+	elif menu_input == "56":
 		room_commands.remove_multiple_rooms_from_directory()
-	elif menu_input == "26":
+	elif menu_input == "57":
 		room_commands.redact_room_event()
-	elif menu_input == "27":
+	elif menu_input == "58":
 		room_commands.list_and_download_media_in_room('','','','./')
-	elif menu_input == "28":
+	elif menu_input == "59":
 		room_commands.download_media_from_multiple_rooms()
-	elif menu_input == "29":
+	elif menu_input == "60":
 		room_commands.quarantine_media_in_room()
-	elif menu_input == "30":
+	elif menu_input == "61":
 		room_commands.shutdown_room('','','','','','')
-	elif menu_input == "31":
+	elif menu_input == "62":
 		room_commands.shutdown_multiple_rooms()
-	elif menu_input == "32":
+	elif menu_input == "63":
 		room_commands.delete_room('')
-	elif menu_input == "33":
+	elif menu_input == "64":
 		room_commands.delete_multiple_rooms()
-	elif menu_input == "34":
+	elif menu_input == "65":
 		room_commands.purge_room_to_timestamp('','')
-	elif menu_input == "35":
+	elif menu_input == "66":
 		room_commands.purge_multiple_rooms_to_timestamp()
-	elif menu_input == "36":
+	elif menu_input == "67":
 		blocked_status = room_commands.get_block_status('')
 		if blocked_status == True:
 			print("\nRoom is blocked.\n")
 		elif blocked_status == False:
 			print("\nRoom is not blocked.\n")
 		print(json.dumps(blocked_status, indent=4, sort_keys=True))
-	elif menu_input == "37":
+	elif menu_input == "68":
 		room_commands.set_block_status('', True)
-	elif menu_input == "38":
+	elif menu_input == "69":
 		room_commands.set_block_status('', False)
-	elif menu_input == "40":
+	elif menu_input == "100":
 		server_commands.delete_block_media()
-	elif menu_input == "41":
+	elif menu_input == "101":
 		server_commands.purge_remote_media_repo()
-	elif menu_input == "42":
+	elif menu_input == "102":
 		server_commands.prepare_database_copy_of_multiple_rooms()
-	elif menu_input == "50":
+	elif menu_input == "120":
 		rdlist_commands.block_all_rooms_with_rdlist_tags(False,'','','')
-	elif menu_input == "51":
+	elif menu_input == "121":
 		rdlist_commands.block_recommended_rdlist_tags()
-	elif menu_input == "52":
+	elif menu_input == "122":
 		rdlist_tags = rdlist_commands.get_rdlist_tags('')
 		print(json.dumps(rdlist_tags, indent=4, sort_keys=True))
-	elif menu_input == "60":
+	elif menu_input == "140":
 		ipinfo_commands.analyse_account_ip('')
-	elif menu_input == "61":
+	elif menu_input == "141":
 		ipinfo_commands.analyse_multiple_account_ips()
-	elif menu_input == "70":
+	elif menu_input == "150":
 		report_commands.generate_user_report('','')
-	elif menu_input == "71":
+	elif menu_input == "151":
 		report_commands.decrypt_zip_file()
-	elif menu_input == "72":
+	elif menu_input == "152":
 		report_commands.lookup_homeserver_admin_email('')
-	elif menu_input == "73":
+	elif menu_input == "153":
 		report_commands.test_send_email()
-	elif menu_input == "74":
+	elif menu_input == "154":
 		report_commands.test_send_incident_reports()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
 		pass_token = True
 	else:
-		print("\nIncorrect input detected, please select a number from 1 to 74!\n")
+		print("\nIncorrect input detected, please select a number from 1 to 154!\n")
 

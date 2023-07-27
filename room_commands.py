@@ -111,6 +111,25 @@ def export_room_state(preset_internal_ID, preset_directory, save_to_file):
 # See
 # https://matrix-org.github.io/synapse/latest/admin_api/rooms.html#room-state-api
 
+def export_multiple_room_states(preset_internal_IDs=None, preset_directory=''):
+    print("Export multiple room states selected")
+
+    if preset_internal_IDs is None:
+        room_list_location = input("\nPlease enter the path of the file containing a JSON array of rooms: ")
+        with open(room_list_location, 'r') as f:
+            room_ids = json.load(f)
+    else:
+        room_ids = preset_internal_IDs
+
+    print("\n" + str(room_ids) + "\n")
+    export_confirmation = input("\nAre you sure you want to export the state of all of these rooms? y/n?\n")
+
+    if export_confirmation in ["y", "yes", "Y", "Yes"]:
+        for room_id in room_ids:
+            export_room_state(room_id, preset_directory, True)
+    elif export_confirmation in ["n", "no", "N", "No"]:
+        print("Export canceled by user.")
+
 def public_directory_rooms():
 	url = f"https://{hardcoded_variables.homeserver_url}/_matrix/client/r0/publicRooms"
 	headers = {"Authorization": f"Bearer {hardcoded_variables.access_token}"}

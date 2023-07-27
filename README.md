@@ -98,7 +98,10 @@ To do:
 - Timestamp for when illegal material was accessed
 - Description of report format and contents (to guide the reader)
 - Summary of key information
-3) Have recommended rdlist function return a list of offending accounts and the tags they accessed
+- Collect state event dumps of recently read rooms as well (as they may have looked at other suss rooms recently)
+3) Have recommended rdlist function:
+- return a list of offending accounts and the tags they accessed (for creating incident_dict's)
+- add the shadowban function to prevent members alerting others after mass shutdowns
 4) Only email reportID in incident report?
 5) Add a room report function to create a properly formatted report for rdlist
 6) Skip already shutdown rooms for speeding up rdlist blocking
@@ -125,7 +128,7 @@ Please select one of the following options:
 ...
 Please enter a number from the above menu, or enter 'q' or 'e' to exit.
 
-51
+121
 
 @mod_team:perthchat.org account already exists. Resetting account password.
 
@@ -216,7 +219,7 @@ It collects as much data about the target user account as possible, then package
 
 Please enter a number from the above menu, or enter 'q' or 'e' to exit.
 
-70
+150
 
 Please enter the username to automatically generate a report: michael
 

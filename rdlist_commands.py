@@ -271,9 +271,6 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 
 	# Deduplicate the list of all kicked users
 	total_list_kicked_users = list(set(total_list_kicked_users))
-
-	# Print the list of all kicked users
-	print(f"\n\nList of all kicked users: {total_list_kicked_users}\n")
 	
 	# Return the list of all kicked users
 	return num_rooms_blocked, num_rooms_purged, total_list_kicked_users

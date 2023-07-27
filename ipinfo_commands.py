@@ -8,6 +8,8 @@ import socket
 import hardcoded_variables
 import user_commands
 
+# Should use: https://github.com/ipinfo/python
+
 def is_valid_ipv4(ip):
 	try:
 		socket.inet_pton(socket.AF_INET, ip)
