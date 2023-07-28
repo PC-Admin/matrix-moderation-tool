@@ -54,10 +54,10 @@ while pass_token == False:
 	print("17) Set rate limit of a user account.\t\t66) Purge the event history of multiple rooms to a specific timestamp.")
 	print("18) Delete rate limit of a user account.\t67) Get blocked status for room.")
 	print("19) Check if user account exists.\t\t68) Block a room.")
-	print("\t\t\t\t\t\t69) Unblock a room.")
+	print("20) Shadow ban a user.\t\t\t\t69) Unblock a room.")
 	print("\n#### Server Commands ####\t\t\t\t\t#### Report Generation ####")
 	print("100) Delete and block a specific media.\t\t\t\t150) Generate user report.")
-	print("101) Purge remote media repository up to a certain date.\t\t151) Decrypt user report .zip file.")
+	print("101) Purge remote media repository up to a certain date.\t151) Decrypt user report .zip file.")
 	print("102) Prepare database for copying events of multiple rooms.\t152) Lookup homeserver admin contact email.")
 	print("\t\t\t\t\t\t\t\t153) Send a test email.")
 	print("#### rdlist ####\t\t\t\t\t\t154) Send test incident reports to yourself.")
@@ -116,6 +116,9 @@ while pass_token == False:
 			print("\nUser account exists.\n")
 		elif user_account_exists == False:
 			print("\nUser account does not exist.\n")
+	elif menu_input == "20":
+		shadow_ban_dict = user_commands.shadow_ban_account('')
+		print(json.dumps(shadow_ban_dict, indent=4, sort_keys=True))
 	elif menu_input == "50":
 		room_details_dict = room_commands.get_room_details('')
 		print(json.dumps(room_details_dict, indent=4, sort_keys=True))

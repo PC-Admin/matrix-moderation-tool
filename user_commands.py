@@ -505,3 +505,23 @@ def check_user_account_exists(preset_username):
 
 # Example:
 # $ curl -X GET /_synapse/admin/v1/username_available?username=dogpoo&access_token=ACCESS_TOKEN
+
+def shadow_ban_account(preset_username):
+	if preset_username == '':
+		username = input("\nPlease enter the username you wish to shadow ban: ")
+	elif preset_username != '':
+		username = preset_username
+	username = parse_username(username)
+
+	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/shadow_ban"
+	url += f"?access_token={hardcoded_variables.access_token}"
+
+	response = requests.post(url, verify=True)
+
+	if response.status_code != 200:
+		print(f"Error shadow banning account: {response.status_code}, {response.text}\n")
+
+	return json.loads(response.text)
+
+# Example:
+# curl -XPOST -H "Content-Type: application/json" 'https://matrix.perthchat.org/_synapse/admin/v1/users/@dogpoo:perthchat.org/shadow_ban?access_token=ACCESS_TOKEN'

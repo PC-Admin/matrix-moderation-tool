@@ -238,6 +238,13 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 	num_rooms_purged = 0
 
 	if shutdown_confirmation.lower() in ['y', 'yes', 'Y', 'Yes']:
+		# Ask the user if they wish to shadow ban all local users in these rooms
+		shadow_ban_confirmation = input("\nDo you want to also shadow ban all your local users in these rooms before performing these shutdowns? (This is recommended as it prevents them from alerting others about these mass shutdown.) y/n? ")
+		# Perform shadow bans if admin confirms
+		if shadow_ban_confirmation in ['y', 'yes', 'Y', 'Yes']:
+			for user in all_local_users:
+				print(f"\nShadow banning user: {user}")
+				user_commands.shadow_ban_account(user)
 		for room_id in all_room_ids:
 			blocked_status = room_commands.get_block_status(room_id)
 			#print(f"\nroom_details_dict: {room_details_dict}")
