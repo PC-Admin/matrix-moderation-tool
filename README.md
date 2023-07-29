@@ -86,7 +86,7 @@ To do:
 - https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-third-party-id-threepid-or-3pid
 - https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
 2) Add fully automated (should just return a web link and decryption password) reporting functions for users:
-- Description of why the report was made (what happened)
+- Description of why the report was made (what happened), include key information
 - User's ID - DONE
 - Whois Data - DONE
 - Account Data - DONE
@@ -97,18 +97,16 @@ To do:
 - Any other usernames associated with that IP
 - Timestamp for when illegal material was accessed
 - Description of report format and contents (to guide the reader)
-- Summary of key information
 - Collect state event dumps of recently read rooms as well (as they may have looked at other suss rooms recently)
 3) Have recommended rdlist function:
 - return a list of offending accounts and the tags they accessed (for creating incident_dict's)
-- add the shadowban function to prevent members alerting others after mass shutdowns
+- add the shadowban function to prevent members alerting others after mass shutdowns - DONE
 4) Only email reportID in incident report?
 5) Add a room report function to create a properly formatted report for rdlist
-6) Skip already shutdown rooms for speeding up rdlist blocking
-7) Add function for probing the support email of another server automatically
-8) Automated incident report email to other server owners who has users in rdlist rooms for more scalable coordination
-9) Automated public room joining and reminder if reporting email is not available?
-10) Refine ipinfo module to also return region/state of IP
+6) Expand the incident reporting to also issue reports over Matrix
+7) Automated public room joining and reminder if reporting email is not available?
+8) Refine ipinfo module to also return extra details about the IP
+9) Make existing functions compatible with JSON formatted inputs
 
 
 ***

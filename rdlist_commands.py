@@ -10,33 +10,6 @@ import room_commands
 import report_commands
 import hardcoded_variables
 
-rdlist_tag_descriptions = {
-    "csam": "Child Sexual Abuse Material",
-    "cfm": "An abundance of content which would directly appeal to those seeking csam.",
-    "jailbait": "Photos which contain underage individuals in questionable or suggestive situations.",
-    "tfm": "An abundance of content which would directly appeal to those seeking jailbait.",
-    "beastiality": "Self explanatory.",
-    "3d_loli": "Pornography which depicts photorealistic underage characters.",
-    "stylized_3d_loli": "Pornography which depicts underage characters that are not depicted in a realistic style.",
-    "gore": "Self explanatory.",
-    "snuff": "Self explanatory.",
-    "degen_misc": "Other types of coomers rooms.",
-    "degen_larp": "Coomer larp rooms.",
-    "degen_meet": "Coomer socializing rooms.",
-    "degen_porn": "Rooms dedicated to pornography, excluding types which have dedicated tags.",
-    "bot_porn": "Rooms which contain bots that spam pornographic content.",
-    "bot_spam": "Rooms which contain bots that spam content. Primarily for malvertising and cryptospam",
-    "preban": "Rooms which may not contain tagged content, however have clear intent. i.e: Rooms with names like 'CP Room', 'Child Porn', etc",
-    "hub_room_trade": "Rooms which exist solely to trade illegal or questionable content. i.e: csam, jailbait",
-    "hub_room_sussy": "A room which is sussy. This tag does not have a solid definition, see existing tagged rooms",
-    "abandoned": "Similar to 'anarchy', primarily for rooms which have automated spam bots.",
-    "anarchy": "Unmoderated rooms.",
-    "hub_room_underage": "Rooms which contain a disproportionate amount of underage users.",
-    "hub_room_links": "Rooms which exist to share links to other rooms.",
-    "toddlercon": "Lolicon but younger.",
-    "loli": "Rooms which exist to host lolicon.",
-}
-
 def sync_rdlist():
 	rdlist_dir = "./rdlist"
 	os.makedirs(rdlist_dir, exist_ok=True)
@@ -290,20 +263,13 @@ def block_recommended_rdlist_tags():
 	# Check if user account already exists
 	account_query = user_commands.query_account(hardcoded_variables.rdlist_bot_username)
 
-	# Generate random password
-	rdlist_bot_password = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(20))
-
 	# If user is not found, create it
 	if 'User not found' in account_query:
 		# Create user account
-		user_commands.create_account(hardcoded_variables.rdlist_bot_username, rdlist_bot_password)
+		user_commands.create_account(hardcoded_variables.rdlist_bot_username, hardcoded_variables.rdlist_bot_password)
 	else:
 		print(f"\n@{hardcoded_variables.rdlist_bot_username}:{hardcoded_variables.base_url} account already exists. Resetting account password.")
-		user_commands.reset_password(hardcoded_variables.rdlist_bot_username, rdlist_bot_password)
-
-	# Promote bot user to server admin
-	print(f"\nEnsuring @{hardcoded_variables.rdlist_bot_username}:{hardcoded_variables.base_url} account is a server admin.")
-	user_commands.set_user_server_admin(hardcoded_variables.rdlist_bot_username)
+		user_commands.reset_password(hardcoded_variables.rdlist_bot_username, hardcoded_variables.rdlist_bot_password)
 
 	# Define default valies for shutdown_room()
 	preset_new_room_name = 'POLICY VIOLATION'
@@ -315,7 +281,7 @@ def block_recommended_rdlist_tags():
 	# Print user login details
 	print("\n\nRoom shutdowns completed!\n\nUser login details for your moderator account:\n")
 	print("Username: " + hardcoded_variables.rdlist_bot_username)
-	print("Password: " + rdlist_bot_password)
+	print("Password: " + hardcoded_variables.rdlist_bot_password)
 
 	# Print statistics for the admin
 	print(f"\nPrint rdlist statistics:")

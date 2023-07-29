@@ -9,6 +9,7 @@ import zipfile
 import pyAesCrypt
 import smtplib
 import requests
+import asyncio
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
@@ -17,7 +18,49 @@ from email import encoders
 import user_commands
 import room_commands
 import ipinfo_commands
+import bot_commands
 import hardcoded_variables
+
+rdlist_tag_descriptions = {
+    "csam": "Child Sexual Abuse Material",
+    "cfm": "An abundance of content which would directly appeal to those seeking csam.",
+    "jailbait": "Photos which contain underage individuals in questionable or suggestive situations.",
+    "tfm": "An abundance of content which would directly appeal to those seeking jailbait.",
+    "beastiality": "Self explanatory.",
+    "3d_loli": "Pornography which depicts photorealistic underage characters.",
+    "stylized_3d_loli": "Pornography which depicts underage characters that are not depicted in a realistic style.",
+    "gore": "Self explanatory.",
+    "snuff": "Self explanatory.",
+    "degen_misc": "Other types of coomers rooms.",
+    "degen_larp": "Coomer larp rooms.",
+    "degen_meet": "Coomer socializing rooms.",
+    "degen_porn": "Rooms dedicated to pornography, excluding types which have dedicated tags.",
+    "bot_porn": "Rooms which contain bots that spam pornographic content.",
+    "bot_spam": "Rooms which contain bots that spam content. Primarily for malvertising and cryptospam",
+    "preban": "Rooms which may not contain tagged content, however have clear intent. i.e: Rooms with names like 'CP Room', 'Child Porn', etc",
+    "hub_room_trade": "Rooms which exist solely to trade illegal or questionable content. i.e: csam, jailbait",
+    "hub_room_sussy": "A room which is sussy. This tag does not have a solid definition, see existing tagged rooms",
+    "abandoned": "Similar to 'anarchy', primarily for rooms which have automated spam bots.",
+    "anarchy": "Unmoderated rooms.",
+    "hub_room_underage": "Rooms which contain a disproportionate amount of underage users.",
+    "hub_room_links": "Rooms which exist to share links to other rooms.",
+    "toddlercon": "Lolicon but younger.",
+    "loli": "Rooms which exist to host lolicon.",
+}
+
+confidentiality_warning = f"""\n\n**********************************************************************
+\t\tATTENTION! CONFIDENTIALITY NOTICE!
+\nThis electronic mail and any files linked to it may hold information
+that is privileged, confidential, and intended exclusively for the use of
+the designated recipient or entity. If you're not the expected recipient or
+the individual tasked with delivering the electronic mail to the intended recipient,
+be aware that you've received this mail in error. Any utilization, duplication,
+distribution, forwarding, printing, or publicizing of this email or the attached files
+is strictly prohibited, as is revealing the information contained within.
+If you've received this email in error, please promptly inform the sender and
+remove it from your electronic mailbox.
+\n**********************************************************************
+"""
 
 def get_report_folder():
 	# Get report_folder from hardcoded_variables
@@ -202,8 +245,10 @@ def decrypt_zip_file():
 	# Print the location of the decrypted ZIP file
 	print("\nDecrypted .zip file location: " + encrypted_zip_file_name[:-4] + "\n")
 
-def lookup_homeserver_admin_email(preset_baseurl):
-	if preset_baseurl == '':
+def lookup_homeserver_admin(preset_baseurl):
+	if hardcoded_variables.testing_mode == True:
+		baseurl = hardcoded_variables.base_url
+	elif preset_baseurl == '':
 		baseurl = input("\nEnter the base URL to collect the admin contact details (Example: matrix.org): ")
 	elif preset_baseurl != '':
 		baseurl = preset_baseurl
@@ -211,7 +256,7 @@ def lookup_homeserver_admin_email(preset_baseurl):
 	# If baseurl is matrix.org, return 'abuse@matrix.org' as a hardcoded response
 	if baseurl == "matrix.org":
 		print("\nAdmin contact email(s) for " + baseurl + " are: abuse@matrix.org")
-		return {"matrix.org": ["abuse@matrix.org"]}, False
+		return {"admins": {"email_address": "abuse@matrix.org"}}, False
 
 	# Check target homserver for MSC1929 support email
 	url = f"https://{baseurl}/.well-known/matrix/support"
@@ -222,28 +267,22 @@ def lookup_homeserver_admin_email(preset_baseurl):
 		response = None
 
 	# If the request was successful, the status code will be 200
-	if response.status_code == 200 and "email_address" in response.text:
+	if response.status_code == 200 and ( "email_address" in response.text or "matrix_id" in response.text ):
 		# Parse the response as JSON
 		data = json.loads(response.text)
 
-		# Extract the emails from the admins field and remove duplicates
-		admin_emails = list({admin['email_address'] for admin in data['admins']})
+		#print("\nAdmin contact details for " + baseurl + " are: " + str(data))
 
-		print("\nAdmin contact emails for " + baseurl + " are: " + str(admin_emails))
-
-		# Create a dictionary with baseurl as key and emails as value
-		email_dict = {baseurl: admin_emails}
-
-		return email_dict, False
+		return data, False
 	else:
-		print(f"Error: Unable to collect admin email from server {baseurl}")
+		print(f"Error: Unable to collect admin contact details from server {baseurl}")
 		print("Attempting to collect admin email from WHOIS data...")
 
 		# Get WHOIS data
 		try:
 			w = whois.whois(baseurl)
 			if w.emails:
-				print("\nAdmin contact email(s) for " + baseurl + " are: " + str(w.emails))
+				#print("\nAdmin contact email(s) for " + baseurl + " are: " + str(w.emails))
 				return {baseurl: list(w.emails)}, True
 			else:
 				print(f"Error: Unable to collect admin email from WHOIS data for {baseurl}")
@@ -285,11 +324,11 @@ def send_email(email_address, email_subject, email_content, email_attachments):
 
 def test_send_email():
 	# Ask the user for the destination email address
-	email_address = input("\nPlease enter the destination email address to send this test email too: ")
+	email_address = hardcoded_variables.incident_report_return_email
 
 	# Example email parameters
-	email_subject = "Test Email"
-	email_content = "This is a test email."
+	email_subject = "Incident Report"
+	email_content = "Hello! This is a test email. Please ignore it."
 	email_attachments = ["./test_data/evil_clown.jpeg"]  # List of file paths. Adjust this to the actual files you want to attach.
 
 	# Try to send the email
@@ -307,14 +346,17 @@ We regret to inform you that there have been incidents involving the following u
 	for full_username, room_dict in user_dict.items():
 		email_content += f"\nUser: {full_username}\n"
 		for room_id, rdlist_tags in room_dict.items():
-			email_content += f"Is in the room {room_id}, this room has been flagged with the following rdlist tags:\n{', '.join(rdlist_tags)}\n"
+			email_content += f"\n  Is in the room: {room_id}\n  This room has been flagged with the following rdlist tags:\n"
+			for tag in rdlist_tags:
+				tag_description = rdlist_tag_descriptions.get(tag, "No description available.")
+				email_content += f"  - {tag} ({tag_description})\n"
 
 	email_content += f"""
 
 We request your immediate attention to this matter. It is recommended that you:
 - Generate a report on these users' accounts and send it to law enforcement.
 - Block and purge these rooms from your homeserver.
-- Deactivate these users' accounts.
+- Deactivate these users' accounts, or retain them for further observation.
 
 All of these actions can be done automatically using this moderation tool:
 https://github.com/PC-Admin/matrix-moderation-tool
@@ -323,15 +365,14 @@ https://github.com/PC-Admin/matrix-moderation-tool
 \tTHIS EMAIL IS UNMONITORED, PLEASE DO NOT REPLY TO IT
 **********************************************************************
 
-To contact us please email {hardcoded_variables.report_return_email}.
+To contact us please email {hardcoded_variables.incident_report_return_email}.
 
 Thank you for helping us make Matrix safer.
 
 Best regards,
-Incident Report Team
+Abuse Management Team
 https://{hardcoded_variables.base_url}
 """
-
 	if from_whois:
 		email_content += f"""\n\n**********************************************************************
 \tATTENTION DOMAIN REGISTRAR, YOUR ACTION IS REQUIRED HERE
@@ -342,25 +383,49 @@ https://{hardcoded_variables.base_url}
 https://github.com/matrix-org/matrix-spec-proposals/pull/1929
 		"""
 
-	confidentiality_warning = f"""\n\n**********************************************************************
-\t\tATTENTION! CONFIDENTIALITY NOTICE!
-\nThis electronic mail and any files linked to it may hold information
-that is privileged, confidential, and intended exclusively for the use of
-the designated recipient or entity. If you're not the expected recipient or
-the individual tasked with delivering the electronic mail to the intended recipient,
-be aware that you've received this mail in error. Any utilization, duplication,
-distribution, forwarding, printing, or publicizing of this email or the attached files
-is strictly prohibited, as is revealing the information contained within.
-If you've received this email in error, please promptly inform the sender and
-remove it from your electronic mailbox.
-	\n**********************************************************************
-	"""
-
 	email_content += confidentiality_warning
 	return email_content
 
+def prepare_message_content(user_dict, baseurl):
+	message_content = f"""Dear Administrator,
 
-def send_incident_report(incidents_dict):
+We regret to inform you that there have been incidents involving the following users in your homeserver:
+	"""
+
+	for full_username, room_dict in user_dict.items():
+		message_content += f"\nUser: {full_username}\n"
+		for room_id, rdlist_tags in room_dict.items():
+			message_content += f"\n  Is in the room: {room_id}\n  This room has been flagged with the following rdlist tags:\n"
+			for tag in rdlist_tags:
+				tag_description = rdlist_tag_descriptions.get(tag, "No description available.")
+				message_content += f"  - {tag} ({tag_description})\n"
+
+	message_content += f"""
+
+We request your immediate attention to this matter. It is recommended that you:
+- Generate a report on these users' accounts and send it to law enforcement.
+- Block and purge these rooms from your homeserver.
+- Deactivate these users' accounts, or retain them for further observation.
+
+All of these actions can be done automatically using this moderation tool:
+https://github.com/PC-Admin/matrix-moderation-tool
+
+**********************************************************************
+\tTHIS ACCOUNT IS UNMONITORED, PLEASE DO NOT REPLY TO IT
+**********************************************************************
+
+To contact us please message {hardcoded_variables.incident_report_return_mxid}.
+
+Thank you for helping us make Matrix safer.
+
+Best regards,
+Abuse Management Team
+https://{hardcoded_variables.base_url}
+"""
+
+	return message_content
+
+async def send_incident_report(incidents_dict):
 	success = True
 	homeserver_dict = {}
 
@@ -372,61 +437,72 @@ def send_incident_report(incidents_dict):
 			homeserver_dict[baseurl] = {}
 		homeserver_dict[baseurl][full_username] = room_dict
 
-	print("homeserver_dict: " + str(homeserver_dict))
-	# Prepare and send one email per homeserver, including all users and rooms.
+	# Prepare and send one incident report per homeserver, including all users and rooms.
 	for baseurl, user_dict in homeserver_dict.items():
-		if hardcoded_variables.testing_mode == True:
-			admin_email_dict = {baseurl: [hardcoded_variables.report_return_email]}
-			print("admin_email_dict: " + str(admin_email_dict))
-			from_whois = True
-		elif hardcoded_variables.testing_mode == False:
-			admin_email_dict, from_whois = lookup_homeserver_admin_email(baseurl)
 
-		if not admin_email_dict or baseurl not in admin_email_dict:
+		admin_contact_dict, from_whois = lookup_homeserver_admin(baseurl)
+
+		if not admin_contact_dict or "admins" not in admin_contact_dict:
 			print(f"Unable to find any admin emails for {baseurl}")
 			success = False
 			continue
 
-		# Prepare and send one email per homeserver, including all users and rooms.
-		for email_address in admin_email_dict[baseurl]:
-			email_subject = f"Incident Report for users from {baseurl}"
-			email_content = prepare_email_content(user_dict, from_whois, baseurl)
+		# Prepare and send one message or email per homeserver, including all users and rooms.
+		for admin in admin_contact_dict["admins"]:
+			#print(f"DEBUG: {type(admin)}")
+			#print(f"DEBUG: {admin}")  # this will print the content of each admin dict
+			if "matrix_id" in admin:	# If matrix_id exists
+				message_content = prepare_message_content(user_dict, baseurl)
 
-			email_attachments = []
-			if not send_email(email_address, email_subject, email_content, email_attachments):
-				print(f"Failed to send email to {email_address}")
-				success = False
+				try:
+					print(f"Sending Incident Report message to {admin['matrix_id']}")
+					await bot_commands.send_message(admin["matrix_id"], message_content)
+				except Exception as e:
+					print(f"Failed to send message to {admin['matrix_id']}: {str(e)}")
+					success = False
+			# If email_address exists, or if message send failed, send Incident report via email
+			elif "email_address" in admin or success == False:
+				email_address = admin.get("email_address")
+				if email_address:  # If email_address exists
+					email_subject = f"Incident Report for users from {baseurl}"
+					email_content = prepare_email_content(user_dict, from_whois, baseurl)
+
+					email_attachments = []
+					print(f"Sending Incident Report email to {email_address}")
+					if not send_email(email_address, email_subject, email_content, email_attachments):
+						print(f"Failed to send email to {email_address}")
+						success = False
 
 	return success
 
 def test_send_incident_reports():
 	incidents_dict = {
 		f"@billybob:matrix.org": {
-			"!dummyid1:matrix.org": ["csam", "lolicon", "beastiality"],
+			"!dummyid1:matrix.org": ["csam", "loli", "beastiality"],
 			"!dummyid2:matrix.org": ["csam", "anarchy"]
 		},
 		f"@johndoe:matrix.org": {
-			"!dummyid3:matrix.org": ["csam", "lolicon", "toddlercon"],
-			"!dummyid4:matrix.org": ["csam", "terrorism"]
+			"!dummyid3:matrix.org": ["csam", "loli", "toddlercon"],
+			"!dummyid4:matrix.org": ["anarchy", "terrorism"]
 		},
 		f"@pedobear:perthchat.org": {
-			"!dummyid5:matrix.org": ["csam", "lolicon", "jailbait"],
+			"!dummyid5:matrix.org": ["csam", "loli", "jailbait"],
 			"!dummyid6:matrix.org": ["csam", "hub_links"]
 		},
 		f"@randomcreep:perthchat.org": {
 			"!dummyid7:matrix.org": ["csam", "jailbait"],
-			"!dummyid8:matrix.org": ["csam", "pre_ban"]
+			"!dummyid8:matrix.org": ["csam", "preban"]
 		},
 		f"@fatweeb:grin.hu": {
-			"!dummyid9:matrix.org": ["csam", "lolicon"],
+			"!dummyid9:matrix.org": ["csam", "loli"],
 			"!dummyid10:matrix.org": ["csam", "degen"]
 		}
 	}
 
 	try:
 		if hardcoded_variables.testing_mode == True:
-			print("\nWARNING: TESTING MODE ENABLED, SENDING EMAIL TO: " + hardcoded_variables.report_return_email + "\n")
-		if send_incident_report(incidents_dict):
+			print("\nNOTE: Testing mode is enabled, sending Incident Reports to you! :)\n")
+		if asyncio.run(send_incident_report(incidents_dict)):
 			print("\nIncident reports successfully sent.")
 		else:
 			print("\nFailed to send the incident reports.")

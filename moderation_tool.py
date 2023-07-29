@@ -6,6 +6,7 @@ import server_commands
 import ipinfo_commands
 import rdlist_commands
 import report_commands
+import bot_commands
 import hardcoded_variables
 
 # check if homeserver url is hard coded, if not set it
@@ -59,9 +60,9 @@ while pass_token == False:
 	print("100) Delete and block a specific media.\t\t\t\t150) Generate user report.")
 	print("101) Purge remote media repository up to a certain date.\t151) Decrypt user report .zip file.")
 	print("102) Prepare database for copying events of multiple rooms.\t152) Lookup homeserver admin contact email.")
-	print("\t\t\t\t\t\t\t\t153) Send a test email.")
-	print("#### rdlist ####\t\t\t\t\t\t154) Send test incident reports to yourself.")
-	print("120) Block all rooms with specific rdlist tags.")
+	print("\t\t\t\t\t\t\t\t153) Send a test email (to yourself).")
+	print("#### rdlist ####\t\t\t\t\t\t154) Sent a test Matrix message (to yourself).")
+	print("120) Block all rooms with specific rdlist tags.\t\t\t155) Send test incident reports (to yourself).")
 	print("121) Block all rooms with recommended rdlist tags.")
 	print("122) Get rdlist tags for a room.")
 	print("\n#### ipinfo.io ####")
@@ -188,10 +189,13 @@ while pass_token == False:
 	elif menu_input == "151":
 		report_commands.decrypt_zip_file()
 	elif menu_input == "152":
-		report_commands.lookup_homeserver_admin_email('')
+		admin_contact_dict, is_whois = report_commands.lookup_homeserver_admin('')
+		print(f"\nAdmin contacts: {json.dumps(admin_contact_dict, indent=4, sort_keys=True)}\nWhois: {str(is_whois)}")
 	elif menu_input == "153":
 		report_commands.test_send_email()
 	elif menu_input == "154":
+		bot_commands.test_matrix_message()
+	elif menu_input == "155":
 		report_commands.test_send_incident_reports()
 	elif menu_input == "q" or menu_input == "Q" or menu_input == "e" or menu_input == "E":
 		print("\nExiting...\n")
