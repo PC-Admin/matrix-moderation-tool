@@ -71,7 +71,13 @@ while pass_token == False:
 	print("\nPlease enter a number from the above menu, or enter 'q' or 'e' to exit.\n")
 	menu_input = input()
 	if menu_input == "1":
-		user_commands.deactivate_account('')
+		erase_data = input("Deactivating account. Do you want to also erase the user's data? (y/n) ")
+		if erase_data in ["y", "Y", "yes", "Yes", "YES"]:
+			user_commands.deactivate_account('',True)
+		elif erase_data in ["n", "N", "no", "No", "NO"]:
+			user_commands.deactivate_account('')
+		else:
+			print("\nIncorrect input detected, please select 'y' or 'n'!\n")
 	elif menu_input == "2":
 		user_commands.deactivate_multiple_accounts()
 	elif menu_input == "3":

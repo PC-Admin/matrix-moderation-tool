@@ -13,8 +13,8 @@ def parse_username(username):
 	username = username.replace(tail_end,'')
 	return username
 
-def deactivate_account(preset_username):
-	if len(preset_username) == 0:
+def deactivate_account(preset_username, erase=False):
+	if preset_username == '':
 		username = input("\nPlease enter the username to deactivate: ")
 		username = parse_username(username)
 	else:
@@ -28,7 +28,7 @@ def deactivate_account(preset_username):
 	}
 
 	data = {
-		"erase": True
+		"erase": erase
 	}
 
 	print("\n" + url + "\n")
@@ -50,19 +50,31 @@ def deactivate_multiple_accounts():
 	with open(user_list_location, newline='') as f:
 			reader = csv.reader(f)
 			data = list(reader)
+	print(data)
 	delete_confirmation = input("\n" + str(data) + "\n\nAre you sure you want to deactivate these users? y/n?\n")
+	erase_confirmation = input("\nDo you want to also erase all these users' data? y/n?\n")
+	if erase_confirmation in ["y", "Y", "yes", "Yes", "YES"]:
+		erase = True
+	elif erase_confirmation in ["n", "N", "no", "No", "NO"]:
+		erase = False
+	else:
+		print("\nIncorrect input detected, please select 'y' or 'n'!\n")
+		return
 	#print(len(data[0]))
 	#print(data[0][0])
-	if delete_confirmation == "y" or delete_confirmation == "Y" or  delete_confirmation == "yes" or  delete_confirmation == "Yes":  
+	if delete_confirmation ["y", "Y", "yes", "Yes", "YES"]:  
 		x = 0
 		while x <= (len(data) - 1):
 			#print(data[0][x])
-			deactivate_account(data[x][0])
+			status = deactivate_account(data[x][0], erase)
+			#print(status)
 			x += 1
 			#print(x)
-			time.sleep(10)
-	if delete_confirmation == "n" or delete_confirmation == "N" or  delete_confirmation == "no" or  delete_confirmation == "No":
+			time.sleep(5)
+	elif delete_confirmation in ["n", "N", "no", "No", "NO"]:
 		print("\nExiting...\n")
+	else:
+		print("\nIncorrect input detected, please select 'y' or 'n'!\n")
 
 def create_account(preset_username, preset_password):
 	if len(preset_username) == 0 and len(preset_password) == 0:
