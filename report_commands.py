@@ -487,7 +487,7 @@ def test_send_incident_reports():
 		},
 		f"@pedobear:perthchat.org": {
 			"!dummyid5:matrix.org": ["csam", "loli", "jailbait"],
-			"!dummyid6:matrix.org": ["csam", "hub_links"]
+			"!dummyid6:matrix.org": ["csam", "hublinks"]
 		},
 		f"@randomcreep:perthchat.org": {
 			"!dummyid7:matrix.org": ["csam", "jailbait"],
@@ -495,7 +495,7 @@ def test_send_incident_reports():
 		},
 		f"@fatweeb:grin.hu": {
 			"!dummyid9:matrix.org": ["csam", "loli"],
-			"!dummyid10:matrix.org": ["csam", "degen"]
+			"!dummyid10:matrix.org": ["csam", "degen_porn"]
 		}
 	}
 

@@ -24,11 +24,14 @@ This script also requires you to install the following PIP packages:
 pip3 install python-whois
 pip3 install requests
 pip3 install pyAesCrypt
+pip3 install matrix-nio
 ```
 
 
 ***
 ## Upgrade user to 'server admin'
+
+To use this moderation script you need an OAuth token of a "server admin" account. If you've just setup a Matrix server, you'll need to promote an account to server admin by altering your database.
 
 https://github.com/matrix-org/synapse/tree/master/docs/admin_api
 
@@ -44,11 +47,9 @@ UPDATE 1
 
 synapse=# 
 
-‘-’ sign instead of ‘=’ means:
+Note: A ‘-’ sign instead of ‘=’ means you didn't type a complete SQL query yet!
 
-It means you didn't type a complete SQL query yet.
-
-You need a semicolon to terminate the command.
+(You need a semicolon (;) at the end to terminate the command.)
 
 
 ***
