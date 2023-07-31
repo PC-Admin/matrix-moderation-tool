@@ -19,6 +19,6 @@ smtp_password = "strong-stmp-password"
 smtp_server = "smtp.provider.org"
 smtp_port = 587
 incident_report_return_email = "youradminemail@example.org"
-incident_report_return_mxid = "@yourmxid:example.com
+incident_report_return_mxid = "@yourmxid:example.com"
 ###########################################################################
 
