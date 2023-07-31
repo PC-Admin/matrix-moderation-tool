@@ -95,7 +95,7 @@ def encrypt_user_folder(user_report_folder, username):
 	pyAesCrypt.encryptFile(zip_file_name, zip_file_name + ".aes", strong_password, bufferSize)
 
 	# Delete the original zip file
-	os.remove(zip_file_name)
+	#os.remove(zip_file_name)
 
 	# Write the password to a file
 	password_file = open(zip_file_name + ".aes" + ".password", "w")
@@ -336,6 +336,20 @@ def test_send_email():
 		print("\nEmail successfully sent.")
 	else:
 		print("\nFailed to send email.")
+
+def generate_rdlist_report_summary(room_dict, user_id):
+    print(f"user_dict: {room_dict}")
+    report_content = f"""\n~~~User Report~~~\n\nUsername: {user_id}\n"""
+
+    for room_id, rdlist_tags in room_dict.items():
+        report_content += f"\nWas a member of this room: {room_id}\nThis room has been flagged with the following rdlist tags:\n"
+        for tag in rdlist_tags:
+            tag_description = rdlist_tag_descriptions.get(tag, "No description available.")
+            report_content += f"  - {tag} ({tag_description})\n"
+
+    report_content
+
+    return report_content
 
 def prepare_email_content(user_dict, from_whois, baseurl):
 	email_content = f"""Dear Administrator,

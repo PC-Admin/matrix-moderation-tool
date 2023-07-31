@@ -59,7 +59,7 @@ while pass_token == False:
 	print("\n#### Server Commands ####\t\t\t\t\t#### Report Generation ####")
 	print("100) Delete and block a specific media.\t\t\t\t150) Generate user report.")
 	print("101) Purge remote media repository up to a certain date.\t151) Decrypt user report .zip file.")
-	print("102) Prepare database for copying events of multiple rooms.\t152) Lookup homeserver admin contact email.")
+	print("102) Prepare database for copying events of multiple rooms.\t152) Lookup homeserver admin contact details.")
 	print("\t\t\t\t\t\t\t\t153) Send a test email (to yourself).")
 	print("#### rdlist ####\t\t\t\t\t\t154) Sent a test Matrix message (to yourself).")
 	print("120) Block all rooms with specific rdlist tags.\t\t\t155) Send test incident reports (to yourself).")

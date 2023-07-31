@@ -31,7 +31,7 @@ def get_room_details(preset_internal_ID):
 # Example
 # $ curl -kXGET 'https://matrix.perthchat.org/_synapse/admin/v1/rooms/!OeqILBxiHahidSQQoC:matrix.org?access_token=ACCESS_TOKEN'
 
-def get_room_members(preset_internal_ID, local_only):
+def get_room_members(preset_internal_ID, local_only=False):
 	if preset_internal_ID == '':
 		internal_ID = input("\nEnter the internal id of the room you wish to query (Example: !OLkDvaYjpNrvmwnwdj:matrix.org): ")
 	elif preset_internal_ID != '':
