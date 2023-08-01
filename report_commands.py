@@ -2,11 +2,8 @@
 import os
 import json
 import whois
-import random
-import string
 import datetime
 import zipfile
-import pyAesCrypt
 import smtplib
 import requests
 import asyncio
@@ -72,10 +69,7 @@ def get_report_folder():
 
 	return report_folder
 
-def encrypt_user_folder(user_report_folder, username):
-	# Generate a strong random password
-	strong_password = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(20))
-
+def zip_report_folder(user_report_folder, username):
 	# Get parent directory of user_report_folder
 	parent_directory = os.path.dirname(os.path.abspath(user_report_folder))
 
@@ -88,22 +82,7 @@ def encrypt_user_folder(user_report_folder, username):
 			for file in files:
 				zip_file.write(os.path.join(root, file), arcname=os.path.relpath(os.path.join(root, file), user_report_folder))
 
-	# Buffer size - 64K
-	bufferSize = 64 * 1024
-
-	# Encrypt the .zip file
-	pyAesCrypt.encryptFile(zip_file_name, zip_file_name + ".aes", strong_password, bufferSize)
-
-	# Delete the original zip file
-	#os.remove(zip_file_name)
-
-	# Write the password to a file
-	password_file = open(zip_file_name + ".aes" + ".password", "w")
-	password_file.write(strong_password)
-	password_file.close()
-
-	# You can return the password if you need to use it later, or you can directly print it here
-	return strong_password, zip_file_name + ".aes"
+	return zip_file_name
 
 def generate_user_report(preset_username, report_details):
 	if len(preset_username) == 0:
@@ -222,28 +201,17 @@ def generate_user_report(preset_username, report_details):
 			break
 
 	# Generate a random password, then encrypt the ./report/username/ folder to a timestamped .zip file
-	strong_password, encrypted_zip_file_name = encrypt_user_folder(user_report_folder, username)
+	zip_file_name = zip_report_folder(user_report_folder, username)
 
 	# Measure the size of the encrypted .zip file in MB
-	encrypted_zip_file_size = os.path.getsize(encrypted_zip_file_name) / 1000000
+	zip_file_size = os.path.getsize(zip_file_name) / 1000000
 
 	# Print the password and the encrypted .zip file name
-	print("Report generated successfully on user: \"" + username + "\"\n\nYou can send this .zip file and password when reporting a user to law enforcement.")
-	print("\nPassword: " + strong_password)
-	print("Encrypted .zip file location: " + encrypted_zip_file_name)
-	print("Encrypted .zip file size: " + str(encrypted_zip_file_size) + " MB\n")
+	print("Report generated successfully on user: \"" + username + "\"\n\nYou can send this .zip file when reporting a user to law enforcement.")
+	print(".zip file location: " + zip_file_name)
+	print(".zip file size: " + str(zip_file_size) + " MB\n")
 
-	return encrypted_zip_file_name, strong_password
-
-def decrypt_zip_file():
-	# Ask user for the location of the encrypted .zip file
-	encrypted_zip_file_name = input("\nPlease enter the location of the encrypted .zip file: ")
-	# Ask user for the password
-	strong_password = input("Please enter the password: ")
-	# Decrypt the ZIP file into the same location as the encrypted ZIP file
-	pyAesCrypt.decryptFile(encrypted_zip_file_name, encrypted_zip_file_name[:-4], strong_password, 64 * 1024)
-	# Print the location of the decrypted ZIP file
-	print("\nDecrypted .zip file location: " + encrypted_zip_file_name[:-4] + "\n")
+	return zip_file_name
 
 def lookup_homeserver_admin(preset_baseurl):
 	if hardcoded_variables.testing_mode == True:
@@ -338,7 +306,7 @@ def test_send_email():
 		print("\nFailed to send email.")
 
 def generate_rdlist_report_summary(room_dict, user_id):
-    print(f"user_dict: {room_dict}")
+    #print(f"user_dict: {room_dict}")
     report_content = f"""\n~~~User Report~~~\n\nUsername: {user_id}\n"""
 
     for room_id, rdlist_tags in room_dict.items():

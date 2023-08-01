@@ -23,7 +23,6 @@ This script also requires you to install the following PIP packages:
 ```
 pip3 install python-whois
 pip3 install requests
-pip3 install pyAesCrypt
 pip3 install matrix-nio
 ```
 

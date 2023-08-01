@@ -2,8 +2,6 @@
 import os
 import subprocess
 import json
-import random
-import string
 import time
 import user_commands
 import room_commands
@@ -133,9 +131,9 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 
 	all_room_ids = list(all_room_ids) # convert the set to a list
 
-	print(f"all_local_users: {all_local_users}")
-	print(f"all_remote_users: {all_remote_users}")
-	print(f"all_room_ids: {all_room_ids}")
+	#print(f"all_local_users: {all_local_users}")
+	#print(f"all_remote_users: {all_remote_users}")
+	#print(f"all_room_ids: {all_room_ids}")
 
 	# If there's at least 1 local user detected, ask the admin if they want to generate a user report for every user found in rdlist rooms
 	if len(all_local_users) > 0:
@@ -143,7 +141,6 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 		generate_user_report_confirmation = input("\nDo you want to generate a user report file for each of these users? y/n? ")
 		if generate_user_report_confirmation.lower() in ['y', 'yes', 'Y', 'Yes']:
 			for user_id in all_local_users:
-				print(f"\nGenerating user report for user: {user_id}")
 				# Generate report_dict for each user
 				report_content = report_commands.generate_rdlist_report_summary(all_local_users[user_id], user_id)
 				report_commands.generate_user_report(user_id, report_content)
