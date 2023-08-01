@@ -3,10 +3,14 @@ import os
 import subprocess
 import json
 import time
+import asyncio
 import user_commands
 import room_commands
 import report_commands
 import hardcoded_variables
+
+def testing_mode_warning():
+	print("\nWARNING! Testing mode is enabled, this will:\n\n- Reduce the amount of data collected in user reports.\n- Slow down rdlist blocking/purging.\n- Prevent the deactivation of accounts.\n- Send incident reports to yourself instead of other homeserver admins.\n")
 
 def sync_rdlist():
 	rdlist_dir = "./rdlist"
@@ -58,30 +62,7 @@ def get_rdlist_tags(preset_internal_ID):
 
 	return None
 
-def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,preset_new_room_name,preset_message):
-	# Git clone the rdlist repo to ./rdlist/
-	sync_rdlist()
-
-	if rdlist_use_recommended == True:
-		# Use the hardcoded recommended tags
-		blocked_tags = hardcoded_variables.rdlist_recommended_tags
-		print(f"\nUsing recommended rdlist tags. Rooms matching the following tags will be purged and/or blocked:\n{hardcoded_variables.rdlist_recommended_tags}")
-
-	elif rdlist_use_recommended == False:
-		# After the git repo has been cloned/pulled, open the file and read it into a string
-		with open(os.path.join("rdlist", "lib", "docs", "tags.md"), 'r') as file:
-			data = file.readlines()
-
-		# Print ./rdlist/lib/docs/tags.md README file for the user
-		print("\nPrinting details about the current tags in rdlist:\n")
-		for line in data:
-			print(line, end='')  # Print the contents of the file
-
-		# Take input from the user and convert it to a list
-		print("\nPlease enter a space seperated list of tags you wish to block:\n")
-		blocked_tags = input().split()
-		print('')
-
+def get_key_rdlist_info(rdlist_tags):
 	# Load the summaries JSON file
 	summaries_path = os.path.join("rdlist", "dist", "summaries.json")
 	with open(summaries_path, 'r') as file:
@@ -97,8 +78,8 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 	# Create a dictionary to store the tags for each room
 	room_tags = dict()
 
-	# Iterate over blocked_tags
-	for tag in blocked_tags:
+	# Iterate over the provided rdlist_tags
+	for tag in rdlist_tags:
 		# Filter the data to keep only the entries where the tag appears in the "tags" list
 		filtered_data = [item for item in data if 'report_info' in item and 'tags' in item['report_info'] and tag in item['report_info']['tags']]
 
@@ -131,15 +112,25 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 
 	all_room_ids = list(all_room_ids) # convert the set to a list
 
-	#print(f"all_local_users: {all_local_users}")
-	#print(f"all_remote_users: {all_remote_users}")
-	#print(f"all_room_ids: {all_room_ids}")
+	return all_room_ids, all_local_users, all_remote_users
+
+def collect_user_reports_on_rdlist_accounts(all_local_users=None, skip_input=False):
+	# Print warning if testing mode is enabled
+	if hardcoded_variables.testing_mode == True:
+		testing_mode_warning()
+
+	# If all_local_users is None, then we need to generate it
+	if all_local_users == None:
+		# Git clone the rdlist repo to ./rdlist/
+		sync_rdlist()
+		all_room_ids, all_local_users, all_remote_users = get_key_rdlist_info(hardcoded_variables.rdlist_recommended_tags)
 
 	# If there's at least 1 local user detected, ask the admin if they want to generate a user report for every user found in rdlist rooms
 	if len(all_local_users) > 0:
 		print(f"\nWARNING! The following local users are current members of rooms tagged in rdlist: {list(all_local_users.keys())}")
-		generate_user_report_confirmation = input("\nDo you want to generate a user report file for each of these users? y/n? ")
-		if generate_user_report_confirmation.lower() in ['y', 'yes', 'Y', 'Yes']:
+		if skip_input == False:
+			generate_user_report_confirmation = input("\nDo you want to generate a user report file for each of these users? y/n? ")
+		if generate_user_report_confirmation.lower() in ['y', 'yes', 'Y', 'Yes'] or skip_input == True:
 			for user_id in all_local_users:
 				# Generate report_dict for each user
 				report_content = report_commands.generate_rdlist_report_summary(all_local_users[user_id], user_id)
@@ -149,7 +140,65 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 	elif len(all_local_users) == 0:
 		print(f"\nNo local users were found in rdlist rooms.")
 
-	# Todo: Add Incident Report section
+def send_incident_reports_on_rdlist_accounts(all_remote_users=None, skip_input=False):
+	# Print warning if testing mode is enabled
+	if hardcoded_variables.testing_mode == True:
+		testing_mode_warning()
+
+	# If all_remote_users is None, then we need to generate it
+	if all_remote_users == None:
+		# Git clone the rdlist repo to ./rdlist/
+		sync_rdlist()
+		all_room_ids, all_local_users, all_remote_users = get_key_rdlist_info(hardcoded_variables.rdlist_recommended_tags)
+
+	# If there's at least 1 remote user detected, ask the admin if they want to generate a user report for every user found in rdlist rooms
+	if len(all_remote_users) > 0 or skip_input == False:
+		print(f"\nWARNING! The following remote users are current members of rooms tagged in rdlist: {list(all_remote_users.keys())}")
+		if skip_input == False:
+			send_incident_report_confirmation = input("\nDo you want to send out incident reports for these users to every homeserver admin involved? y/n? ")
+		if send_incident_report_confirmation.lower() in ['y', 'yes', 'Y', 'Yes'] or skip_input == True:
+			loop = asyncio.get_event_loop()
+			loop.run_until_complete(report_commands.send_incident_reports(all_remote_users))
+		elif send_incident_report_confirmation.lower() in ['n', 'no', 'N', 'No']:
+			print("\nSkipping incident report generation...\n")
+
+def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,preset_new_room_name,preset_message):
+	# Git clone the rdlist repo to ./rdlist/
+	sync_rdlist()
+
+	if rdlist_use_recommended == True:
+		# Use the hardcoded recommended tags
+		rdlist_tags = hardcoded_variables.rdlist_recommended_tags
+		print(f"\nUsing recommended rdlist tags. Rooms matching the following tags will be purged and/or blocked:\n{hardcoded_variables.rdlist_recommended_tags}")
+
+	elif rdlist_use_recommended == False:
+		# After the git repo has been cloned/pulled, open the file and read it into a string
+		with open(os.path.join("rdlist", "lib", "docs", "tags.md"), 'r') as file:
+			data = file.readlines()
+
+		# Print ./rdlist/lib/docs/tags.md README file for the user
+		print("\nPrinting details about the current tags in rdlist:\n")
+		for line in data:
+			print(line, end='')  # Print the contents of the file
+
+		# Take input from the user and convert it to a list
+		print("\nPlease enter a space seperated list of tags you wish to block:\n")
+		rdlist_tags = input().split()
+		print('')
+
+	all_room_ids, all_local_users, all_remote_users = get_key_rdlist_info(rdlist_tags)
+
+	#print(f"\nDEBUG all_local_users: {all_local_users}")
+	#print(f"DEBUG all_remote_users: {all_remote_users}")
+	#print(f"DEBUG all_room_ids: {all_room_ids}")
+
+	# If there's at least 1 local user detected, ask the admin if they want to generate a user report for every user found in rdlist rooms
+
+	collect_user_reports_on_rdlist_accounts(all_local_users, False)
+
+	# If there's at least 1 remote user detected, ask the admin if they want to generate a incident report for every user homeserver involved in rdlist rooms
+
+	send_incident_reports_on_rdlist_accounts(all_remote_users, False)
 
 	# Ask the user if they wish to block and purge all these rooms, then collect shutdown parameters
 	if preset_user_ID == '':
@@ -220,7 +269,7 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 def block_recommended_rdlist_tags():
 	# Print warning if testing mode is enabled
 	if hardcoded_variables.testing_mode == True:
-		print("\nWARNING! Testing mode is enabled, this will reduce the amount of data generated in reports and greatly slow down rdlist blocking!\n")
+		testing_mode_warning()
 
 	# Check if user account already exists
 	account_query = user_commands.query_account(hardcoded_variables.rdlist_bot_username)

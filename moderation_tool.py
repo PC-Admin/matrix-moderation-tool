@@ -61,10 +61,13 @@ while pass_token == False:
 	print("101) Purge remote media repository up to a certain date.\t151) Lookup homeserver admin contact details.")
 	print("102) Prepare database for copying events of multiple rooms.\t152) Send a test email (to yourself).")
 	print("\t\t\t\t\t\t\t\t153) Sent a test Matrix message (to yourself).")
-	print("#### rdlist ####\t\t\t\t\t\t154) Send test incident reports (to yourself).")
+	print("#### rdlist - General ####\t\t\t\t\t154) Send test incident reports (to yourself).")
 	print("120) Block all rooms with specific rdlist tags.")
-	print("121) Block all rooms with recommended rdlist tags.")
-	print("122) Get rdlist tags for a room.")
+	print("121) Get rdlist tags for a room.")
+	print("\n#### rdlist - Recommended Tags ####\nFor rdlist rooms with recommended tags, the following actions are available:")
+	print("130) Collect User Reports on local accounts in rdlist rooms.")
+	print("131) Send Incident Reports on remote accounts in rdlist rooms.")
+	print("132) Block/Purge all rdlist rooms.")
 	print("\n#### ipinfo.io ####")
 	print("140) Analyse a users country of origin.")
 	print("141) Analyse multiple users country of origin.")
@@ -182,10 +185,14 @@ while pass_token == False:
 	elif menu_input == "120":
 		rdlist_commands.block_all_rooms_with_rdlist_tags(False,'','','')
 	elif menu_input == "121":
-		rdlist_commands.block_recommended_rdlist_tags()
-	elif menu_input == "122":
 		rdlist_tags = rdlist_commands.get_rdlist_tags('')
 		print(json.dumps(rdlist_tags, indent=4, sort_keys=True))
+	elif menu_input == "130":
+		rdlist_commands.collect_user_reports_on_rdlist_accounts()
+	elif menu_input == "131":
+		rdlist_commands.send_incident_reports_on_rdlist_accounts()
+	elif menu_input == "132":
+		rdlist_commands.block_recommended_rdlist_tags()
 	elif menu_input == "140":
 		ipinfo_commands.analyse_account_ip('')
 	elif menu_input == "141":

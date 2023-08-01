@@ -221,7 +221,7 @@ def generate_user_report(preset_username, report_details):
 	zip_file_size = os.path.getsize(zip_file_name) / 1000000
 
 	# Print the password and the encrypted .zip file name
-	print("Report generated successfully on user: \"" + username + "\"\n\nYou can send this .zip file when reporting a user to law enforcement.")
+	print("Report generated successfully on user: \"" + username + "\"\n\nYou can send this .zip file when reporting a user to law enforcement.\n")
 	print(".zip file location: " + zip_file_name)
 	print(".zip file size: " + str(zip_file_size) + " MB\n")
 
@@ -421,7 +421,7 @@ https://{hardcoded_variables.base_url}
 
 	return message_content
 
-async def send_incident_report(incidents_dict):
+async def send_incident_reports(incidents_dict):
 	success = True
 	homeserver_dict = {}
 
@@ -451,7 +451,7 @@ async def send_incident_report(incidents_dict):
 				message_content = prepare_message_content(user_dict, baseurl)
 
 				try:
-					print(f"Sending Incident Report message to {admin['matrix_id']}")
+					print(f"\nSending Incident Report for users from {baseurl} to {admin['matrix_id']}")
 					await bot_commands.send_message(admin["matrix_id"], message_content)
 				except Exception as e:
 					print(f"Failed to send message to {admin['matrix_id']}: {str(e)}")
@@ -464,7 +464,7 @@ async def send_incident_report(incidents_dict):
 					email_content = prepare_email_content(user_dict, from_whois, baseurl)
 
 					email_attachments = []
-					print(f"Sending Incident Report email to {email_address}")
+					print(f"Sending Incident Report for users from {baseurl} to {admin['email_address']}")
 					if not send_email(email_address, email_subject, email_content, email_attachments):
 						print(f"Failed to send email to {email_address}")
 						success = False
@@ -498,7 +498,7 @@ def test_send_incident_reports():
 	try:
 		if hardcoded_variables.testing_mode == True:
 			print("\nNOTE: Testing mode is enabled, sending Incident Reports to you! :)\n")
-		if asyncio.run(send_incident_report(incidents_dict)):
+		if asyncio.run(send_incident_reports(incidents_dict)):
 			print("\nIncident reports successfully sent.")
 		else:
 			print("\nFailed to send the incident reports.")

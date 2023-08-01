@@ -118,7 +118,77 @@ This script can automatically load and block/purge abusive rooms from rdlist, ma
 
 If you are running a public server, please dm me at [@michael:perthchat.org](https://matrix.to/#/@michael:perthchat.org) and I can invite you to the 'Legion of Janitors' room.
 
-Once you have read access to the [rdlist repository](https://code.glowers.club/loj/rdlist), simply run this moderation script like so:
+Once you have read access to the [rdlist repository](https://code.glowers.club/loj/rdlist), this script can be used for multiple rdlist related functions.
+
+
+***
+## Collect User Reports on local users in rdlist rooms
+
+This script can automatically generate 'User Reports' for each one of your local users in rdlist rooms that have the 'recommended tags'.
+
+These user reports can be given to law enforcement or shared in [#janitor-dumps](https://matrix.to/#/#janitor-dumps:glowers.club) to help us locate more abusive users/rooms.
+
+```
+130
+
+rdlist repo already cloned...
+Fetching origin
+Pulling latest changes from rdlist repo...
+
+WARNING! The following local users are current members of rooms tagged in rdlist: ['@fatweeb23838:perthchat.org', '@somecreep29330:perthchat.org']
+
+Do you want to generate a user report file for each of these users? y/n? y
+
+Generating user report for fatweeb23838...
+Report generated successfully on user: "fatweeb23838"
+
+You can send this .zip file when reporting a user to law enforcement.
+.zip file location: /home/pcadmin/PerthchatVault/Perthchat_LIVE/matrix-moderation-tool/reports/fatweeb23838_2023-08-01_23-19-24.zip
+.zip file size: 0.00966 MB
+
+
+Generating user report for somecreep29330...
+Report generated successfully on user: "somecreep29330"
+
+You can send this .zip file when reporting a user to law enforcement.
+.zip file location: /home/pcadmin/PerthchatVault/Perthchat_LIVE/matrix-moderation-tool/reports/somecreep29330_2023-08-01_23-19-27.zip
+.zip file size: 0.29578 MB
+```
+
+
+***
+## Send Incident Reports for remote users in rdlist rooms
+
+This script can automatically generate 'Incident Reports' for every remote homeserver admin with users in rdlist rooms that have the 'recommended tags'.
+
+It examines the homeserver involved to find a admin contact method via [MSC1929](https://github.com/matrix-org/matrix-spec-proposals/pull/1929). If an MXID is returned it will attempt to send the Incident Report over Matrix. If an email is provided it will send the Incident Report over email. If neither is found a whois lookup is performed and the Incident Report are sent to the domain registrar via email.
+
+```
+131
+
+rdlist repo already cloned...
+Fetching origin
+Pulling latest changes from rdlist repo...
+
+WARNING! The following remote users are current members of rooms tagged in rdlist: ['@pedobear847:matrix.org']
+
+Do you want to send out incident reports for these users to every homeserver admin involved? y/n? y
+
+Sending Incident Report for users from matrix.org to abuse@matrix.org
+
+Sending Incident Report for users from perthchat.org to @michael:perthchat.org
+
+```
+
+[Preview of Incident Report.]
+
+
+## rdlist Block/Purge all rooms with recommended rdlist tags
+
+Finally this script can be used to shutdown rooms with the recommended rdlist tags.
+
+This function is much larger and will ask you if you also want to create user/incident reports before the shutdowns. (Recommended) It'll also ask you if you want to shadowban the users in these rooms to prevent them from alerting others. (Recommended) Finally it'll ask if you want to shutdown the local accounts located in these rooms.
+
 ```
 $ python3 moderation_tool.py 
 
@@ -126,7 +196,7 @@ Please select one of the following options:
 ...
 Please enter a number from the above menu, or enter 'q' or 'e' to exit.
 
-121
+132
 
 @mod_team:perthchat.org account already exists. Resetting account password.
 
@@ -144,6 +214,12 @@ WARNING! The following local users are current members of rooms tagged in rdlist
 Do you want to generate a user report file for each of these users? y/n? n
 
 Skipping user report generation...
+
+WARNING! The following remote users are current members of rooms tagged in rdlist: ['@PC-Admin:matrix.org']
+
+Do you want to send out incident reports for these users to every homeserver admin involved? y/n? n
+
+Skipping incident report generation...
 
 
 Number of rdlist rooms being shutdown: 346
@@ -202,8 +278,6 @@ Do you want to also deactivate all these accounts that were kicked from rdlist r
 ...
 ```
 
-Note that this script before shutting these rooms down will save the state events to the "./state_events" folder, please keep this data as it's important for law enforcement.
-
 
 ***
 ## One-touch Reporting
@@ -227,7 +301,6 @@ Report generated successfully on user: "michael"
 
 You can send this .zip file and password when reporting a user to law enforcement.
 
-Password: RwiFrw9zouhVO7Dy9kW7
-Encrypted .zip file location: ./reports/michael_2023-07-23_02-21-56.zip.aes
-Encrypted .zip file size: 0.503927 MB
+.zip file location: ./reports/michael_2023-07-23_02-21-56.zip.aes
+.zip file size: 0.503927 MB
 ```
