@@ -180,7 +180,7 @@ Sending Incident Report for users from perthchat.org to @michael:perthchat.org
 
 ```
 
-[Preview of Incident Report.]
+![A preview of an Incident Report being sent over Matrix.](https://github.com/PC-Admin/matrix-moderation-tool/assets/29645145/db5a4a56-fd66-413a-ac44-1216c7b2f1fd)
 
 
 ## rdlist Block/Purge all rooms with recommended rdlist tags
