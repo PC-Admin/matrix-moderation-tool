@@ -170,7 +170,7 @@ rdlist repo already cloned...
 Fetching origin
 Pulling latest changes from rdlist repo...
 
-WARNING! The following remote users are current members of rooms tagged in rdlist: ['@pedobear847:matrix.org']
+WARNING! The following remote users are current members of rooms tagged in rdlist: ['@pedobear:matrix.org', '@randomcreep:perthchat.org']
 
 Do you want to send out incident reports for these users to every homeserver admin involved? y/n? y
 
@@ -215,7 +215,7 @@ Do you want to generate a user report file for each of these users? y/n? n
 
 Skipping user report generation...
 
-WARNING! The following remote users are current members of rooms tagged in rdlist: ['@PC-Admin:matrix.org']
+WARNING! The following remote users are current members of rooms tagged in rdlist: ['@***REDACTED***:matrix.org']
 
 Do you want to send out incident reports for these users to every homeserver admin involved? y/n? n
 
@@ -293,14 +293,14 @@ Please enter a number from the above menu, or enter 'q' or 'e' to exit.
 
 150
 
-Please enter the username to automatically generate a report: michael
+Please enter the username to automatically generate a report: pedobear
 
 ...
 
-Report generated successfully on user: "michael"
+Report generated successfully on user: "pedobear"
 
 You can send this .zip file and password when reporting a user to law enforcement.
 
-.zip file location: ./reports/michael_2023-07-23_02-21-56.zip.aes
+.zip file location: ./reports/pedobear_2023-07-23_02-21-56.zip
 .zip file size: 0.503927 MB
 ```
