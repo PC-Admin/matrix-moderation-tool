@@ -111,7 +111,7 @@ def generate_user_report(preset_username, report_details):
 
 	# Collect and write the report details to ./report/username/report_details.txt
 	if report_details == '':
-		report_details = input("\nPlease enter the details for this report. Include as much detail as possible, including:\n A description of what happened.\n Timestamps of events. \n Whether this user was a repeat offender, if so include details about previous incidents. \n Other user or rooms involved. \n Other evidence you've collected against this user. \n Whether the offending users were deactivated. \n Whether the offending rooms were shut down.")
+		report_details = input("\nPlease enter the details for this report. Include as much detail as possible, including:\n- A description of what happened.\n- Timestamps of events.\n- Whether this user was a repeat offender, if so include details about previous incidents.\n- Other user or rooms involved.\n- Other evidence you've collected against this user.\n- Whether the offending users were deactivated.\n- Whether the offending rooms were shut down.\n\n")
 	report_details_file = open(user_report_folder + "report_details.txt", "w")
 	report_details_file.write(report_details)
 	report_details_file.close()
@@ -155,6 +155,7 @@ def generate_user_report(preset_username, report_details):
 	# Prepare folder structures
 	room_folder = user_report_folder + "rooms/"
 	dm_folder = user_report_folder + "dms/"
+	forgotten_folder = user_report_folder + "forgotten/"
 	details_folder = "details/"
 	states_folder = "states/"
 
@@ -178,7 +179,17 @@ def generate_user_report(preset_username, report_details):
 	if not os.path.exists(dm_details_folder):
 		os.makedirs(dm_details_folder, exist_ok=True)
 
-	room_list = joined_rooms_dict.get('joined_rooms', [])
+	# For forgotten rooms, get the state and write to ./report/username/forgotten/states/
+	forgotten_states_folder = forgotten_folder + states_folder
+	if not os.path.exists(forgotten_states_folder):
+		os.makedirs(forgotten_states_folder, exist_ok=True)
+
+	# For forgotten rooms, get the details and write to ./report/username/forgotten/details/
+	forgotten_details_folder = forgotten_folder + details_folder
+	if not os.path.exists(forgotten_details_folder):
+		os.makedirs(forgotten_details_folder, exist_ok=True)
+
+	room_list = list(account_data['account_data']['rooms'].keys())
 
 	count = 0
 	for room in room_list:
@@ -187,17 +198,20 @@ def generate_user_report(preset_username, report_details):
 		room_details = room_commands.get_room_details(room)
 
 		# Check the room conditions to select the proper output folders
-		if room_details['joined_members'] == 2 and room_details['public'] == False:
+		if room_details['forgotten'] == True:
+			room_details_file = open(forgotten_details_folder + room + ".json", "w")
+			room_commands.export_room_state(room, forgotten_states_folder, True)
+		elif room_details['joined_members'] == 2 and room_details['public'] == False:
 			room_details_file = open(dm_details_folder + room + ".json", "w")
-			state_events = room_commands.export_room_state(room, dm_states_folder, True)
+			room_commands.export_room_state(room, dm_states_folder, True)
 		else:
 			room_details_file = open(room_details_folder + room + ".json", "w")
-			state_events = room_commands.export_room_state(room, room_states_folder, True)
+			room_commands.export_room_state(room, room_states_folder, True)
 
 		room_details_file.write(json.dumps(room_details, indent=4, sort_keys=True))
 		room_details_file.close()
 
-		if count > 4 and hardcoded_variables.testing_mode == True:
+		if count > 10 and hardcoded_variables.testing_mode == True:
 			break
 
 	# Generate a random password, then encrypt the ./report/username/ folder to a timestamped .zip file
