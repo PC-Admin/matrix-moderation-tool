@@ -264,13 +264,17 @@ def lookup_homeserver_admin(preset_baseurl):
 		try:
 			w = whois.whois(baseurl)
 			if w.emails:
-				#print("\nAdmin contact email(s) for " + baseurl + " are: " + str(w.emails))
-				return {baseurl: list(w.emails)}, True
+				# Check if the emails field is a list
+				if isinstance(w.emails, list):
+					return {baseurl: list(w.emails)}, True
+				# If it's not a list, it must be a single string. So, we wrap it in a list
+				else:
+					return {baseurl: [w.emails]}, True
 			else:
-				print(f"Error: Unable to collect admin email from WHOIS data for {baseurl}")
+				print(f"\t\tError: Unable to collect admin email from WHOIS data for {baseurl}")
 				return None, False
 		except:
-			print(f"Error: Unable to collect WHOIS data for {baseurl}")
+			print(f"\t\tError: Unable to collect WHOIS data for {baseurl}")
 			return None, False
 
 def send_email(email_address, email_subject, email_content, email_attachments):
