@@ -152,7 +152,7 @@ def send_incident_reports_on_rdlist_accounts(all_remote_users=None, skip_input=F
 		all_room_ids, all_local_users, all_remote_users = get_key_rdlist_info(hardcoded_variables.rdlist_recommended_tags)
 
 	# If there's at least 1 remote user detected, ask the admin if they want to generate a user report for every user found in rdlist rooms
-	if len(all_remote_users) > 0 or skip_input == False:
+	if len(all_remote_users) > 0:
 		print(f"\nWARNING! The following remote users are current members of rooms tagged in rdlist: {list(all_remote_users.keys())}")
 		if skip_input == False:
 			send_incident_report_confirmation = input("\nDo you want to send out incident reports for these users to every homeserver admin involved? y/n? ")
@@ -161,6 +161,8 @@ def send_incident_reports_on_rdlist_accounts(all_remote_users=None, skip_input=F
 			loop.run_until_complete(report_commands.send_incident_reports(all_remote_users))
 		elif send_incident_report_confirmation.lower() in ['n', 'no', 'N', 'No']:
 			print("\nSkipping incident report generation...\n")
+	elif len(all_remote_users) == 0:
+		print(f"\nNo remote users were found in rdlist rooms.")
 
 def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,preset_new_room_name,preset_message):
 	# Git clone the rdlist repo to ./rdlist/
@@ -262,7 +264,7 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 
 	# Deduplicate the list of all kicked users
 	total_list_kicked_users = list(set(total_list_kicked_users))
-	
+
 	# Return the list of all kicked users
 	return num_rooms_blocked, num_rooms_purged, total_list_kicked_users
 
