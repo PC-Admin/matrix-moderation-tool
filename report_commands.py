@@ -59,6 +59,9 @@ remove it from your electronic mailbox.
 \n**********************************************************************
 """
 
+def testing_mode_warning():
+	print("\nWARNING! Testing mode is enabled, this will:\n\n- Reduce the amount of data collected in user reports.\n- Slow down rdlist blocking/purging.\n- Prevent the deactivation of accounts.\n- Send incident reports to yourself instead of other homeserver admins.\n")
+
 def get_report_folder():
 	# Get report_folder from hardcoded_variables
 	report_folder = hardcoded_variables.report_folder
@@ -85,6 +88,10 @@ def zip_report_folder(user_report_folder, username):
 	return zip_file_name
 
 def generate_user_report(preset_username, report_details):
+	# Print warning if testing mode is enabled
+	if hardcoded_variables.testing_mode == True:
+		testing_mode_warning()
+
 	if len(preset_username) == 0:
 		username = input("\nPlease enter the username to automatically generate a report: ")
 		username = user_commands.parse_username(username)
