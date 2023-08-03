@@ -238,7 +238,7 @@ def lookup_homeserver_admin(preset_baseurl):
 	# If baseurl is matrix.org, return 'abuse@matrix.org' as a hardcoded response
 	if baseurl == "matrix.org":
 		print("\nAdmin contact email(s) for " + baseurl + " are: abuse@matrix.org")
-		return {"admins": {"email_address": "abuse@matrix.org"}}, False
+		return {"admins": [{"email_address": "abuse@matrix.org"}]}, False
 
 	# Check target homserver for MSC1929 support email
 	url = f"https://{baseurl}/.well-known/matrix/support"
@@ -266,10 +266,12 @@ def lookup_homeserver_admin(preset_baseurl):
 			if w.emails:
 				# Check if the emails field is a list
 				if isinstance(w.emails, list):
-					return {baseurl: list(w.emails)}, True
+					# Create a list of dictionaries, each containing one email address
+					emails_dict_list = [{"email_address": email} for email in w.emails]
+					return {"admins": emails_dict_list}, True
 				# If it's not a list, it must be a single string. So, we wrap it in a list
 				else:
-					return {baseurl: [w.emails]}, True
+					return {"admins": [{"email_address": w.emails}]}, True
 			else:
 				print(f"\t\tError: Unable to collect admin email from WHOIS data for {baseurl}")
 				return None, False
