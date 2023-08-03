@@ -237,7 +237,7 @@ def lookup_homeserver_admin(preset_baseurl):
 
 	# If baseurl is matrix.org, return 'abuse@matrix.org' as a hardcoded response
 	if baseurl == "matrix.org":
-		print("\nAdmin contact email(s) for " + baseurl + " are: abuse@matrix.org")
+		#print("\nAdmin contact email(s) for " + baseurl + " are: abuse@matrix.org")
 		return {"admins": [{"email_address": "abuse@matrix.org"}]}, False
 
 	# Check target homserver for MSC1929 support email
@@ -257,7 +257,7 @@ def lookup_homeserver_admin(preset_baseurl):
 
 		return data, False
 	else:
-		print(f"Error: Unable to collect admin contact details from server {baseurl}")
+		print(f"\nError: Unable to collect admin contact details from server {baseurl}")
 		print("Attempting to collect admin email from WHOIS data...")
 
 		# Get WHOIS data
@@ -273,10 +273,10 @@ def lookup_homeserver_admin(preset_baseurl):
 				else:
 					return {"admins": [{"email_address": w.emails}]}, True
 			else:
-				print(f"\t\tError: Unable to collect admin email from WHOIS data for {baseurl}")
+				print(f"Error: Unable to collect admin email from WHOIS data for {baseurl}")
 				return None, False
 		except:
-			print(f"\t\tError: Unable to collect WHOIS data for {baseurl}")
+			print(f"Error: Unable to collect WHOIS data for {baseurl}")
 			return None, False
 
 def send_email(email_address, email_subject, email_content, email_attachments):
