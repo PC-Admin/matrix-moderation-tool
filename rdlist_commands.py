@@ -13,31 +13,25 @@ def testing_mode_warning():
 	print("\nWARNING! Testing mode is enabled, this will:\n\n- Reduce the amount of data collected in user reports.\n- Slow down rdlist blocking/purging.\n- Prevent the deactivation of accounts.\n- Send incident reports to yourself instead of other homeserver admins.\n")
 
 def sync_rdlist():
-	rdlist_dir = "./rdlist"
-	os.makedirs(rdlist_dir, exist_ok=True)
-	# Check if the rdlist repo has already been cloned
-	if os.path.isdir("./rdlist/.git"):
-		print("\nrdlist repo already cloned...")
-		os.chdir("./rdlist/")
-		# Update git remote references and get status
-		subprocess.run(["git", "remote", "update"], check=True)
-		status = subprocess.run(["git", "status", "-uno"], stdout=subprocess.PIPE, check=True)
-		os.chdir("..")
+    rdlist_dir = os.path.expanduser(hardcoded_variables.rdlist_dir)
+    os.makedirs(rdlist_dir, exist_ok=True)
+    # Check if the rdlist repo has already been cloned
+    if os.path.isdir(os.path.join(rdlist_dir, ".git")):
+        print("\nrdlist repo already cloned...")
+        # Update git remote references and get status
+        subprocess.run(["git", "-C", rdlist_dir, "remote", "update"], check=True)
+        status = subprocess.run(["git", "-C", rdlist_dir, "status", "-uno"], stdout=subprocess.PIPE, check=True)
 
-		# If "Your branch is up to date" is not in the status, then there are changes to pull
-		if "Your branch is up to date" not in status.stdout.decode():
-			print("Pulling latest changes from rdlist repo...")
-			os.chdir("./rdlist/")
-			# Avoid pulling changes if testing mode is enabled
-			if hardcoded_variables.testing_mode == False:
-				subprocess.run(["git", "pull"], check=True)
-			os.chdir("..")
-		else:
-			print("rdlist repo is up-to-date, no need to pull changes.")
+        # If "Your branch is up to date" is not in the status, then there are changes to pull
+        if "Your branch is up to date" not in status.stdout.decode():
+            print("Pulling latest changes from rdlist repo...")
+            subprocess.run(["git", "-C", rdlist_dir, "pull"], check=True)
+        else:
+            print("rdlist repo is up-to-date, no need to pull changes.")
 
-	else:
-		print("Cloning rdlist repo...")
-		subprocess.run(["git", "clone", "ssh://gitea@code.glowers.club:1488/loj/rdlist.git"], check=True)
+    else:
+        print("Cloning rdlist repo...")
+        subprocess.run(["git", "clone", "ssh://gitea@code.glowers.club:1488/loj/rdlist.git", rdlist_dir], check=True)
 
 # A function to return the rdlist tags associated with a room
 def get_rdlist_tags(preset_internal_ID):
@@ -46,7 +40,7 @@ def get_rdlist_tags(preset_internal_ID):
 	elif preset_internal_ID != '':
 		internal_ID = preset_internal_ID
 
-	# Git clone the rdlist repo to ./rdlist/
+	# Git clone the rdlist repo to specified directory
 	sync_rdlist()
 
 	# Load the summaries JSON file
@@ -63,8 +57,9 @@ def get_rdlist_tags(preset_internal_ID):
 	return None
 
 def get_key_rdlist_info(rdlist_tags):
-	# Load the summaries JSON file
-	summaries_path = os.path.join("rdlist", "dist", "summaries.json")
+	# Expand the user in the path and load the summaries JSON file
+	summaries_dir = os.path.expanduser(hardcoded_variables.rdlist_dir)
+	summaries_path = os.path.join(summaries_dir, "dist", "summaries.json")
 	with open(summaries_path, 'r') as file:
 		data = json.load(file)
 
@@ -78,6 +73,7 @@ def get_key_rdlist_info(rdlist_tags):
 	# Create a dictionary to store the tags for each room
 	room_tags = dict()
 
+	print("\nCalculating local and remote users in rdlist rooms... (This may take a while, please wait.)")
 	# Iterate over the provided rdlist_tags
 	for tag in rdlist_tags:
 		# Filter the data to keep only the entries where the tag appears in the "tags" list
@@ -121,7 +117,7 @@ def collect_user_reports_on_rdlist_accounts(all_local_users=None, skip_input=Fal
 
 	# If all_local_users is None, then we need to generate it
 	if all_local_users == None:
-		# Git clone the rdlist repo to ./rdlist/
+		# Git clone the rdlist repo to specified directory
 		sync_rdlist()
 		all_room_ids, all_local_users, all_remote_users = get_key_rdlist_info(hardcoded_variables.rdlist_recommended_tags)
 
@@ -136,7 +132,7 @@ def collect_user_reports_on_rdlist_accounts(all_local_users=None, skip_input=Fal
 				report_content = report_commands.generate_rdlist_report_summary(all_local_users[user_id], user_id)
 				report_commands.generate_user_report(user_id, report_content)
 		elif generate_user_report_confirmation.lower() in ['n', 'no', 'N', 'No']:
-			print("\nSkipping user report generation...\n")
+			print("\nSkipping user report generation...")
 	elif len(all_local_users) == 0:
 		print(f"\nNo local users were found in rdlist rooms.")
 
@@ -147,7 +143,7 @@ def send_incident_reports_on_rdlist_accounts(all_remote_users=None, skip_input=F
 
 	# If all_remote_users is None, then we need to generate it
 	if all_remote_users == None:
-		# Git clone the rdlist repo to ./rdlist/
+		# Git clone the rdlist repo to specified directory
 		sync_rdlist()
 		all_room_ids, all_local_users, all_remote_users = get_key_rdlist_info(hardcoded_variables.rdlist_recommended_tags)
 
@@ -160,12 +156,12 @@ def send_incident_reports_on_rdlist_accounts(all_remote_users=None, skip_input=F
 			loop = asyncio.get_event_loop()
 			loop.run_until_complete(report_commands.send_incident_reports(all_remote_users))
 		elif send_incident_report_confirmation.lower() in ['n', 'no', 'N', 'No']:
-			print("\nSkipping incident report generation...\n")
+			print("\nSkipping incident report generation...")
 	elif len(all_remote_users) == 0:
 		print(f"\nNo remote users were found in rdlist rooms.")
 
 def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,preset_new_room_name,preset_message):
-	# Git clone the rdlist repo to ./rdlist/
+	# Git clone the rdlist repo to specified directory
 	sync_rdlist()
 
 	if rdlist_use_recommended == True:
@@ -174,11 +170,13 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 		print(f"\nUsing recommended rdlist tags. Rooms matching the following tags will be purged and/or blocked:\n{hardcoded_variables.rdlist_recommended_tags}")
 
 	elif rdlist_use_recommended == False:
-		# After the git repo has been cloned/pulled, open the file and read it into a string
-		with open(os.path.join("rdlist", "lib", "docs", "tags.md"), 'r') as file:
+		# Expand the user in the path and read the file into a string
+		rdlist_dir = os.path.expanduser(hardcoded_variables.rdlist_dir)
+		rdlist_path = os.path.join(rdlist_dir, "lib", "docs", "tags.md")
+		with open(rdlist_path, 'r') as file:
 			data = file.readlines()
 
-		# Print ./rdlist/lib/docs/tags.md README file for the user
+		# Print rdlist/lib/docs/tags.md README file for the user
 		print("\nPrinting details about the current tags in rdlist:\n")
 		for line in data:
 			print(line, end='')  # Print the contents of the file
@@ -257,10 +255,10 @@ def block_all_rooms_with_rdlist_tags(rdlist_use_recommended,preset_user_ID,prese
 					time.sleep(5)
 	elif shutdown_confirmation.lower() in ['n', 'no', 'N', 'No']:
 		print("\nSkipping blocking/shutdown of rooms...\n")
-		return
+		return 0, 0, []
 	else:
 		print("\nInvalid input, skipping these files...\n")
-		return
+		return 0, 0, []
 
 	# Deduplicate the list of all kicked users
 	total_list_kicked_users = list(set(total_list_kicked_users))
@@ -281,7 +279,7 @@ def block_recommended_rdlist_tags():
 		# Create user account
 		user_commands.create_account(hardcoded_variables.rdlist_bot_username, hardcoded_variables.rdlist_bot_password)
 	else:
-		print(f"@{hardcoded_variables.rdlist_bot_username}:{hardcoded_variables.base_url} account already exists. Resetting account password.\n")
+		print(f"@{hardcoded_variables.rdlist_bot_username}:{hardcoded_variables.base_url} account already exists. Resetting account password.")
 		user_commands.reset_password(hardcoded_variables.rdlist_bot_username, hardcoded_variables.rdlist_bot_password)
 
 	# Define default valies for shutdown_room()
@@ -291,17 +289,19 @@ def block_recommended_rdlist_tags():
 	# Block all rooms with recommended tag set
 	num_rooms_blocked, num_rooms_purged, total_list_kicked_users = block_all_rooms_with_rdlist_tags(True, hardcoded_variables.rdlist_bot_username, preset_new_room_name, preset_message)
 
-	# Print user login details
-	print("\n\nRoom shutdowns completed!\n\nUser login details for your moderator account:\n")
-	print("Username: " + hardcoded_variables.rdlist_bot_username)
-	print("Password: " + hardcoded_variables.rdlist_bot_password)
+	# Print user login details if any rooms were shutdown
+	if total_list_kicked_users != []:
+		print("\n\nRoom shutdowns completed!\n\nUser login details for your moderator account:\n")
+		print("Username: " + hardcoded_variables.rdlist_bot_username)
+		print("Password: " + hardcoded_variables.rdlist_bot_password)
 
 	# Print statistics for the admin
-	print(f"\nPrint rdlist statistics:")
+	print(f"\nPrinting rdlist statistics:")
 	print(f"\nNumber of rooms blocked: {num_rooms_blocked}")
 	print(f"Number of rooms purged: {num_rooms_purged}")
 	print(f"Number of local users located in rdlist rooms and kicked: {len(total_list_kicked_users)}")
-	print(f"\nThe following users were current members of rooms tagged in rdlist: {total_list_kicked_users}")
+	if total_list_kicked_users != []:
+		print(f"\nThe following users were current members of rooms tagged in rdlist: {total_list_kicked_users}")
 
 	# Ask admin if they want to deactivate all the accounts that were kicked from rdlist rooms
 	deactivate_confirmation = input("\nDo you want to also deactivate all these accounts that were kicked from rdlist rooms? y/n? ")

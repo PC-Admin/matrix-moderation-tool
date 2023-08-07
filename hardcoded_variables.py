@@ -7,6 +7,7 @@ access_token = ""			# Your homeserver admin access token
 # ipinfo.io token
 ipinfo_token = ""			# Leave blank to disable ipinfo.io lookups
 # rdlist specific
+rdlist_dir = "~/rdlist"             	# The directory where rdlist is pulled to
 rdlist_bot_username = "mod_team"	# The username to perform automated room shutdowns
 rdlist_bot_username = "strong-password"	# The password for this user
 rdlist_recommended_tags = ['hub_room_links', 'hub_room_trade', 'preban', 'degen_misc', 'beastiality', 'degen_porn', 'gore', 'snuff', 'degen_larp', 'hub_room_sussy', 'bot_spam', 'cfm', 'jailbait', 'bot_porn', 'toddlercon', 'loli', 'csam', 'tfm', 'degen_meet', 'stylized_3d_loli', '3d_loli']

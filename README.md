@@ -143,7 +143,7 @@ Generating user report for fatweeb23838...
 Report generated successfully on user: "fatweeb23838"
 
 You can send this .zip file when reporting a user to law enforcement.
-.zip file location: /home/pcadmin/PerthchatVault/Perthchat_LIVE/matrix-moderation-tool/reports/fatweeb23838_2023-08-01_23-19-24.zip
+.zip file location: /home/pcadmin/projects/matrix-moderation-tool/reports/fatweeb23838_2023-08-01_23-19-24.zip
 .zip file size: 0.00966 MB
 
 
@@ -151,7 +151,7 @@ Generating user report for somecreep29330...
 Report generated successfully on user: "somecreep29330"
 
 You can send this .zip file when reporting a user to law enforcement.
-.zip file location: /home/pcadmin/PerthchatVault/Perthchat_LIVE/matrix-moderation-tool/reports/somecreep29330_2023-08-01_23-19-27.zip
+.zip file location: /home/pcadmin/projects/matrix-moderation-tool/reports/somecreep29330_2023-08-01_23-19-27.zip
 .zip file size: 0.29578 MB
 ```
 
