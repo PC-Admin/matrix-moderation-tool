@@ -537,3 +537,28 @@ def shadow_ban_account(preset_username):
 
 # Example:
 # curl -XPOST -H "Content-Type: application/json" 'https://matrix.perthchat.org/_synapse/admin/v1/users/@dogpoo:perthchat.org/shadow_ban?access_token=ACCESS_TOKEN'
+
+def find_account_with_threepid(medium="", address=""):
+    # prompt user to enter values if they're not provided
+    if medium == "":
+        print("\nPlease enter the medium (either 'email' or 'msisdn' for mobile number): ")
+        medium = input()
+    if address == "":
+        print("\nPlease enter the address (the email or mobile number): ")
+        address = input()
+
+    url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/threepid/{medium}/users/{address}?access_token={hardcoded_variables.access_token}"
+
+    response = requests.get(url, verify=True)
+
+    if response.status_code == 200:
+        # User exists
+        return response.json()
+    elif response.status_code == 404:
+        # User not found
+        return {"errcode":"M_NOT_FOUND", "error":"User not found"}
+    else:
+        print(f"Error querying account: {response.status_code}, {response.text}")
+
+# Example:
+# $ curl -X GET 'https://matrix.perthchat.org/_synapse/admin/v1/threepid/email/users/dogpoo@protonmail.com?access_token=ACCESS_TOKEN'

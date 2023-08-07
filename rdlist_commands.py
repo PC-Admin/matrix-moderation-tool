@@ -43,8 +43,9 @@ def get_rdlist_tags(preset_internal_ID):
 	# Git clone the rdlist repo to specified directory
 	sync_rdlist()
 
-	# Load the summaries JSON file
-	summaries_path = os.path.join("rdlist", "dist", "summaries.json")
+	# Expand the user in the path and load the summaries JSON file
+	summaries_dir = os.path.expanduser(hardcoded_variables.rdlist_dir)
+	summaries_path = os.path.join(summaries_dir, "dist", "summaries.json")
 	with open(summaries_path, 'r') as file:
 		data = json.load(file)
 
