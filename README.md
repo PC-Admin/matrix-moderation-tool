@@ -29,7 +29,7 @@ pip3 install matrix-nio
 ***
 ## Running the script
 
-`$ python3 moderation-tool.py`
+`$ python3 moderation_tool.py`
 
 
 ***
