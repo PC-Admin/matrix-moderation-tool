@@ -117,3 +117,30 @@ This script can automatically load and block/purge abusive rooms from rdlist, ma
 If you are running a public server, please dm me at [@michael:perthchat.org](https://matrix.to/#/@michael:perthchat.org) and I can invite you to the 'Legion of Janitors' room.
 
 For more information on rdlist related function consult the [support document](./docs/rdlist_functions.md).
+
+
+***
+## One-touch Reporting
+
+WARNING: This section is under heavy development and shouldn't be used by anyone!!!
+
+This script can automatically generate reports about user accounts for law enforcement.
+
+It collects as much data about the target user account as possible, then packages it into an encrypted ZIP file that can be shared:
+```
+
+Please enter a number from the above menu, or enter 'q' or 'e' to exit.
+
+150
+
+Please enter the username to automatically generate a report: pedobear
+
+...
+
+Report generated successfully on user: "pedobear"
+
+You can send this .zip file and password when reporting a user to law enforcement.
+
+.zip file location: ./reports/pedobear_2023-07-23_02-21-56.zip
+.zip file size: 0.503927 MB
+```
