@@ -1,6 +1,14 @@
+
 #!/bin/env python3
 
+import os
 import json
+
+# Check if ./hardcoded_variables.py file exists
+if not os.path.exists("./hardcoded_variables.py"):
+	print("ERROR: The file './hardcoded_variables.py' does not exist. It must be configured before using this script.")
+	exit()
+
 import user_commands
 import room_commands
 import server_commands
@@ -8,24 +16,31 @@ import ipinfo_commands
 import rdlist_commands
 import report_commands
 import bot_commands
+
+# Importing the module only after verifying its existence
 import hardcoded_variables
 
-# check if homeserver url is hard coded, if not set it
+# If it does exist... check if the variables are configured:
+
+# check if homeserver url is the default
 
 if hardcoded_variables.homeserver_url == "matrix.example.org":
-	homeserver_url = input("homeserver_url not configured; What is the URL of your server? Eg: matrix.example.org ")
+	print("ERROR: homeserver_url not configured, please configure your './hardcoded_variables.py' file!")
+	exit()
 
-# check if base url is hard coded, if not set it
+# check if base url is the default
 
 if hardcoded_variables.base_url == "example.org":
-	base_url = input("base_url not configured; What is the URL of your server? Eg: example.org ")
+	print("ERROR: base_url not configured, please configure your './hardcoded_variables.py' file!")
+	exit()
 
-# check if access token is hard coded, if not set it
+# check if access token is the default
 
 length_access_token = len(hardcoded_variables.access_token)
 
 if length_access_token == 0:
-	access_token = input("access_token not configured; Please enter access token for server admin account: ")
+	print("ERROR: access_token not configured, please configure your './hardcoded_variables.py' file!")
+	exit()
 
 # loop menu for various moderation actions
 
