@@ -15,14 +15,18 @@ This work is published under the MIT license, for more information on this licen
 ***
 ## Setup script
 
-You can hard code the server URL, federation port and access token into the [hardcoded_variables.py](./hardcoded_variables.py) file for faster use, ~~it will prompt you for these values if you don't.~~ (Prompting is currently broken)
+Firstly, you need hard code the 'server URL', 'federation port' and 'access token' into the [hardcoded_variables.py](./hardcoded_variables.py) file 
+```
+$ cp ./hardcoded_variables.py.sample ./hardcoded_variables.py
+$ nano ./hardcoded_variables.py
+```
 
 Your access token can be found in Element > Settings > Help & About, your user account must first be upgraded to a server admin.
 
 This script also requires you to install the following PIP packages:
 ```
-pip3 install python-whois
-pip3 install requests
+$ pip3 install python-whois && \
+pip3 install requests && \
 pip3 install matrix-nio
 ```
 
@@ -83,6 +87,45 @@ With the popular [matrix-docker-ansible-deploy](https://github.com/spantaleev/ma
 
 
 ***
+## rdlist Functionality
+
+'rdlist' is a comprehensive list of child abuse related rooms on Matrix, it's a safety initiative led by the [Legion of Janitors](https://matrix.to/#/#janitors:glowers.club).
+
+This script can automatically load and block/purge abusive rooms from rdlist, making it **very easy** for inexperienced administrators to block this harmful content.
+
+If you are running a public server, please dm me at [@michael:perthchat.org](https://matrix.to/#/@michael:perthchat.org) and I can invite you to the 'Legion of Janitors' room.
+
+For more information on rdlist related function consult the [support document](./docs/rdlist_functions.md).
+
+
+***
+## One-touch Reporting
+
+CAUTION: This section is under heavy development and probably shouldn't be used by anyone!
+
+This script can automatically generate reports about user accounts for law enforcement.
+
+It collects as much data about the target user account as possible, then packages it into an encrypted ZIP file that can be shared:
+```
+
+Please enter a number from the above menu, or enter 'q' or 'e' to exit.
+
+150
+
+Please enter the username to automatically generate a report: pedobear
+
+...
+
+Report generated successfully on user: "pedobear"
+
+You can send this .zip file and password when reporting a user to law enforcement.
+
+.zip file location: ./reports/pedobear_2023-07-23_02-21-56.zip
+.zip file size: 0.503927 MB
+```
+
+
+***
 ## Roadmap
 
 To do:
@@ -105,42 +148,3 @@ To do:
 7) Automated public room joining and reminder if reporting email is not available?
 8) Refine ipinfo module to also return extra details about the IP
 9) Make existing functions compatible with JSON formatted inputs
-
-
-***
-## rdlist Functionality
-
-'rdlist' is a comprehensive list of child abuse related rooms on Matrix, it's a safety initiative led by the [Legion of Janitors](https://matrix.to/#/#janitors:glowers.club).
-
-This script can automatically load and block/purge abusive rooms from rdlist, making it **very easy** for inexperienced administrators to block this harmful content.
-
-If you are running a public server, please dm me at [@michael:perthchat.org](https://matrix.to/#/@michael:perthchat.org) and I can invite you to the 'Legion of Janitors' room.
-
-For more information on rdlist related function consult the [support document](./docs/rdlist_functions.md).
-
-
-***
-## One-touch Reporting
-
-WARNING: This section is under heavy development and shouldn't be used by anyone!!!
-
-This script can automatically generate reports about user accounts for law enforcement.
-
-It collects as much data about the target user account as possible, then packages it into an encrypted ZIP file that can be shared:
-```
-
-Please enter a number from the above menu, or enter 'q' or 'e' to exit.
-
-150
-
-Please enter the username to automatically generate a report: pedobear
-
-...
-
-Report generated successfully on user: "pedobear"
-
-You can send this .zip file and password when reporting a user to law enforcement.
-
-.zip file location: ./reports/pedobear_2023-07-23_02-21-56.zip
-.zip file size: 0.503927 MB
-```
