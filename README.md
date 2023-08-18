@@ -131,8 +131,11 @@ You can send this .zip file and password when reporting a user to law enforcemen
 To do:
 1) Add the following functions:
 - https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-id-in-an-auth-provider
-- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-third-party-id-threepid-or-3pid
+- https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#find-a-user-based-on-their-third-party-id-threepid-or-3pid - DONE
 - https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
+- https://matrix-org.github.io/synapse/v1.38/admin_api/rooms.html#make-room-admin-api
+- https://matrix-org.github.io/synapse/latest/admin_api/server_notices.html
+https://matrix-org.github.io/synapse/latest/usage/administration/admin_api/federation.html#destination-rooms
 2) Add fully automated (should just return a web link and decryption password) reporting functions for users:
 - Description of why the report was made (what happened), include key information
 - Any other usernames associated with that IP

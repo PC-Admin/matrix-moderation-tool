@@ -5,7 +5,7 @@
 
 > This function disables a specific user's account, making it unusable for the owner.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#deactivate-account
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#deactivate-account
 
 2) **Deactivate multiple user accounts.**
 
@@ -15,7 +15,7 @@
 
 > Use this to generate a new user account.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#create-or-modify-account
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#create-or-modify-account
 
 4) **Create multiple user accounts.**
 
@@ -25,13 +25,13 @@
 
 > If a user forgets their password, this function helps set a new one.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#reset-password
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#reset-password
 
 6) **Whois user account.**	
 
-> Provides detailed information about a specific user's account.
+> This API returns information about the active sessions for a specific user.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#query-current-sessions-for-a-user
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#query-current-sessions-for-a-user
 
 7) **Whois multiple user accounts.**
 
@@ -41,7 +41,7 @@
 
 > Allows you to get specific details or attributes of a user account.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#query-user-account
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#query-user-account
 
 9) **Query multiple user accounts.**
 
@@ -51,13 +51,13 @@
 
 > Displays the list of rooms that a user is a part of.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#list-room-memberships-of-a-user
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-room-memberships-of-a-user
 
 11) **Promote a user to server admin.**	
 
 > Elevates a user's privileges, making them an administrator on the server.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#change-whether-a-user-is-a-server-administrator-or-not
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#change-whether-a-user-is-a-server-administrator-or-not
 
 12) **List all user accounts.**
 
@@ -69,7 +69,7 @@
 
 > This API quarantines all local media that a local user has uploaded. That is to say, if you would like to quarantine media uploaded by a user on a remote homeserver, you should instead use one of the other APIs. Useful for potential harmful or inappropriate content.
 
-  https://matrix-org.github.io/synapse/v1.40/admin_api/media_admin_api.html#quarantining-all-media-of-a-user
+  https://matrix-org.github.io/synapse/latest/admin_api/media_admin_api.html#quarantining-all-media-of-a-user
 
 14) **Collect account data.**
 
@@ -79,25 +79,25 @@
 
 > Shows devices and services that have push access to a user's account.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#list-all-pushers
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#list-all-pushers
 
 16) **Get rate limit of a user account.**
 
 > Displays the frequency at which a user can make requests or actions.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#get-status-of-ratelimit
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#get-status-of-ratelimit
 
 17) **Set rate limit of a user account.**
 
 > Adjusts the frequency rate at which a user can make requests or actions.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#set-ratelimit
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#set-ratelimit
 
 18) **Delete rate limit of a user account.**
 
 > Removes any rate limits set on a user's account, granting them unrestricted action frequency.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#delete-ratelimit
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#delete-ratelimit
 
 19) **Check if user account exists.**
 
@@ -109,7 +109,7 @@
 
 > Shadow-banning a user should be used as a tool of last resort and may lead to confusing or broken behaviour for the client. A shadow-banned user will not receive any notification and it is generally more appropriate to ban or kick abusive users. A shadow-banned user will be unable to contact anyone on the server.
 
-  https://matrix-org.github.io/synapse/v1.38/admin_api/user_admin_api.html#shadow-banning-users
+  https://matrix-org.github.io/synapse/latest/admin_api/user_admin_api.html#controlling-whether-a-user-is-shadow-banned
 
 21) **Find a user by their 3PID (Third-party ID).**
   
