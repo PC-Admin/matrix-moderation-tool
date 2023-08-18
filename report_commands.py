@@ -258,6 +258,7 @@ def lookup_homeserver_admin(preset_baseurl):
 	# If the request was successful, the status code will be 200
 	if response.status_code == 200 and ( "email_address" in response.text or "matrix_id" in response.text ):
 		# Parse the response as JSON
+		print(response.text)
 		data = json.loads(response.text)
 
 		#print("\nAdmin contact details for " + baseurl + " are: " + str(data))
