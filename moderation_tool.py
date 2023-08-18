@@ -112,7 +112,7 @@ while pass_token == False:
 	elif menu_input == "7":
 		user_commands.whois_multiple_accounts()
 	elif menu_input == "8":
-		query_account_dict = user_commands.query_account()
+		query_account_dict = user_commands.query_account('')
 		print(json.dumps(query_account_dict, indent=4, sort_keys=True))
 	elif menu_input == "9":
 		user_commands.query_multiple_accounts()
