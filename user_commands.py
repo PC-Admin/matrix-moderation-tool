@@ -432,6 +432,7 @@ def list_account_pushers(preset_username):
 
 def get_rate_limit():
 	username = input("\nPlease enter the username to get its ratelimiting: ")
+	username = parse_username(username)
 
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/override_ratelimit?access_token={hardcoded_variables.access_token}"
 
@@ -450,6 +451,7 @@ def get_rate_limit():
 
 def set_rate_limit():
 	username = input("\nPlease enter the username to adjust its ratelimiting: ")
+	username = parse_username(username)
 
 	messages_per_second = input("\nPlease enter the desired messages per second: ")
 	burst_count = input("\nPlease enter the desired burst count: ")
@@ -478,6 +480,7 @@ def set_rate_limit():
 
 def delete_rate_limit():
 	username = input("\nPlease enter the username to delete its ratelimiting: ")
+	username = parse_username(username)
 
 	url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/users/@{username}:{hardcoded_variables.base_url}/override_ratelimit?access_token={hardcoded_variables.access_token}"
 
