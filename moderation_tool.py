@@ -1,3 +1,4 @@
+#!/bin/env python3
 
 import json
 import user_commands
@@ -12,19 +13,19 @@ import hardcoded_variables
 # check if homeserver url is hard coded, if not set it
 
 if hardcoded_variables.homeserver_url == "matrix.example.org":
-	homeserver_url = input("What is the URL of your server? Eg: matrix.example.org ")
+	homeserver_url = input("homeserver_url not configured; What is the URL of your server? Eg: matrix.example.org ")
 
 # check if base url is hard coded, if not set it
 
 if hardcoded_variables.base_url == "example.org":
-	base_url = input("What is the URL of your server? Eg: example.org ")
+	base_url = input("base_url not configured; What is the URL of your server? Eg: example.org ")
 
 # check if access token is hard coded, if not set it
 
 length_access_token = len(hardcoded_variables.access_token)
 
 if length_access_token == 0:
-	access_token = input("Please enter access token for server admin account: ")
+	access_token = input("access_token not configured; Please enter access token for server admin account: ")
 
 # loop menu for various moderation actions
 
