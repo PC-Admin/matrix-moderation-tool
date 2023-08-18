@@ -119,6 +119,10 @@ Number of rdlist rooms being shutdown: 346
 
 Are you sure you want to block/shutdown these rooms? y/n? y
 
+Do you want to also shadow ban all your local users in these rooms before performing these shutdowns? (This is recommended as it prevents them from alerting others about these mass shutdown.) y/n? y
+
+Shadow banning user: @***REDACTED***:perthchat.org
+
 
 Skipping already blocked room: !***REDACTED***:matrix.org
 
@@ -168,5 +172,11 @@ Number of local users located in rdlist rooms and kicked: 1
 The following users were current members of rooms tagged in rdlist: ['@***REDACTED***:perthchat.org']
 
 Do you want to also deactivate all these accounts that were kicked from rdlist rooms? y/n?
+
+https://matrix.perthchat.org/_synapse/admin/v1/deactivate/@***REDACTED***:perthchat.org
+
+Successfully deactivated account.
+
+These accounts have been deactivated.
 ...
 ```
