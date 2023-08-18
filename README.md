@@ -15,7 +15,7 @@ This work is published under the MIT license, for more information on this licen
 ***
 ## Setup script
 
-You can hard code the server URL, federation port and access token into the [hardcoded_variables.py](./hardcoded_variables.py) file for faster use, it will prompt you for these values if you don't.
+You can hard code the server URL, federation port and access token into the [hardcoded_variables.py](./hardcoded_variables.py) file for faster use, ~~it will prompt you for these values if you don't.~~ (Prompting is currently broken)
 
 Your access token can be found in Element > Settings > Help & About, your user account must first be upgraded to a server admin.
 
@@ -25,6 +25,11 @@ pip3 install python-whois
 pip3 install requests
 pip3 install matrix-nio
 ```
+
+***
+## Running the script
+
+`$ python3 moderation-tool.py`
 
 
 ***
@@ -87,19 +92,12 @@ To do:
 - https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
 2) Add fully automated (should just return a web link and decryption password) reporting functions for users:
 - Description of why the report was made (what happened), include key information
-- User's ID - DONE
-- Whois Data - DONE
-- Account Data - DONE
-- Query Data - DONE
-- Pushers List - DONE
-- IPs + ipinfo Data - DONE
-- List of the rooms the user is participating in, divided into 1:1 conversations and larger rooms - DONE
 - Any other usernames associated with that IP
 - Timestamp for when illegal material was accessed
 - Description of report format and contents (to guide the reader)
 - Collect state event dumps of recently read rooms as well (as they may have looked at other suss rooms recently)
 3) Have recommended rdlist function:
-- return a list of offending accounts and the tags they accessed (for creating incident_dict's)
+- return a list of offending accounts and the tags they accessed (for creating incident_dict's) - DONE
 - add the shadowban function to prevent members alerting others after mass shutdowns - DONE
 4) Only email reportID in incident report?
 5) Add a room report function to create a properly formatted report for rdlist
