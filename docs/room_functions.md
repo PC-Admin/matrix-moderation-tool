@@ -1,3 +1,4 @@
+
 #### Room Commands ####
 
 50) **List details of a room.**
