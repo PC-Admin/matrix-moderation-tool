@@ -21,39 +21,39 @@ A tool for making common Synapse moderation tasks easier. Created by @PC-Admin.
 
 ----------------------------------------------
 
-#### User Account Commands ####			    #### Room Commands ####
-1) Deactivate a user account.			    50) List details of a room.
-2) Deactivate multiple user accounts.	    51) List the members of a room.
+#### User Account Commands ####			    	#### Room Commands ####
+1) Deactivate a user account.			    	50) List details of a room.
+2) Deactivate multiple user accounts.			51) List the members of a room.
 3) Create a user account.			        52) Export the state events of a room.
-4) Create multiple user accounts.		    53) Export the state events of multiple rooms.
+4) Create multiple user accounts.		    	53) Export the state events of multiple rooms.
 5) Reset a users password.			        54) List rooms in public directory.
 6) Whois user account.				        55) Remove a room from the public directory.
-7) Whois multiple user accounts.		    56) Remove multiple rooms from the public directory.
+7) Whois multiple user accounts.		    	56) Remove multiple rooms from the public directory.
 8) Query user account.				        57) Redact a room event.
-9) Query multiple user accounts.		    58) List/Download all media in a room.
-10) List room memberships of user.		    59) Download media from multiple rooms.
-11) Promote a user to server admin.		    60) Quarantine all media in a room.
+9) Query multiple user accounts.		    	58) List/Download all media in a room.
+10) List room memberships of user.		    	59) Download media from multiple rooms.
+11) Promote a user to server admin.		    	60) Quarantine all media in a room.
 12) List all user accounts.			        61) Shutdown a room.
-13) Quarantine all media a users uploaded.	62) Shutdown multiple rooms.
+13) Quarantine all media a users uploaded.		62) Shutdown multiple rooms.
 14) Collect account data.			        63) Delete a room.
 15) List account pushers.			        64) Delete multiple rooms.
-16) Get rate limit of a user account.		65) Purge the event history of a room to a specific timestamp.
-17) Set rate limit of a user account.		66) Purge the event history of multiple rooms to a specific timestamp.
-18) Delete rate limit of a user account.	67) Get blocked status for room.
-19) Check if user account exists.		    68) Block a room.
+16) Get rate limit of a user account.			65) Purge the event history of a room to a specific timestamp.
+17) Set rate limit of a user account.			66) Purge the event history of multiple rooms to a specific timestamp.
+18) Delete rate limit of a user account.		67) Get blocked status for room.
+19) Check if user account exists.		    	68) Block a room.
 20) Shadow ban a user.				        69) Unblock a room.
 21) Find a user by their 3PID.
 
-#### Server Commands ####					                #### ipinfo.io ####
-100) Delete and block a specific media.				        140) Analyse a users country of origin.
+#### Server Commands ####					#### ipinfo.io ####
+100) Delete and block a specific media.				140) Analyse a users country of origin.
 101) Purge remote media repository up to a certain date.	141) Analyse multiple users country of origin.
 102) Prepare database for copying events of multiple rooms.
-103) Show last 10 reported events.				            #### Report Generation ####
-104) Get all reported events.					            150) Generate user report.
-105) Get details of a reported event.				        151) Lookup homeserver admin contact details.
-								                            152) Send a test email (to yourself).
-#### rdlist - General ####					                153) Send a test Matrix message (to yourself).
-120) Block all rooms with specific rdlist tags.			    154) Send test incident reports (to yourself).
+103) Show last 10 reported events.				#### Report Generation ####
+104) Get all reported events.					150) Generate user report.
+105) Get details of a reported event.				151) Lookup homeserver admin contact details.
+								152) Send a test email (to yourself).
+#### rdlist - General ####					153) Send a test Matrix message (to yourself).
+120) Block all rooms with specific rdlist tags.			154) Send test incident reports (to yourself).
 121) Get rdlist tags for a room.
 
 #### rdlist - Recommended Tags ####
