@@ -73,21 +73,22 @@ while pass_token == False:
 	print("19) Check if user account exists.\t\t68) Block a room.")
 	print("20) Shadow ban a user.\t\t\t\t69) Unblock a room.")
 	print("21) Find a user by their 3PID.")
-	print("\n#### Server Commands ####\t\t\t\t\t#### Report Generation ####")
-	print("100) Delete and block a specific media.\t\t\t\t150) Generate user report.")
-	print("101) Purge remote media repository up to a certain date.\t151) Lookup homeserver admin contact details.")
-	print("102) Prepare database for copying events of multiple rooms.\t152) Send a test email (to yourself).")
-	print("\t\t\t\t\t\t\t\t153) Sent a test Matrix message (to yourself).")
-	print("#### rdlist - General ####\t\t\t\t\t154) Send test incident reports (to yourself).")
-	print("120) Block all rooms with specific rdlist tags.")
+	print("\n#### Server Commands ####\t\t\t\t\t#### ipinfo.io ####")
+	print("100) Delete and block a specific media.\t\t\t\t140) Analyse a users country of origin.")
+	print("101) Purge remote media repository up to a certain date.\t141) Analyse multiple users country of origin.")
+	print("102) Prepare database for copying events of multiple rooms.")
+	print("103) Show last 10 reported events.\t\t\t\t#### Report Generation ####")
+	print("104) Get all reported events.\t\t\t\t\t150) Generate user report.")
+	print("105) Get details of a reported event.\t\t\t\t151) Lookup homeserver admin contact details.")
+	print("\t\t\t\t\t\t\t\t152) Send a test email (to yourself).")
+	print("#### rdlist - General ####\t\t\t\t\t153) Send a test Matrix message (to yourself).")
+	print("120) Block all rooms with specific rdlist tags.\t\t\t154) Send test incident reports (to yourself).")
 	print("121) Get rdlist tags for a room.")
-	print("\n#### rdlist - Recommended Tags ####\nFor rdlist rooms with recommended tags, the following actions are available:")
+	print("\n#### rdlist - Recommended Tags ####")
+	print("For rdlist rooms with recommended tags, the following actions are available:")
 	print("130) Collect User Reports on local accounts in rdlist rooms.")
 	print("131) Send Incident Reports on remote accounts in rdlist rooms.")
 	print("132) Block/Purge all rdlist rooms.")
-	print("\n#### ipinfo.io ####")
-	print("140) Analyse a users country of origin.")
-	print("141) Analyse multiple users country of origin.")
 	print("\nPlease enter a number from the above menu, or enter 'q' or 'e' to exit.\n")
 	menu_input = input()
 	if menu_input == "1":
@@ -202,6 +203,15 @@ while pass_token == False:
 		server_commands.purge_remote_media_repo()
 	elif menu_input == "102":
 		server_commands.prepare_database_copy_of_multiple_rooms()
+	elif menu_input == "103":
+		reported_events = server_commands.get_reported_events(10)
+		print(json.dumps(reported_events, indent=4, sort_keys=True))
+	elif menu_input == "104":
+		all_reported_events = server_commands.paginate_reported_events()  # Again assuming default values are set
+		print(json.dumps(all_reported_events, indent=4, sort_keys=True))
+	elif menu_input == "105":
+		report_details = server_commands.get_event_report_details()
+		print(json.dumps(report_details, indent=4, sort_keys=True))
 	elif menu_input == "120":
 		rdlist_commands.block_all_rooms_with_rdlist_tags(False,'','','')
 	elif menu_input == "121":

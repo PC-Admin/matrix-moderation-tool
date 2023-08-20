@@ -135,7 +135,8 @@ To do:
 - https://github.com/matrix-org/synapse/blob/master/docs/admin_api/delete_group.md
 - https://matrix-org.github.io/synapse/v1.38/admin_api/rooms.html#make-room-admin-api
 - https://matrix-org.github.io/synapse/latest/admin_api/server_notices.html
-https://matrix-org.github.io/synapse/latest/usage/administration/admin_api/federation.html#destination-rooms
+- https://matrix-org.github.io/synapse/latest/admin_api/event_reports.html
+- https://matrix-org.github.io/synapse/latest/usage/administration/admin_api/federation.html#destination-rooms
 2) Add fully automated (should just return a web link and decryption password) reporting functions for users:
 - Description of why the report was made (what happened), include key information
 - Any other usernames associated with that IP

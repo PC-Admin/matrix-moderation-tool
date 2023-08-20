@@ -136,3 +136,70 @@ def prepare_database_copy_of_multiple_rooms():
 	print(chown_command_process.stdout)
 
 	print("\nThe sql query files have been generated, as postgres user in container run:\n# docker exec -it matrix-postgres /bin/bash\nbash-5.0$  export PGPASSWORD=your-db-password\nbash-5.0$ for f in /var/lib/postgresql/data/ramdisk/*/dump_room_data.sql; do psql --host=127.0.0.1 --port=5432 --username=synapse -w -f $f; done\n\nAfter copying the data to a cloud location law enforcement can access, clean up the ramdisk like so:\n# rm -r /matrix/postgres/data/ramdisk/*\n# umount /matrix/postgres/data/ramdisk")
+
+def get_reported_events(limit=100, _from=0, dir='b', user_id=None, room_id=None):
+    url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/event_reports"
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {hardcoded_variables.access_token}"
+    }
+
+    params = {
+        'limit': limit,
+        'from': _from,
+        'dir': dir
+    }
+
+    if user_id:
+        params['user_id'] = user_id
+
+    if room_id:
+        params['room_id'] = room_id
+
+    response = requests.get(url, headers=headers, params=params)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error fetching reported events: {response.status_code}, {response.text}")
+        return None
+
+def paginate_reported_events(limit=100, dir='b', user_id=None, room_id=None):
+    _from = 0
+    all_reports = []
+
+    while True:
+        reports = get_reported_events(limit=limit, _from=_from, dir=dir, user_id=user_id, room_id=room_id)
+        if not reports or "event_reports" not in reports:
+            break
+
+        all_reports.extend(reports["event_reports"])
+
+        if "next_token" in reports:
+            _from = reports["next_token"]
+        else:
+            break
+
+    return all_reports
+
+def get_event_report_details(preset_report_id=''):
+    if preset_report_id == '':
+        report_id = input("\nEnter the report_id of the report you wish to query (Example: 56): ")
+    elif preset_report_id != '':
+        report_id = preset_report_id
+
+    url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/event_reports/{report_id}"
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {hardcoded_variables.access_token}"
+    }
+
+    response = requests.get(url, headers=headers)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error fetching event report details: {response.status_code}, {response.text}")
+        return None
