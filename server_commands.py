@@ -203,3 +203,64 @@ def get_event_report_details(preset_report_id=''):
     else:
         print(f"Error fetching event report details: {response.status_code}, {response.text}")
         return None
+
+def send_server_notice(preset_user_id='', preset_message='', txnId=None, event_type="m.room.message", state_key=None):
+    """
+    Sends a server notice to a given user.
+
+    Args:
+    - user_id (str): The Matrix ID of the user to send the notice to, e.g. "@target_user:server_name".
+    - message (str): The message to be sent as a notice.
+    - txnId (str, optional): A unique transaction ID. If provided, retransmissions with the same txnId will be ignored.
+    - event_type (str, optional): The type of event. Defaults to "m.room.message".
+    - state_key (str, optional): Setting this will result in a state event being sent.
+
+    Returns:
+    - dict: A dictionary containing the response from the server.
+    """
+
+	# Take user_id from user if not provided
+    if preset_user_id == '':
+        user_id = input("\nEnter the user_id of the user you would like to send the server notice to: ")
+    elif preset_user_id != '':
+        user_id = preset_user_id
+
+    # Take message from user if not provided
+    if preset_message == '':
+        message = input("\nEnter the message you would like to send to the user: ")
+    elif preset_message != '':
+        message = preset_message
+
+    # Construct the URL based on whether a txnId is provided
+    if txnId:
+        url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/send_server_notice/{txnId}"
+    else:
+        url = f"https://{hardcoded_variables.homeserver_url}/_synapse/admin/v1/send_server_notice"
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {hardcoded_variables.access_token}"
+    }
+
+    # Construct the request body
+    data = {
+        "user_id": user_id,
+        "content": {
+            "msgtype": "m.text",
+            "body": message
+        }
+    }
+
+    if event_type:
+        data["type"] = event_type
+    if state_key:
+        data["state_key"] = state_key
+
+    # Send the request
+    response = requests.put(url, headers=headers, json=data) if txnId else requests.post(url, headers=headers, json=data)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error sending server notice: {response.status_code}, {response.text}")
+        return None

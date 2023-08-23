@@ -80,9 +80,10 @@ while pass_token == False:
 	print("103) Show last 10 reported events.\t\t\t\t#### Report Generation ####")
 	print("104) Get all reported events.\t\t\t\t\t150) Generate user report.")
 	print("105) Get details of a reported event.\t\t\t\t151) Lookup homeserver admin contact details.")
-	print("\t\t\t\t\t\t\t\t152) Send a test email (to yourself).")
-	print("#### rdlist - General ####\t\t\t\t\t153) Send a test Matrix message (to yourself).")
-	print("120) Block all rooms with specific rdlist tags.\t\t\t154) Send test incident reports (to yourself).")
+	print("106) Send a server notice.\t\t\t\t\t152) Send a test email (to yourself).")
+	print("\t\t\t\t\t\t\t\t\t153) Send a test Matrix message (to yourself).")
+	print("\n#### rdlist - General ####\t\t\t\t\t154) Send test incident reports (to yourself).")
+	print("120) Block all rooms with specific rdlist tags.")
 	print("121) Get rdlist tags for a room.")
 	print("\n#### rdlist - Recommended Tags ####")
 	print("For rdlist rooms with recommended tags, the following actions are available:")
@@ -212,6 +213,9 @@ while pass_token == False:
 	elif menu_input == "105":
 		report_details = server_commands.get_event_report_details()
 		print(json.dumps(report_details, indent=4, sort_keys=True))
+	elif menu_input == "106":
+		server_commands.send_server_notice()
+		print("\nServer notice sent.\n")
 	elif menu_input == "120":
 		rdlist_commands.block_all_rooms_with_rdlist_tags(False,'','','')
 	elif menu_input == "121":

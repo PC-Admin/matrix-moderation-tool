@@ -45,8 +45,24 @@ Process Flow:
 
 Example:
 ```bash
-$ date --date '149 days ago' +%s
-$ curl -X POST --header "Authorization: Bearer ACCESS_TOKEN" '... Matrix Synapse purge endpoint ...'
+$ python3 moderation_tool.py
+
+101
+
+Enter the number of days to purge from: 30 
+
+Enter the number of days to purge too: -2
+{"deleted":0}
+{"deleted":0}
+{"deleted":3}
+{"deleted":360}
+{"deleted":469}
+...
+{"deleted":1020}
+{"deleted":2440}
+{"deleted":0}
+{"deleted":0}
+Done! :)
 ```
 
 102) **Prepare Database for Copying Events of Multiple Rooms**
