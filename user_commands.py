@@ -62,7 +62,7 @@ def deactivate_multiple_accounts():
 		return
 	#print(len(data[0]))
 	#print(data[0][0])
-	if delete_confirmation ["y", "Y", "yes", "Yes", "YES"]:  
+	if delete_confirmation in ["y", "Y", "yes", "Yes", "YES"]:  
 		x = 0
 		while x <= (len(data) - 1):
 			#print(data[0][x])
