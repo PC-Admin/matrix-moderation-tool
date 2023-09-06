@@ -5,7 +5,7 @@
 
 This script can automatically load and block/purge abusive rooms from rdlist, making it **very easy** for inexperienced administrators to block this harmful content.
 
-If you are running a public server, please dm me at [@michael:perthchat.org](https://matrix.to/#/@michael:perthchat.org) and I can invite you to the 'Legion of Janitors' room.
+If you are running a public server, please dm me at [@PC-Admin:matrix.org](https://matrix.to/#/@PC-Admin:matrix.org) and I can invite you to the 'Legion of Janitors' room.
 
 ***
 ## Collect User Reports on local users in rdlist rooms
